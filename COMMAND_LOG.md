@@ -9,4 +9,8 @@
 | # | Thời gian (Local) | Lệnh đã thực thi | Chức năng / Mục đích | Kết quả |
 |---|-------------------|------------------|----------------------|---------|
 | 1 | 2026-10-16 01:58 | `ls -la` | Kiểm tra trạng thái thư mục dự án ban đầu | Thư mục trống |
-| 2 | 2026-10-16 01:59 | `git status 2>&1` | Kiểm tra Git repository đã được khởi tạo hay chưa | Chưa có .git (sẽ init ở Phase 0) |
+| 2 | 2026-10-16 01:59 | `git status 2>&1` | Kiểm tra Git repository đã được khởi tạo hay chưa | Chưa có .git |
+| 3 | 2026-10-16 02:02 | `git init && git add . && git commit -m "..."` | Khởi tạo git và commit các file cấu hình và kế hoạch ban đầu | Commit `2c93741` |
+| 4 | 2026-10-16 02:03 | `git branch -m main` | Đổi tên nhánh mặc định thành `main` | Thành công |
+| 5 | 2026-10-16 02:03 | `go version && ... && node -v` | Kiểm tra phiên bản Go, Bun và Node trên hệ thống | Go 1.27.2, Node v26.11.1 |
+| 6 | 2026-10-16 02:04 | `npm -v` | Kiểm tra phiên bản npm | npm 12.2.0 |
