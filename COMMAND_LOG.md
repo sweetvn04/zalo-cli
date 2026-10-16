@@ -28,3 +28,5 @@
 | 18 | 2026-10-16 17:23 | `git status -s` | Kiểm tra các file thay đổi trước khi commit | CHANGELOG, COMMAND_LOG và thư mục daemon/ |
 | 19 | 2026-10-16 17:23 | `git add daemon/ ... && git commit -m "..."` | Commit cập nhật daemon/index.mjs hỗ trợ kitten icat | Commit `e5f20e3` |
 | 20 | 2026-10-16 17:24 | `git commit -am "docs: sync COMMAND_LOG..."` | Lưu commit đồng bộ nhật ký | Commit `07c3031` |
+| 21 | 2026-10-16 17:36 | `test -f daemon/session.json ...` | Kiểm tra xem session.json đã được tạo sau khi Bảo quét QR thành công chưa | Đã tạo thành công |
+| 22 | 2026-10-16 17:37 | `git status -s` | Kiểm tra .gitignore có bảo vệ an toàn cho session.json không | Working tree sạch, session được bảo mật |
