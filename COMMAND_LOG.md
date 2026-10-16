@@ -25,3 +25,5 @@
 | 15 | 2026-10-16 16:58 | `git commit -am "docs: log commands 10-14..."` | Lưu commit cập nhật COMMAND_LOG.md | Commit `365af84` |
 | 16 | 2026-10-16 17:12 | `curl -s .../loginQR.ts \| grep ...` | Kiểm tra hàm saveQRCodeToFile trong zca-js | Phát hiện zca-js ghi file ảnh base64 |
 | 17 | 2026-10-16 17:13 | `which kitten chafa timg` | Kiểm tra công cụ render ảnh terminal trên Linux Konoha | Có sẵn `/usr/bin/kitten` và `/usr/bin/chafa` |
+| 18 | 2026-10-16 17:23 | `git status -s` | Kiểm tra các file thay đổi trước khi commit | CHANGELOG, COMMAND_LOG và thư mục daemon/ |
+| 19 | 2026-10-16 17:23 | `git add daemon/ ... && git commit -m "..."` | Commit cập nhật daemon/index.mjs hỗ trợ kitten icat | Commit `e5f20e3` |

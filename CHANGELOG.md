@@ -23,7 +23,7 @@
 
 ### [Phase 1 - Step 1.1] Hoàn thiện luồng tạo và hiển thị ảnh QR Zalo
 * **Thời gian:** 2026-10-16 17:23
-* **Commit:** (Đang thực hiện)
+* **Commit:** `e5f20e3`
 * **Scope:** `fix(daemon)`
 * **Files Created/Modified:**
   - `daemon/index.mjs`: Lưu ảnh PNG gốc từ server Zalo xuống đĩa `qr.png` và gọi lệnh `kitten icat` để render trực tiếp lên Kitty Terminal.
