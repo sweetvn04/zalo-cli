@@ -16,3 +16,9 @@
 | 6 | 2026-10-16 02:04 | `npm -v` | Kiểm tra phiên bản npm | npm 12.2.0 |
 | 7 | 2026-10-16 14:59 | `ls -la ../hoshino` | Khảo sát mã nguồn dự án bot Zalo hoshino | Tìm thấy `bot.mjs`, `package.json` dùng `zca-js` |
 | 8 | 2026-10-16 14:59 | `test -f ../hoshino/session.json ...` | Kiểm tra xem file session Zalo đã được lưu sẵn chưa | Chưa có session.json |
+| 9 | 2026-10-16 14:59 | `git commit -am "docs: log commands 7 and 8..."` | Lưu commit cập nhật COMMAND_LOG.md | Commit `098a3df` |
+| 10 | 2026-10-16 16:56 | `curl -s .../loginQR.ts \| grep ...` | Đọc logic xử lý loginQR trong mã nguồn zca-js | Tìm thấy flow callback và saveToFile |
+| 11 | 2026-10-16 16:56 | `curl -s .../loginQR.ts \| sed -n '420,480p'` | Kiểm tra cách generate QR và timeout | Xác định qrData.code và qrData.image |
+| 12 | 2026-10-16 16:56 | `curl -s .../loginQR.ts \| grep "function generate"` | Kiểm tra API generate QR của Zalo | POST id.zalo.me/account/authen/qr/generate |
+| 13 | 2026-10-16 16:57 | `curl -s .../loginQR.ts \| grep "function waitingScan"` | Kiểm tra API waitingScan của Zalo | POST id.zalo.me/account/authen/qr/waiting-scan |
+| 14 | 2026-10-16 16:57 | `ls -la daemon` | Kiểm tra các file do Bảo đã thực hành tạo trong thư mục daemon | Đã có `index.mjs`, `package.json`, `node_modules` |
