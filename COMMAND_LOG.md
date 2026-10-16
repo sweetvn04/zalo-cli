@@ -22,3 +22,6 @@
 | 12 | 2026-10-16 16:56 | `curl -s .../loginQR.ts \| grep "function generate"` | Kiểm tra API generate QR của Zalo | POST id.zalo.me/account/authen/qr/generate |
 | 13 | 2026-10-16 16:57 | `curl -s .../loginQR.ts \| grep "function waitingScan"` | Kiểm tra API waitingScan của Zalo | POST id.zalo.me/account/authen/qr/waiting-scan |
 | 14 | 2026-10-16 16:57 | `ls -la daemon` | Kiểm tra các file do Bảo đã thực hành tạo trong thư mục daemon | Đã có `index.mjs`, `package.json`, `node_modules` |
+| 15 | 2026-10-16 16:58 | `git commit -am "docs: log commands 10-14..."` | Lưu commit cập nhật COMMAND_LOG.md | Commit `365af84` |
+| 16 | 2026-10-16 17:12 | `curl -s .../loginQR.ts \| grep ...` | Kiểm tra hàm saveQRCodeToFile trong zca-js | Phát hiện zca-js ghi file ảnh base64 |
+| 17 | 2026-10-16 17:13 | `which kitten chafa timg` | Kiểm tra công cụ render ảnh terminal trên Linux Konoha | Có sẵn `/usr/bin/kitten` và `/usr/bin/chafa` |
