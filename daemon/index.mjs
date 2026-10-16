@@ -1,11 +1,53 @@
 import { Zalo } from "zca-js";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
+import WebSocket, { WebSocketServer } from "ws";
 
+const PORT = 8989;
 const SESSION_FILE = "session.json";
 const QR_FILE = "qr.png";
 const zalo = new Zalo();
 let api;
+
+// khoi tao WebSocket
+const wss = new WebSocketServer({port: PORT})
+console.log(`🚀 Daemon WebSocket Server đang mở tại ws://127.0.0.1:${PORT}`);
+
+// ham phat du lieu cho go cli
+function broadcast(evnet, data) {
+  const payload = JSON.stringify({ event, data });
+  for (const client of wss.client) {
+    if (client.readyState === 1) { // 1 nghia la client san sang
+      client.send(payload);
+    }
+  }
+}
+
+// khi co go ket noi vao
+wss.on("connection", (socket) => {
+  console.log("[IPC] Đã có client kết nối vào Web socket server!")
+  //lang nghe lenh tu go, vi du gui tin nhan.
+  socket.on("message", async (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString());
+      if (msg.action === "send_message") {
+        const { thread_id, thread_type, text } = msg.payload;
+        const targetType = thread_type === "group" ? ThreadType.Group : ThreadType.User;
+
+        // dung api cua zcajs
+        await api.sendMessage({ msg: text }, thread_id, targetType);
+        console.log(`📤 Đã gửi tới ${thread_id}: "${text}"`);
+      }
+    }
+    catch (err) {
+      console.error("❌ Lỗi xử lý lệnh từ Go:", err.message);
+    }
+  });
+
+  socket.on("close", () => {
+    console.log("🔌 [IPC] Client đã ngắt kết nối.");
+  });
+});
 
 // 1. Kiểm tra xem đã từng đăng nhập chưa
 if (fs.existsSync(SESSION_FILE)) {
@@ -50,12 +92,24 @@ console.log("✅ ĐÃ ĐĂNG NHẬP THÀNH CÔNG! Đang lắng nghe tin nhắn..
 
 // 2. Lắng nghe tin nhắn đến
 api.listener.on("message", (message) => {
-  if (message.isSelf) return;
+  const isPlainText = typeof message.data.content === "string";
+  if (isPlainText) return;
+  // Đóng gói dữ liệu tin nhắn sạch sẽ
+  const eventData = {
+    msg_id: message.data.msgId,
+    thread_id: message.threadId,
+    thread_type: message.type === ThreadType.Group ? "group" : "user",
+    sender_id: message.data.uidFrom,
+    sender_name: message.data.dName || "Người lạ",
+    content: message.data.content,
+    timestamp: message.data.ts,
+    is_self: !!message.isSelf,
+  };
 
-  const senderName = message.data.dName || "Người lạ";
-  const content = message.data.content;
+  console.log(`📩 [${eventData.sender_name}]: ${eventData.content}`);
 
-  console.log(`📩 [${senderName}]: ${content}`);
+  // 👈 MỚI: Bắn tin nhắn sang Go CLI qua WebSocket!
+  broadcast("new_message", eventData);
 });
 
 // Bắt đầu lắng nghe
