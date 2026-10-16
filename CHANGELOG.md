@@ -29,3 +29,12 @@
   - `daemon/index.mjs`: Lưu ảnh PNG gốc từ server Zalo xuống đĩa `qr.png` và gọi lệnh `kitten icat` để render trực tiếp lên Kitty Terminal.
 * **Nguyên nhân kỹ thuật & Rationale:**
   - Zalo sử dụng mã QR ảnh đa tầng (Multi-layer watermark) để xác thực app di động. Thư viện vẽ mã ASCII thuần (`qrcode-terminal`) chỉ chứa chuỗi token thô khiến app Zalo trên điện thoại không nhận diện được phiên đăng nhập. Việc lưu ảnh binary PNG gốc và hiển thị bằng giao thức đồ họa của Kitty giải quyết triệt để lỗi không quét được.
+
+### [Phase 1 - Step 1.3] Khởi tạo Local WebSocket Server phục vụ IPC
+* **Thời gian:** 2026-10-16 20:04
+* **Commit:** (Đang thực hiện)
+* **Scope:** `feat(daemon)`
+* **Files Created/Modified:**
+  - `daemon/index.mjs`: Mở WebSocketServer tại cổng 8989, xây dựng hàm `broadcast` đẩy sự kiện `new_message` sang client, và lắng nghe lệnh `send_message` từ client để gọi `api.sendMessage` của `zca-js`.
+* **Nguyên nhân kỹ thuật & Rationale:**
+  - Hiện thực hóa kiến trúc Client - Daemon. Tách biệt hoàn toàn việc kết nối Zalo mạng ngoài của Daemon và tầng UI terminal của Go CLI thông qua giao thức IPC JSON trên Local WebSocket (`ws://127.0.0.1:8989`).

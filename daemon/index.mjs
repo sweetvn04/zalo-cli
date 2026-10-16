@@ -1,4 +1,4 @@
-import { Zalo } from "zca-js";
+import { Zalo, ThreadType } from "zca-js";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import WebSocket, { WebSocketServer } from "ws";
@@ -14,9 +14,9 @@ const wss = new WebSocketServer({port: PORT})
 console.log(`🚀 Daemon WebSocket Server đang mở tại ws://127.0.0.1:${PORT}`);
 
 // ham phat du lieu cho go cli
-function broadcast(evnet, data) {
+function broadcast(event, data) {
   const payload = JSON.stringify({ event, data });
-  for (const client of wss.client) {
+  for (const client of wss.clients) {
     if (client.readyState === 1) { // 1 nghia la client san sang
       client.send(payload);
     }
@@ -93,7 +93,7 @@ console.log("✅ ĐÃ ĐĂNG NHẬP THÀNH CÔNG! Đang lắng nghe tin nhắn..
 // 2. Lắng nghe tin nhắn đến
 api.listener.on("message", (message) => {
   const isPlainText = typeof message.data.content === "string";
-  if (isPlainText) return;
+  if (!isPlainText) return;
   // Đóng gói dữ liệu tin nhắn sạch sẽ
   const eventData = {
     msg_id: message.data.msgId,
