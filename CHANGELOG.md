@@ -32,7 +32,7 @@
 
 ### [Phase 1 - Step 1.3] Khởi tạo Local WebSocket Server phục vụ IPC
 * **Thời gian:** 2026-10-16 20:04
-* **Commit:** (Đang thực hiện)
+* **Commit:** `ab70117`
 * **Scope:** `feat(daemon)`
 * **Files Created/Modified:**
   - `daemon/index.mjs`: Mở WebSocketServer tại cổng 8989, xây dựng hàm `broadcast` đẩy sự kiện `new_message` sang client, và lắng nghe lệnh `send_message` từ client để gọi `api.sendMessage` của `zca-js`.
