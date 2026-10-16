@@ -14,3 +14,5 @@
 | 4 | 2026-10-16 02:03 | `git branch -m main` | Đổi tên nhánh mặc định thành `main` | Thành công |
 | 5 | 2026-10-16 02:03 | `go version && ... && node -v` | Kiểm tra phiên bản Go, Bun và Node trên hệ thống | Go 1.27.2, Node v26.11.1 |
 | 6 | 2026-10-16 02:04 | `npm -v` | Kiểm tra phiên bản npm | npm 12.2.0 |
+| 7 | 2026-10-16 14:59 | `ls -la ../hoshino` | Khảo sát mã nguồn dự án bot Zalo hoshino | Tìm thấy `bot.mjs`, `package.json` dùng `zca-js` |
+| 8 | 2026-10-16 14:59 | `test -f ../hoshino/session.json ...` | Kiểm tra xem file session Zalo đã được lưu sẵn chưa | Chưa có session.json |
