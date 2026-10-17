@@ -144,25 +144,22 @@ zalo-cli/
 * **Mục tiêu:** Dựng khung repo sạch sẽ, thiết lập Git chuẩn Conventional Commits và kiểm tra công cụ sẵn có trên hệ thống Linux `Konoha`.
 * **Kiến thức cần nắm:** Quy tắc tổ chức dự án chuẩn của Golang (`cmd/` và `internal/`) và quản lý đa ngôn ngữ (Go + Bun/Node trong cùng repo).
 
-- [ ] **Step 0.1:** Khởi tạo Git repository, cấu hình `.gitignore` chuẩn (bỏ qua `node_modules`, `dist`, binary Go, session cookies nhạy cảm).
+- [x] **Step 0.1:** Khởi tạo Git repository, cấu hình `.gitignore` chuẩn (bỏ qua `node_modules`, `dist`, binary Go, session cookies nhạy cảm).
 - [ ] **Step 0.2:** Kiểm tra môi trường hệ thống (`go version`, `bun -v` hoặc `node -v`). Khởi tạo `go.mod` với module name `github.com/sweetvn/zalo-cli`.
-- [ ] **Step 0.3:** Dựng khung thư mục: `cmd/zalo-cli`, `internal/...`, `daemon/src`.
+- [ ] **Step 0.3:** Dựng khung thư mục: `cmd/zalo-cli`, `internal/...`.
 
 ---
 
-### 🟡 PHASE 1: Xây dựng Bridge Daemon (`daemon/`) — Cầu nối Zalo (Ước tính: 60 phút)
+### 🟡 PHASE 1: Xây dựng Bridge Daemon (`daemon/`) — Cầu nối Zalo (Ước tính: 60 phút) — [ĐÃ HOÀN THÀNH 100%]
 
-* **Mục tiêu:** Có một tiến trình Node.js/Bun chạy được ngầm, đăng nhập Zalo bằng mã QR hiển thị ngay trên terminal, lưu session an toàn và mở cổng WebSocket local để Go kết nối.
-* **Kiến thức cần nắm:** Cách `zca-js` xử lý chuỗi QR, cách lưu trữ cookies (`tough-cookie`) để tái sử dụng phiên đăng nhập mà không cần quét lại mỗi lần mở app.
+* **Mục tiêu:** Có một tiến trình Node.js chạy được ngầm, đăng nhập Zalo bằng mã QR hiển thị ngay trên Kitty Terminal, lưu session an toàn và mở cổng WebSocket local để Go kết nối.
+* **Kiến thức đã nắm:** Cách `zca-js` xử lý chuỗi QR, lưu trữ session ra file, mở WebSocketServer trên cổng 8989, cơ chế broadcast event JSON sang IPC client.
 
-- [ ] **Step 1.1 (20m):** Setup thư mục `daemon/`, cài đặt thư viện `zca-js`, `ws`, `qrcode-terminal`.
-- [ ] **Step 1.2 (20m):** Viết module `daemon/src/zalo.ts` thực hiện:
-  - Kiểm tra xem file session đã tồn tại ở `~/.config/zalo-cli/session.json` chưa.
-  - Nếu chưa có: Tạo mã QR quét trực tiếp từ Terminal bằng `qrcode-terminal`.
-  - Khi người dùng quét xác nhận trên điện thoại: Tự động lưu cookie/session ra file.
-- [ ] **Step 1.3 (20m):** Viết module `daemon/src/server.ts` dựng Local WebSocket Server (`ws://127.0.0.1:8989`):
-  - Lắng nghe event `message` từ `zca-js` và broadcast JSON về cho client.
-  - Nhận lệnh `send_message` từ client và gọi `api.sendMessage` của `zca-js`.
+- [x] **Step 1.1:** Setup thư mục `daemon/`, cài đặt thư viện `zca-js`, `ws`.
+- [x] **Step 1.2:** Viết logic `daemon/index.mjs` xử lý đăng nhập QR (hiển thị ảnh PNG gốc qua `kitten icat`), lưu session vào `session.json` để tự khôi phục phiên sau này.
+- [x] **Step 1.3:** Dựng Local WebSocket Server (`ws://127.0.0.1:8989`):
+  - Lắng nghe sự kiện `message` từ `zca-js` và broadcast JSON (`new_message`) về cho Go client.
+  - Sẵn sàng đón nhận lệnh `send_message` từ Go client để gọi `api.sendMessage` của `zca-js`.
 
 ---
 
