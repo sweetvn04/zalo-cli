@@ -39,3 +39,6 @@
 | 29 | 2026-10-16 20:04 | `git add ... && git commit -m "feat(daemon)..."` | Commit hoàn tất tính năng WebSocket server cho daemon | Commit `ab70117` |
 | 30 | 2026-10-16 20:04 | `git commit -am "docs: sync CHANGELOG..."` | Lưu commit đồng bộ nhật ký | Commit `d7c6e38` |
 | 31 | 2026-10-18 02:15 | `git commit -am "docs: update plan.md..."` | Lưu commit cập nhật tiến độ Phase 1 trong plan.md | Commit `1dea044` |
+| 32 | 2026-10-18 02:15 | `git commit -am "docs: finalize command 31..."` | Lưu commit hoàn tất cập nhật COMMAND_LOG.md | Commit `ac0d756` |
+| 33 | 2026-10-18 02:33 | `git status -s` | Kiểm tra file mới CONCEPTS.md | M CHANGELOG.md, ?? CONCEPTS.md |
+| 34 | 2026-10-18 02:34 | `git add CONCEPTS.md ... && git commit -m "..."` | Commit tạo file sổ tay kiến trúc CONCEPTS.md | Commit `c656687` |

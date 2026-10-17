@@ -41,7 +41,7 @@
 
 ### [Docs] Khởi tạo Sổ tay Kiến trúc & Khái niệm Cốt lõi (CONCEPTS.md)
 * **Thời gian:** 2026-10-18 02:33
-* **Commit:** (Đang thực hiện)
+* **Commit:** `c656687`
 * **Scope:** `docs(concepts)`
 * **Files Created/Modified:**
   - `CONCEPTS.md`: Giải thích chi tiết và toàn diện 7 trụ cột lý thuyết của dự án: Client-Daemon, IPC Local WebSocket, Standard Go Layout, Go Concurrency (Goroutine/Channel), The Elm Architecture (Bubble Tea/Lip Gloss), và cơ chế bảo mật Zalo.
