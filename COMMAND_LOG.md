@@ -45,3 +45,78 @@
 | 35 | 2026-10-18 02:34 | `git commit -am "docs: sync CHANGELOG..."` | Lưu commit đồng bộ nhật ký | Commit `662aaeb` |
 | 36 | 2026-10-19 16:55 | `ls -la` | Kiểm tra trạng thái thư mục dự án trước khi khởi tạo Go module | Chưa có go.mod |
 | 37 | 2026-10-19 16:55 | `git commit -am "docs: log command 36..."` | Lưu commit đồng bộ nhật ký | Commit `738b332` |
+
+
+## Đọc ngữ cảnh tiếp tục dự án — 2026-10-29
+
+Ghi bổ sung các lệnh khảo sát sau khi đọc rule; chưa thay đổi mã nguồn hoặc chạy kết nối Zalo.
+
+### 38 — 2026-10-29 22:54:03
+- Lệnh chính xác:
+```bash
+pwd; rg --files -g 'AGENTS.md' -g '*RULE*' -g '*rule*' -g '*CONTEXT*' -g '*context*' -g '*CURRENT*' -g '*current*' -g 'README*' -g 'package.json' -g 'pyproject.toml' -g 'Cargo.toml' -g 'go.mod'
+```
+- Mục đích: Tìm hướng dẫn và file ngữ cảnh.
+- Kết quả: Exit 0; tìm thấy AGENTS.md, go.mod, daemon/package.json.
+
+### 39 — 2026-10-29 22:54:03
+- Lệnh chính xác:
+```bash
+for p in /AGENTS.md /home/AGENTS.md /home/sweetvn/AGENTS.md /home/sweetvn/MyProjects/AGENTS.md; do if [ -f "$p" ]; then printf '\n%s\n' "$p"; cat "$p"; fi; done
+```
+- Mục đích: Kiểm tra rule thư mục cha.
+- Kết quả: Exit 0; không có file hướng dẫn ở các đường dẫn này.
+
+### 40 — 2026-10-29 22:54:03
+- Lệnh chính xác:
+```bash
+ls -la; cat AGENTS.md; git status --short; rg --files -g '*.md' -g '!node_modules' -g '!vendor' -g '!daemon/node_modules' -g '!dist' -g '!build'
+```
+- Mục đích: Đọc rule, trạng thái Git và danh sách tài liệu.
+- Kết quả: Exit 0; go.mod và go.sum chưa được theo dõi.
+
+### 41 — 2026-10-29 22:54:03
+- Lệnh chính xác:
+```bash
+cat plan.md CONCEPTS.md CHANGELOG.md COMMAND_LOG.md; rg --files cmd daemon -g '!node_modules' -g '!bun.lockb' -g '!package-lock.json'; git log -5 --oneline; cat go.mod daemon/package.json
+```
+- Mục đích: Đọc kế hoạch, kiến trúc, nhật ký và dependencies.
+- Kết quả: Exit 0; HEAD 9dfa9eb; daemon đã có IPC.
+
+### 42 — 2026-10-29 22:54:03
+- Lệnh chính xác:
+```bash
+cat daemon/index.mjs .gitignore; ls -la cmd/zalo-cli; rg --files -g AGENTS.md -g '!node_modules' daemon cmd
+```
+- Mục đích: Đọc daemon và kiểm tra mã Go/rule con.
+- Kết quả: Exit 1 do rg không tìm thấy AGENTS.md con; các thao tác đọc trước thành công.
+
+### 43 — 2026-10-29 22:54:03
+- Lệnh chính xác:
+```bash
+cat cmd/zalo-cli/main.go; git check-ignore -v cmd/zalo-cli/main.go
+```
+- Mục đích: Đọc Go client và xác định nguyên nhân bị Git bỏ qua.
+- Kết quả: Exit 0; .gitignore dòng 8 bỏ qua cmd/zalo-cli/main.go.
+
+### 44 — 2026-10-29 22:54:03
+- Lệnh: Python heredoc (`python3 - <<'PY'`) ghi bổ sung các mục 38–44 vào COMMAND_LOG.md.
+- Mục đích: Tuân thủ nhật ký lệnh trong AGENTS.md.
+- Kết quả: Đã ghi nhật ký; không sửa mã nguồn.
+
+
+## Sửa Git ignore và kiểm tra nguyên mẫu Go — 2026-10-29
+
+Các lệnh của Bảo được ghi theo kết quả trong hội thoại. Hai lệnh kiểm chứng cuối không có timestamp hoặc exit code được cung cấp; không coi đây là lần agent tự chạy kiểm tra.
+
+| # | Thời gian (Asia/Ho_Chi_Minh) | Lệnh | Mục đích | Kết quả |
+|---|---|---|---|---|
+| 45 | 2026-10-29 23:28 | `git status --short` | Bảo kiểm tra từ daemon/ | Thấy ../.gitignore, ../COMMAND_LOG.md, ../cmd/, ../go.mod, ../go.sum |
+| 46 | 2026-10-29 23:31 | `git diff .gitignore` | Bảo kiểm tra thay đổi quy tắc bỏ qua | Chỉ đổi zalo-cli thành /zalo-cli |
+| 47 | 2026-10-29 23:31 | `git status --short -untracked-files` | Bảo kiểm tra file chưa theo dõi | Thất bại: Invalid untracked files mode 'ntracked-files' |
+| 48 | 2026-10-29 23:31 | `git status --short -untracked-file` | Bảo thử lại lệnh kiểm tra | Thất bại: Invalid untracked files mode 'ntracked-file' |
+| 49 | 2026-10-29 23:31 | `git status --short --untracked-files=all` | Bảo liệt kê đầy đủ file chưa theo dõi | Git nhận diện cmd/zalo-cli/main.go, go.mod và go.sum; .gitignore và COMMAND_LOG.md đã sửa |
+| 50 | 2026-10-29 (sau 23:31; không có giờ chính xác) | `go build ./...` | Bảo kiểm tra biên dịch Go | Theo Bảo báo: không có output, không báo lỗi; agent chưa chạy lại |
+| 51 | 2026-10-29 (sau 23:31; không có giờ chính xác) | `git diff --check` | Bảo kiểm tra lỗi khoảng trắng | Theo Bảo báo: không có output, không báo lỗi; agent chưa chạy lại |
+| 52 | 2026-10-29 23:34:18 | `tail -75 COMMAND_LOG.md; tail -45 CHANGELOG.md; git status --short` | Agent đọc nhật ký trước khi cập nhật theo yêu cầu | Exit 0; chưa có mục changelog cho phần Go |
+| 53 | 2026-10-29 23:34:18 | `python3 - <<'PY' (script cập nhật COMMAND_LOG.md và CHANGELOG.md trong lượt này)` | Agent ghi lại thao tác người dùng và bổ sung changelog | Đã cập nhật hai file nhật ký; chưa stage hoặc commit |

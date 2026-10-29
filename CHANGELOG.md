@@ -47,3 +47,23 @@
   - `CONCEPTS.md`: Giải thích chi tiết và toàn diện 7 trụ cột lý thuyết của dự án: Client-Daemon, IPC Local WebSocket, Standard Go Layout, Go Concurrency (Goroutine/Channel), The Elm Architecture (Bubble Tea/Lip Gloss), và cơ chế bảo mật Zalo.
 * **Nguyên nhân kỹ thuật & Rationale:**
   - Cung cấp nền tảng lý thuyết trực quan, dễ hiểu giúp Bảo nắm trọn bản chất kiến trúc hệ thống trước khi triển khai sâu mã nguồn Golang.
+
+
+## Phase 2: Go IPC Client
+
+### Sửa Git ignore và chuẩn bị lưu nguyên mẫu Go IPC client
+* **Thời gian cập nhật nhật ký:** 2026-10-29 23:34:18 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** `fix(gitignore)`, nguyên mẫu `feat(cli)` hiện có.
+* **Files Changed / Chờ đưa vào Git:**
+  - `.gitignore`: Bảo đổi `zalo-cli` thành `/zalo-cli` để chỉ bỏ qua binary ở gốc repository, không bỏ qua thư mục `cmd/zalo-cli/`.
+  - `cmd/zalo-cli/main.go`: Mã nguồn hiện có, chưa được Git theo dõi; kết nối WebSocket daemon, giải mã sự kiện JSON, in tin nhắn qua goroutine, chờ SIGINT/SIGTERM và đóng kết nối khi thoát.
+  - `go.mod`, `go.sum`: File hiện có, chưa được Git theo dõi; module `zalo-cli`, dependency `github.com/gorilla/websocket v1.5.3`.
+  - `COMMAND_LOG.md`, `CHANGELOG.md`: Agent bổ sung nhật ký theo thao tác và kết quả Bảo cung cấp.
+* **Nguyên nhân kỹ thuật:**
+  - Quy tắc `zalo-cli` trước đây khớp cả thư mục mã nguồn cùng tên, khiến `main.go` bị bỏ qua khi đưa file vào Git.
+  - Ghi nhận nguyên mẫu Go đã có trước lượt cập nhật này; agent không viết mới hay chỉnh sửa logic Go.
+* **Kiểm chứng:**
+  - Output Bảo gửi xác nhận Git đã nhìn thấy `cmd/zalo-cli/main.go`, `go.mod`, `go.sum`.
+  - Bảo báo `go build ./...` và `git diff --check` không in output hoặc báo lỗi; agent chưa chạy lại các lệnh này.
+  - Chưa kiểm chứng kết nối Zalo thực tế trong lượt này.
