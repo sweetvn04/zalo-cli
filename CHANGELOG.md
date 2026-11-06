@@ -53,12 +53,12 @@
 
 ### Sửa Git ignore và chuẩn bị lưu nguyên mẫu Go IPC client
 * **Thời gian cập nhật nhật ký:** 2026-10-29 23:34:18 (Asia/Ho_Chi_Minh).
-* **Commit:** Chưa tạo.
+* **Commit:** `1d56e44` — `feat(cli): add initial Go client and fix binary ignore rule`.
 * **Scope:** `fix(gitignore)`, nguyên mẫu `feat(cli)` hiện có.
-* **Files Changed / Chờ đưa vào Git:**
+* **Files Changed / Đã lưu trong commit:**
   - `.gitignore`: Bảo đổi `zalo-cli` thành `/zalo-cli` để chỉ bỏ qua binary ở gốc repository, không bỏ qua thư mục `cmd/zalo-cli/`.
-  - `cmd/zalo-cli/main.go`: Mã nguồn hiện có, chưa được Git theo dõi; kết nối WebSocket daemon, giải mã sự kiện JSON, in tin nhắn qua goroutine, chờ SIGINT/SIGTERM và đóng kết nối khi thoát.
-  - `go.mod`, `go.sum`: File hiện có, chưa được Git theo dõi; module `zalo-cli`, dependency `github.com/gorilla/websocket v1.5.3`.
+  - `cmd/zalo-cli/main.go`: Mã nguồn hiện có, đã được Git theo dõi; kết nối WebSocket daemon, giải mã sự kiện JSON, in tin nhắn qua goroutine, chờ SIGINT/SIGTERM và đóng kết nối khi thoát.
+  - `go.mod`, `go.sum`: File hiện có, đã được Git theo dõi; module `zalo-cli`, dependency `github.com/gorilla/websocket v1.5.3`.
   - `COMMAND_LOG.md`, `CHANGELOG.md`: Agent bổ sung nhật ký theo thao tác và kết quả Bảo cung cấp.
 * **Nguyên nhân kỹ thuật:**
   - Quy tắc `zalo-cli` trước đây khớp cả thư mục mã nguồn cùng tên, khiến `main.go` bị bỏ qua khi đưa file vào Git.
