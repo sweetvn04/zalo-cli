@@ -175,3 +175,13 @@
 * **Nguyên nhân:** login(session) ném lỗi làm daemon thoát, buộc người dùng tự đổi tên/xóa session để đăng nhập lại.
 * **Chi tiết:** Tách khôi phục/QR thành loginWithSession. Phiên bị từ chối hoặc JSON hỏng chuyển sang QR, callback Kitty được giữ. Chỉ thay session sau QR thành công, ghi file tạm 0600 rồi rename nguyên tử, giữ phiên cũ nếu đăng nhập mới thất bại. File tạm đuôi .cookie đã được Git ignore. Dùng execFileSync thay shell để hiển thị QR.
 * **Kiểm chứng:** Kiểm tra cú pháp và 27 ca Node đều qua, gồm phiên hợp lệ, phiên bị từ chối, JSON hỏng, QR thất bại giữ phiên cũ và quyền 0600 của phiên mới. Chưa đăng nhập lại tài khoản thật.
+
+### Chọn tin bằng mũi tên và xem ảnh ngay trong chat
+* **Thời gian:** 2026-11-10 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** feat(tui).
+* **Files Changed:** internal/tui/model.go, internal/tui/view.go, internal/tui/images.go, internal/tui/history.go, internal/tui/selection.go, internal/media/image.go, internal/media/preview.go, go.mod, go.sum.
+* **Chi tiết:** ↑/↓ trong cột chat chọn từng tin, đánh dấu người gửi và giữ tin chọn trong viewport. Chọn ảnh tự tải/cache và giải mã PNG/JPEG/GIF/WebP/BMP, thu nhỏ theo kích thước chat và vẽ preview bằng ô màu truecolor ▀. Preview là nội dung viewport nên cuộn cùng chat; Ctrl+O mở ảnh gốc, Enter trống thử lại preview lỗi. Hủy preview cũ khi đổi tin/chat/resize, token chống kết quả đến muộn, giữ draft và cập nhật URL ảnh sau F6. Giới hạn giải mã 40 triệu pixel. F8 vẫn hoạt động tương thích.
+* **Giới hạn:** Preview dùng ô màu terminal, độ nét giới hạn bởi số ô; GIF xem frame đầu. Chưa render bằng giao thức pixel Kitty.
+* **Tests:** internal/media/preview_test.go kiểm tra màu pixel thực, tỷ lệ/kích thước và giới hạn decode; internal/tui/selection_test.go kiểm tra mũi tên chọn ảnh, giữ draft, cache preview và kết quả cũ sau đổi ảnh/resize. Cập nhật kiểm thử mũi tên theo hành vi chọn tin mới.
+* **Files Changed bổ sung:** internal/tui/history_test.go, internal/tui/selection_test.go, internal/media/preview_test.go, plan.md. Build, vet, race tests toàn bộ và terminal mẫu chọn ảnh bằng Up, decode PNG thật từ cache rồi render inline đều qua. Chưa kiểm chứng với ảnh Zalo thật.

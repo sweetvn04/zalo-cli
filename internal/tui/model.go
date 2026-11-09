@@ -41,10 +41,13 @@ type requestExpired struct {
 }
 
 type chatLine struct {
-	kind, imageURL          string
-	timestamp               int64
-	id, sender, text, state string
-	self                    bool
+	preview, previewError                       string
+	previewLoading                              bool
+	previewWidth, previewHeight, previewAttempt int
+	kind, imageURL                              string
+	timestamp                                   int64
+	id, sender, text, state                     string
+	self                                        bool
 }
 
 type outgoing struct {
@@ -56,6 +59,11 @@ type outgoing struct {
 }
 
 type model struct {
+	previewImage            func(context.Context, string, int, int) (string, error)
+	previewCancel           context.CancelFunc
+	previewLine             *chatLine
+	selectedLine            *chatLine
+	lineRanges              map[*chatLine]lineRange
 	ctx                     context.Context
 	openImage               func(context.Context, string) error
 	imageMenu, imageOpening bool
@@ -85,6 +93,8 @@ type model struct {
 }
 
 func Run(ctx context.Context, url string) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	client, err := ipc.Dial(ctx, url)
 	if err != nil {
 		return err
@@ -110,8 +120,9 @@ func newModel(client transport) model {
 	composer.Prompt = "> "
 	composer.CharLimit = 2000
 	m := model{
-		ctx: context.Background(), openImage: media.OpenImage,
-		client: client, filter: filter, composer: composer,
+		ctx: context.Background(), openImage: media.OpenImage, previewImage: media.Preview,
+		lineRanges: make(map[*chatLine]lineRange),
+		client:     client, filter: filter, composer: composer,
 		chat: viewport.New(40, 10), connected: true,
 		history: make(map[string][]*chatLine), drafts: make(map[string]string),
 		historyStates: make(map[string]*historyState),
@@ -173,6 +184,10 @@ func (m *model) openSelected() tea.Cmd {
 	}
 	if m.active != "" {
 		m.drafts[m.active] = m.composer.Value()
+	}
+	if m.active != key(items[m.cursor]) {
+		m.stopPreview()
+		m.selectedLine = nil
 	}
 	m.active = key(items[m.cursor])
 	m.unread[m.active] = 0
@@ -299,6 +314,9 @@ func (m *model) appendLine(k string, line *chatLine) {
 
 func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := message.(type) {
+	case previewReady:
+		m.acceptPreview(msg)
+		return m, nil
 	case imageOpened:
 		m.imageOpening = false
 		if msg.err != nil {
@@ -309,7 +327,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.WindowSizeMsg:
 		m.resize(msg.Width, msg.Height)
-		return m, nil
+		return m, m.ensurePreview(false)
 	case tea.MouseMsg:
 		if m.imageMenu {
 			return m, nil
@@ -353,11 +371,11 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.handleEvent(msg.result.Event)
 		}
-		return m, m.listen()
+		return m, tea.Batch(m.listen(), m.ensurePreview(false))
 	case requestStarted:
 		if msg.kind == "history" {
 			m.historyStarted(msg)
-			return m, nil
+			return m, m.ensurePreview(false)
 		}
 		if msg.kind == "list" && m.loading && msg.attempt == m.listAttempt {
 			if msg.err != nil {
@@ -415,6 +433,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		switch msg.String() {
 		case "f8", "ctrl+o":
+			if msg.String() == "ctrl+o" && m.selectedLine != nil && m.selectedLine.kind == "image" {
+				return m, m.openExternalImage(m.selectedLine)
+			}
 			images := m.images()
 			if len(images) == 0 {
 				m.status = "Cuộc chat này chưa có ảnh đã tải. F6/F7 để lấy tin cũ."
@@ -429,6 +450,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.chat.GotoTop()
 			return m, m.loadOlder()
 		case "ctrl+end":
+			m.stopPreview()
+			m.selectedLine = nil
+			m.refreshChat(false)
 			m.chat.GotoBottom()
 			return m, nil
 		case "f6":
@@ -468,24 +492,22 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = max(0, m.cursor-1)
 				return m, nil
 			}
-			m.chat.LineUp(1)
-			if m.chat.AtTop() {
-				return m, m.loadOlder()
-			}
-			return m, nil
+			return m, m.selectMessage(-1)
 		case "down":
 			if !m.editing {
 				m.cursor = min(max(0, len(m.visible())-1), m.cursor+1)
 				return m, nil
 			}
-			m.chat.LineDown(1)
-			return m, nil
+			return m, m.selectMessage(1)
 		case "enter":
 			if !m.editing {
 				return m, m.openSelected()
 			}
 			r, ok := m.recipient()
 			text := m.composer.Value()
+			if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "image" {
+				return m, m.ensurePreview(true)
+			}
 			if !ok || !m.connected || m.pending != nil || strings.TrimSpace(text) == "" {
 				return m, nil
 			}

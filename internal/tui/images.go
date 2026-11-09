@@ -47,20 +47,24 @@ func (m model) updateImageMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if index < 0 {
 			return m, nil
 		}
-		if m.imageOpening {
-			m.status = "Đang mở ảnh trước đó..."
-			return m, nil
-		}
-		if m.selectedImage.imageURL == "" {
-			m.status = "Ảnh này chưa có đường dẫn tải do Zalo cung cấp."
-			return m, nil
-		}
-		address := m.selectedImage.imageURL
-		m.imageMenu, m.imageOpening = false, true
-		m.status = "Đang tải và mở ảnh..."
-		return m, func() tea.Msg { return imageOpened{err: m.openImage(m.ctx, address)} }
+		return m, m.openExternalImage(m.selectedImage)
 	}
 	return m, nil
+}
+
+func (m *model) openExternalImage(line *chatLine) tea.Cmd {
+	if m.imageOpening {
+		m.status = "Đang mở ảnh trước đó..."
+		return nil
+	}
+	if line.imageURL == "" {
+		m.status = "Ảnh này chưa có đường dẫn tải do Zalo cung cấp."
+		return nil
+	}
+	address := line.imageURL
+	m.imageMenu, m.imageOpening = false, true
+	m.status = "Đang tải và mở ảnh..."
+	return func() tea.Msg { return imageOpened{err: m.openImage(m.ctx, address)} }
 }
 
 func (m model) imageView() string {

@@ -2702,3 +2702,174 @@ ok 13 - ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặ
 - Lệnh: `git diff --check`
 - Mục đích: Kiểm tra fallback QR và hồi quy daemon.
 - Kết quả: Exit 0. Không có output.
+
+### Lưu sửa đăng nhập — 2026-11-09T23:43:11.883896+07:00
+- Lệnh: `git add -- daemon/auth.mjs daemon/auth.test.mjs daemon/index.mjs CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu fallback QR và ghi phiên an toàn đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu sửa đăng nhập — 2026-11-09T23:43:11.888879+07:00
+- Lệnh: `git commit -m fix(auth): fall back to QR when saved session login fails`
+- Mục đích: Lưu fallback QR và ghi phiên an toàn đã kiểm chứng.
+- Kết quả: Exit 0. [main 92931c7] fix(auth): fall back to QR when saved session login fails
+ 5 files changed, 379 insertions(+), 34 deletions(-)
+ create mode 100644 daemon/auth.mjs
+ create mode 100644 daemon/auth.test.mjs
+
+### Ảnh inline khảo sát — 2026-11-09T23:50:58.859089+07:00
+- Lệnh: `git status --short`
+- Mục đích: Đọc điều hướng tin và tải ảnh trước khi thêm preview tại chỗ.
+- Kết quả: Exit 0, 18 ký tự output.
+
+### Ảnh inline khảo sát — 2026-11-09T23:50:58.860604+07:00
+- Lệnh: `cat internal/tui/images.go`
+- Mục đích: Đọc điều hướng tin và tải ảnh trước khi thêm preview tại chỗ.
+- Kết quả: Exit 0, 2553 ký tự output.
+
+### Ảnh inline khảo sát — 2026-11-09T23:50:58.862674+07:00
+- Lệnh: `cat internal/media/image.go`
+- Mục đích: Đọc điều hướng tin và tải ảnh trước khi thêm preview tại chỗ.
+- Kết quả: Exit 0, 5350 ký tự output.
+
+### Ảnh inline khảo sát — 2026-11-09T23:50:58.864502+07:00
+- Lệnh: `sed -n "25,85p" internal/tui/model.go`
+- Mục đích: Đọc điều hướng tin và tải ảnh trước khi thêm preview tại chỗ.
+- Kết quả: Exit 0, 1477 ký tự output.
+
+### Ảnh inline khảo sát — 2026-11-09T23:50:58.866068+07:00
+- Lệnh: `sed -n "375,495p" internal/tui/model.go`
+- Mục đích: Đọc điều hướng tin và tải ảnh trước khi thêm preview tại chỗ.
+- Kết quả: Exit 0, 3376 ký tự output.
+
+### Ảnh inline khảo sát — 2026-11-09T23:50:58.867841+07:00
+- Lệnh: `cat internal/tui/images_test.go`
+- Mục đích: Đọc điều hướng tin và tải ảnh trước khi thêm preview tại chỗ.
+- Kết quả: Exit 0, 2754 ký tự output.
+
+### Ảnh inline khảo sát — 2026-11-09T23:50:58.869744+07:00
+- Lệnh: `cat go.mod`
+- Mục đích: Đọc điều hướng tin và tải ảnh trước khi thêm preview tại chỗ.
+- Kết quả: Exit 0, 1234 ký tự output.
+
+### Inline decoder dependencies — 2026-11-09T23:52:31.219673+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go get golang.org/x/image@v0.31.0`
+- Mục đích: Thêm decoder WebP/BMP và scale ảnh cho preview.
+- Kết quả: Exit 0. go: downloading golang.org/x/image v0.31.0
+go: downloading golang.org/x/text v0.29.0
+go: added golang.org/x/image v0.31.0
+go: upgraded golang.org/x/text v0.3.8 => v0.29.0
+
+### Preview inline kiểm chứng — 2026-11-09T23:58:13.022467+07:00
+- Lệnh: `gofmt -w internal/media internal/tui`
+- Mục đích: Build điều hướng tin và preview trong viewport.
+- Kết quả: Exit 0. Không có output.
+
+### Preview inline kiểm chứng — 2026-11-09T23:58:13.283280+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go mod tidy`
+- Mục đích: Build điều hướng tin và preview trong viewport.
+- Kết quả: Exit 0. Không có output.
+
+### Preview inline kiểm chứng — 2026-11-09T23:58:14.368300+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Build điều hướng tin và preview trong viewport.
+- Kết quả: Exit 0. Không có output.
+
+### Preview inline kiểm chứng — 2026-11-09T23:58:14.894976+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
+- Mục đích: Build điều hướng tin và preview trong viewport.
+- Kết quả: Exit 1. ok  	zalo-cli/internal/media	0.010s
+--- FAIL: TestScrollKeysAndMouseMoveChat (0.00s)
+    history_test.go:25: up arrow did not scroll while composing
+FAIL
+FAIL	zalo-cli/internal/tui	0.033s
+FAIL
+
+### Inline tiếp tục — 2026-11-10T00:00:28.974317+07:00
+- Lệnh: `cat internal/tui/selection.go`
+- Mục đích: Đọc lại định dạng sau gofmt để hoàn thiện kiểm thử.
+- Kết quả: Exit 0.
+
+### Inline lựa chọn kiểm chứng — 2026-11-10T00:01:53.020468+07:00
+- Lệnh: `gofmt -w internal/media internal/tui`
+- Mục đích: Kiểm tra màu preview và điều hướng tin trực tiếp.
+- Kết quả: Exit 0. Không có output.
+
+### Inline lựa chọn kiểm chứng — 2026-11-10T00:01:53.605138+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Kiểm tra màu preview và điều hướng tin trực tiếp.
+- Kết quả: Exit 0. Không có output.
+
+### Inline lựa chọn kiểm chứng — 2026-11-10T00:01:54.145566+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
+- Mục đích: Kiểm tra màu preview và điều hướng tin trực tiếp.
+- Kết quả: Exit 1. ok  	zalo-cli/internal/media	0.013s
+--- FAIL: TestScrollKeysAndMouseMoveChat (0.00s)
+    history_test.go:29: up arrow did not scroll while composing
+FAIL
+FAIL	zalo-cli/internal/tui	0.038s
+FAIL
+
+### Inline kiểm tra điều hướng — 2026-11-10T00:02:28.913540+07:00
+- Lệnh: `gofmt -w internal/tui/history_test.go`
+- Mục đích: Xác nhận chọn tin đang nhìn thấy không ép cuộn ngoài ý muốn.
+- Kết quả: Exit 0. Không có output.
+
+### Inline kiểm tra điều hướng — 2026-11-10T00:02:29.402135+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
+- Mục đích: Xác nhận chọn tin đang nhìn thấy không ép cuộn ngoài ý muốn.
+- Kết quả: Exit 0. ok  	zalo-cli/internal/media	(cached)
+ok  	zalo-cli/internal/tui	0.035s
+
+### Inline kiểm tra điều hướng — 2026-11-10T00:02:29.675334+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Xác nhận chọn tin đang nhìn thấy không ép cuộn ngoài ý muốn.
+- Kết quả: Exit 0. Không có output.
+
+### Inline kiểm tra điều hướng — 2026-11-10T00:02:29.679875+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Xác nhận chọn tin đang nhìn thấy không ép cuộn ngoài ý muốn.
+- Kết quả: Exit 0. Không có output.
+
+### Inline terminal fixture — 2026-11-10
+- Lệnh: Python heredoc cập nhật /tmp/zalo-tui-pty.py với PNG hai màu trong cache tạm và phím Up.
+- Mục đích: Thử decoder/render ảnh thật qua entrypoint TUI, không tải URL ngoài hoặc mở GUI.
+- Kết quả: Đã cập nhật harness tạm.
+
+### Inline race và terminal — 2026-11-10T00:03:14.143818+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
+- Mục đích: Kiểm tra race và chọn ảnh trực tiếp bằng Up trong terminal mẫu.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.018s
+ok  	zalo-cli/internal/ipc	(cached)
+ok  	zalo-cli/internal/media	1.082s
+ok  	zalo-cli/internal/tui	1.212s
+
+### TUI build fixture — 2026-11-10T00:03:14.643379
+- Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
+- Mục đích: Đổi endpoint trong binary kiểm thử sang cổng giả lập ngẫu nhiên.
+- Kết quả: Exit 0. Thành công.
+
+### Inline race và terminal — 2026-11-10T00:03:18.797138+07:00
+- Lệnh: `python3 /tmp/zalo-tui-pty.py`
+- Mục đích: Kiểm tra race và chọn ảnh trực tiếp bằng Up trong terminal mẫu.
+- Kết quả: Exit 0. PASS: CLI -tui received history, sent Vietnamese, requested the next cursor via F7, selected a photo with Up and rendered actual image pixels inside chat without F8, accepted mouse wheel and quit with Esc.
+
+### Inline hoàn thiện — 2026-11-10T00:04:37.324112+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra thay đổi cuối và cập nhật tiến độ.
+- Kết quả: Exit 0. Không có output.
+
+### Inline hoàn thiện — 2026-11-10T00:04:37.328164+07:00
+- Lệnh: `git diff --stat`
+- Mục đích: Kiểm tra thay đổi cuối và cập nhật tiến độ.
+- Kết quả: Exit 0. CHANGELOG.md                 |  10 +++
+ COMMAND_LOG.md               | 155 +++++++++++++++++++++++++++++++++++++++++++
+ go.mod                       |   3 +-
+ go.sum                       |   6 +-
+ internal/media/image.go      |  32 +++++----
+ internal/tui/history.go      |   7 ++
+ internal/tui/history_test.go |   8 ++-
+ internal/tui/images.go       |  28 ++++----
+ internal/tui/model.go        |  54 ++++++++++-----
+ internal/tui/view.go         |  36 ++++++++--
+ plan.md                      |   2 +-
+ 11 files changed, 287 insertions(+), 54 deletions(-)

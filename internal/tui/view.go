@@ -37,6 +37,7 @@ func clip(text string, width int) string {
 func (m model) sidebarWidth() int { return min(34, max(24, m.width/3)) }
 
 func (m *model) resize(width, height int) {
+	m.stopPreview()
 	m.width, m.height = width, height
 	right := max(10, width-m.sidebarWidth()-4)
 	m.chat.Width = right
@@ -48,8 +49,11 @@ func (m *model) resize(width, height int) {
 
 func (m *model) refreshChat(bottom bool) {
 	var lines []string
+	m.lineRanges = make(map[*chatLine]lineRange)
+	row := 0
 	imageNumber := 0
 	for _, line := range m.history[m.active] {
+		var parts []string
 		name := oneLine(line.sender)
 		if name == "" {
 			name = "Người gửi"
@@ -59,18 +63,38 @@ func (m *model) refreshChat(bottom bool) {
 			name = "Bạn"
 			style = style.Foreground(green)
 		}
-		lines = append(lines, style.Render(clip(name, m.chat.Width)))
+		if line == m.selectedLine {
+			name = "› " + name
+		} else {
+			name = "  " + name
+		}
+		parts = append(parts, style.Render(clip(name, m.chat.Width)))
 		if line.kind == "image" {
 			imageNumber++
-			lines = append(lines, bright.Render(clip(fmt.Sprintf("[Ảnh %d] · F8 để chọn và mở", imageNumber), m.chat.Width)))
+			parts = append(parts, bright.Render(clip(fmt.Sprintf("[Ảnh %d] · ↑↓ chọn để xem", imageNumber), m.chat.Width)))
+			if line == m.selectedLine {
+				switch {
+				case line.previewLoading:
+					parts = append(parts, muted.Render("Đang tải ảnh..."))
+				case line.previewError != "":
+					parts = append(parts, muted.Render(ansi.Hardwrap(clean(line.previewError)+" · Enter thử lại", m.chat.Width, false)))
+				case line.preview != "" && line.previewWidth <= m.chat.Width:
+					parts = append(parts, line.preview)
+				}
+			}
 		}
 		if line.text != "" {
-			lines = append(lines, ansi.Hardwrap(clean(line.text), m.chat.Width, false))
+			parts = append(parts, ansi.Hardwrap(clean(line.text), m.chat.Width, false))
 		}
 		if line.state != "" {
-			lines = append(lines, muted.Render(ansi.Hardwrap(clean(line.state), m.chat.Width, false)))
+			parts = append(parts, muted.Render(ansi.Hardwrap(clean(line.state), m.chat.Width, false)))
 		}
-		lines = append(lines, "")
+		parts = append(parts, "")
+		content := strings.Join(parts, "\n")
+		height := strings.Count(content, "\n") + 1
+		m.lineRanges[line] = lineRange{start: row, end: row + height - 1}
+		row += height
+		lines = append(lines, content)
 	}
 	if len(lines) == 0 {
 		text := "Chưa có tin nhắn."
@@ -182,6 +206,6 @@ func (m model) View() string {
 	}, "\n")
 	right := panel.BorderForeground(rightColor).Width(rightWidth + 2).Height(innerHeight).Render(chat)
 	footer := clip(" "+oneLine(m.status), m.width)
-	help := muted.Render(clip(" F8 xem ảnh · Chuột/↑↓ cuộn · F7 tin cũ · Tab đổi cột · Enter gửi · F6 tải lại · Esc thoát", m.width))
+	help := muted.Render(clip(" ↑↓ chọn tin/ảnh · Chuột/PgUp cuộn · Ctrl+O ảnh gốc · Tab đổi cột · Enter gửi · F7 tin cũ · Esc thoát", m.width))
 	return header + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, left, right) + "\n" + footer + "\n" + help
 }

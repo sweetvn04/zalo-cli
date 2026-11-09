@@ -243,4 +243,4 @@ zalo-cli/
 
 Phase 2 và giao diện cơ bản Phase 3 đã triển khai. Chạy daemon trước, sau đó dùng `go run ./cmd/zalo-cli -tui`. Tab đổi cột, mũi tên chọn người nhận, Enter mở chat/gửi, PgUp/PgDn cuộn, F5 tải danh sách, Esc thoát. Giao diện giữ các tin đã tải trong bộ nhớ, tải theo trang tối đa 100 tin văn bản/ảnh; F6 tải lại, F7 hoặc cuộn tới đầu tải tiếp. Hỗ trợ cuộn chuột, ↑/↓ trong chat, PgUp/PgDn và Ctrl+Home/End. Chưa lưu tin xuống đĩa hoặc tự reconnect. Build, vet, race tests và thử terminal với daemon mẫu đã qua; cần Bảo kiểm chứng giao diện với Zalo thật.
 
-Ảnh (2026-11-09): nhận chat.photo trong realtime và lịch sử, F8/Ctrl+O chọn ảnh, Enter tải và mở bằng xdg-open, Esc quay lại chat. Ảnh tải theo yêu cầu vào cache máy, chưa render inline trong terminal.
+Ảnh (2026-11-09): nhận chat.photo trong realtime và lịch sử, ↑/↓ trong chat chọn tin/ảnh và tự xem preview tại chỗ; Ctrl+O mở ảnh gốc bằng xdg-open, F8 vẫn mở menu ảnh. Ảnh tải theo yêu cầu vào cache máy, Preview inline dùng ô màu truecolor và cuộn cùng chat; chưa dùng giao thức pixel Kitty.

@@ -21,22 +21,7 @@ const maxImageSize = 25 * 1024 * 1024
 // OpenImage tải ảnh thành file cục bộ rồi mở bằng ứng dụng mặc định.
 // Không đưa URL hoặc nội dung tin nhắn vào shell.
 func OpenImage(ctx context.Context, address string) error {
-	cache, err := os.UserCacheDir()
-	if err != nil {
-		return fmt.Errorf("tìm thư mục cache: %w", err)
-	}
-	transport := &http.Transport{DialContext: dialPublic, ForceAttemptHTTP2: true}
-	defer transport.CloseIdleConnections()
-	client := &http.Client{
-		Transport: transport, Timeout: 30 * time.Second,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 5 {
-				return fmt.Errorf("ảnh chuyển hướng quá nhiều lần")
-			}
-			return validateURL(req.URL.String())
-		},
-	}
-	path, err := downloadImage(ctx, address, filepath.Join(cache, "zalo-cli", "images"), client)
+	path, err := cachedImage(ctx, address)
 	if err != nil {
 		return err
 	}
@@ -49,6 +34,25 @@ func OpenImage(ctx context.Context, address string) error {
 		return fmt.Errorf("không mở được trình xem ảnh mặc định (xdg-open): %w", err)
 	}
 	return nil
+}
+
+func cachedImage(ctx context.Context, address string) (string, error) {
+	cache, err := os.UserCacheDir()
+	if err != nil {
+		return "", fmt.Errorf("tìm thư mục cache: %w", err)
+	}
+	transport := &http.Transport{DialContext: dialPublic, ForceAttemptHTTP2: true}
+	defer transport.CloseIdleConnections()
+	client := &http.Client{
+		Transport: transport, Timeout: 30 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return fmt.Errorf("ảnh chuyển hướng quá nhiều lần")
+			}
+			return validateURL(req.URL.String())
+		},
+	}
+	return downloadImage(ctx, address, filepath.Join(cache, "zalo-cli", "images"), client)
 }
 
 func validateURL(address string) error {

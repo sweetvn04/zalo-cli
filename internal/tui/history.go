@@ -155,6 +155,13 @@ func (m *model) mergeHistory(k string, messages []ipc.Message) {
 		}
 		if existing := seen[message.MsgID]; message.MsgID != "" && existing != nil {
 			if message.Kind == "image" && message.ImageURL != "" {
+				if existing.imageURL != message.ImageURL {
+					if m.previewLine == existing {
+						m.stopPreview()
+					}
+					existing.preview, existing.previewError = "", ""
+					existing.previewAttempt++
+				}
 				existing.kind, existing.imageURL = message.Kind, message.ImageURL
 			}
 			continue
