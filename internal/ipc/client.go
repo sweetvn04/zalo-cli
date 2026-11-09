@@ -4,11 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
+	writeMu sync.Mutex
+	nextID  atomic.Uint64
 	conn    *websocket.Conn
 	cancel  context.CancelFunc
 	results chan Result
@@ -75,4 +81,30 @@ func (c *Client) deliver(ctx context.Context, result Result) bool {
 	case <-ctx.Done():
 		return false
 	}
+}
+
+// SendMessage gửi lệnh qua IPC. Bên gọi phải đợi send_result cùng ID để biết
+// Zalo đã chấp nhận lệnh hay chưa. Không tự gửi lại khi mất phản hồi.
+func (c *Client) SendMessage(threadID, threadType, text string) (string, error) {
+	if strings.TrimSpace(threadID) == "" || strings.TrimSpace(text) == "" {
+		return "", fmt.Errorf("người nhận và nội dung không được để trống")
+	}
+	if threadType != "user" && threadType != "group" {
+		return "", fmt.Errorf("loại hội thoại phải là user hoặc group")
+	}
+	id := fmt.Sprintf("req-%d", c.nextID.Add(1))
+	request := SendRequest{
+		ID: id, Action: "send_message",
+		Payload: SendPayload{ThreadID: threadID, ThreadType: threadType, Text: text},
+	}
+	// Gorilla WebSocket cho phép một reader và một writer đồng thời.
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+	if err := c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		return "", fmt.Errorf("đặt thời hạn ghi: %w", err)
+	}
+	if err := c.conn.WriteJSON(request); err != nil {
+		return "", fmt.Errorf("gửi lệnh tới daemon: %w", err)
+	}
+	return id, nil
 }

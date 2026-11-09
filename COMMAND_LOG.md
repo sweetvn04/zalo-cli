@@ -585,3 +585,135 @@ ok  	zalo-cli/internal/ipc	1.016s
 - Lệnh: `git add -- cmd/zalo-cli/main.go internal/ipc daemon/index.mjs CHANGELOG.md COMMAND_LOG.md`
 - Mục đích: Lưu bước IPC và bản sửa timestamp đã có.
 - Kết quả: Exit 128. fatal: Unable to create '/home/sweetvn/MyProjects/zalo-cli/.git/index.lock': Read-only file system
+
+### IPC lưu commit — 2026-11-09T18:19:47.796920+07:00
+- Lệnh: `git add -- cmd/zalo-cli/main.go internal/ipc daemon/index.mjs CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu bước đã kiểm chứng theo AGENTS.md.
+- Kết quả: Exit 0. Thành công.
+
+### IPC lưu commit — 2026-11-09T18:19:47.823492+07:00
+- Lệnh: `git commit -m refactor(ipc): receive daemon events through cancellable stream`
+- Mục đích: Lưu bước đã kiểm chứng theo AGENTS.md.
+- Kết quả: Exit 0. [main 4700f15] refactor(ipc): receive daemon events through cancellable stream
+ 7 files changed, 417 insertions(+), 49 deletions(-)
+ create mode 100644 internal/ipc/client.go
+ create mode 100644 internal/ipc/client_test.go
+ create mode 100644 internal/ipc/protocol.go
+
+### Gửi tin khảo sát — 2026-11-09T18:34:50.508882+07:00
+- Lệnh: `git status --short`
+- Mục đích: Đọc IPC trước khi thêm gửi tin và phản hồi.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### Gửi tin khảo sát — 2026-11-09T18:34:50.510575+07:00
+- Lệnh: `cat internal/ipc/client.go internal/ipc/protocol.go cmd/zalo-cli/main.go`
+- Mục đích: Đọc IPC trước khi thêm gửi tin và phản hồi.
+- Kết quả: Exit 0, 3223 ký tự output.
+
+### Gửi tin khảo sát — 2026-11-09T18:34:50.512259+07:00
+- Lệnh: `cat daemon/index.mjs`
+- Mục đích: Đọc IPC trước khi thêm gửi tin và phản hồi.
+- Kết quả: Exit 0, 3765 ký tự output.
+
+### Gửi tin tạo mã — 2026-11-09
+- Lệnh: Python heredoc cập nhật Go IPC, CLI và thêm daemon/ipc.mjs, cập nhật CHANGELOG.md.
+- Mục đích: Thêm gửi tin có mã yêu cầu và xác nhận từ Zalo.
+- Kết quả: Đã ghi mã nguồn.
+
+### Gửi tin kiểm chứng — 2026-11-09T18:36:09.210331+07:00
+- Lệnh: `gofmt -w internal/ipc cmd/zalo-cli/main.go`
+- Mục đích: Kiểm tra luồng gửi tin bằng dữ liệu giả lập.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin kiểm chứng — 2026-11-09T18:36:09.605416+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go build ./...`
+- Mục đích: Kiểm tra luồng gửi tin bằng dữ liệu giả lập.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin kiểm chứng — 2026-11-09T18:36:09.727350+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go vet ./...`
+- Mục đích: Kiểm tra luồng gửi tin bằng dữ liệu giả lập.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin kiểm chứng — 2026-11-09T18:36:09.751098+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Kiểm tra luồng gửi tin bằng dữ liệu giả lập.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin kiểm chứng — 2026-11-09T18:36:10.018077+07:00
+- Lệnh: `node --test daemon/ipc.test.mjs`
+- Mục đích: Kiểm tra luồng gửi tin bằng dữ liệu giả lập.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: /home/sweetvn/MyProjects/zalo-cli/daemon/ipc.test.mjs
+ok 1 - /home/sweetvn/MyProjects/zalo-cli/daemon/ipc.test.mjs
+  ---
+  duration_ms: 224.56192
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 230.602269
+
+
+### Gửi tin kiểm chứng — 2026-11-09T18:36:10.023912+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra luồng gửi tin bằng dữ liệu giả lập.
+- Kết quả: Exit 2. COMMAND_LOG.md:661: new blank line at EOF.
+
+### Gửi tin định dạng — 2026-11-09T18:36:36.552357+07:00
+- Lệnh: `gofmt -w cmd/zalo-cli/main.go cmd/zalo-cli/main_test.go`
+- Mục đích: Định dạng CLI và kiểm thử mới.
+- Kết quả: Exit 0.
+
+### Gửi tin kiểm tra cuối — 2026-11-09T18:36:41.818581+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go test -race ./...`
+- Mục đích: Kiểm tra CLI qua WebSocket giả lập và race.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.011s
+ok  	zalo-cli/internal/ipc	1.010s
+
+### Gửi tin kiểm tra cuối — 2026-11-09T18:36:42.156105+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go build ./...`
+- Mục đích: Kiểm tra CLI qua WebSocket giả lập và race.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin kiểm tra cuối — 2026-11-09T18:36:42.241677+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go vet ./...`
+- Mục đích: Kiểm tra CLI qua WebSocket giả lập và race.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin kiểm tra cuối — 2026-11-09T18:36:42.244886+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra CLI qua WebSocket giả lập và race.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin hoàn thiện — 2026-11-09T18:37:03.762388+07:00
+- Lệnh: `gofmt -w cmd/zalo-cli/main.go`
+- Mục đích: Hiển thị ID hội thoại và kiểm tra thay đổi cuối.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin hoàn thiện — 2026-11-09T18:37:04.137927+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go build ./...`
+- Mục đích: Hiển thị ID hội thoại và kiểm tra thay đổi cuối.
+- Kết quả: Exit 0. Không có output.
+
+### Gửi tin hoàn thiện — 2026-11-09T18:37:04.141238+07:00
+- Lệnh: `git diff --stat`
+- Mục đích: Hiển thị ID hội thoại và kiểm tra thay đổi cuối.
+- Kết quả: Exit 0. CHANGELOG.md                |  11 +++++
+ COMMAND_LOG.md              | 115 ++++++++++++++++++++++++++++++++++++++++++++
+ cmd/zalo-cli/main.go        |  65 +++++++++++++++++++++----
+ daemon/index.mjs            |  17 ++-----
+ internal/ipc/client.go      |  32 ++++++++++++
+ internal/ipc/client_test.go |  45 +++++++++++++++++
+ internal/ipc/protocol.go    |  16 ++++++
+ 7 files changed, 279 insertions(+), 22 deletions(-)
+
+### Gửi tin hoàn thiện — 2026-11-09T18:37:04.144463+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Hiển thị ID hội thoại và kiểm tra thay đổi cuối.
+- Kết quả: Exit 0. Không có output.

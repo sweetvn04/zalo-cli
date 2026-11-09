@@ -2,45 +2,92 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"zalo-cli/internal/ipc"
 )
 
 func main() {
+	to := flag.String("to", "", "ID hội thoại Zalo cần gửi")
+	kind := flag.String("type", "user", "Loại hội thoại: user hoặc group")
+	text := flag.String("text", "", "Nội dung tin nhắn")
+	flag.Parse()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	if err := run(ctx, "ws://127.0.0.1:8989", *to, *kind, *text); err != nil {
+		log.Print(err)
+		os.Exit(1)
+	}
+}
 
-	serverURL := "ws://127.0.0.1:8989"
+func run(ctx context.Context, serverURL, to, kind, text string) error {
+	sending := to != "" || text != ""
+	if sending && (to == "" || text == "") {
+		return fmt.Errorf("cần cả -to và -text để gửi tin")
+	}
+	if kind != "user" && kind != "group" {
+		return fmt.Errorf("-type phải là user hoặc group")
+	}
 	log.Printf("Connecting to daemon at %s", serverURL)
 	client, err := ipc.Dial(ctx, serverURL)
 	if err != nil {
-		log.Print(err)
-		os.Exit(1)
+		return err
 	}
 	defer client.Close()
 	log.Printf("Kết nối tới daemon thành công tại %s!", serverURL)
 
+	var requestID string
+	var timeout <-chan time.Time
+	if sending {
+		requestID, err = client.SendMessage(to, kind, text)
+		if err != nil {
+			return err
+		}
+		timer := time.NewTimer(30 * time.Second)
+		defer timer.Stop()
+		timeout = timer.C
+		log.Println("Đang chờ kết quả gửi từ daemon...")
+	}
 	for {
 		select {
 		case <-ctx.Done():
+			if sending {
+				return fmt.Errorf("đã dừng chờ; chưa xác định được kết quả gửi")
+			}
 			log.Println("👋 Đang đóng Go CLI...")
-			return
+			return nil
+		case <-timeout:
+			return fmt.Errorf("hết thời gian chờ; chưa xác định được kết quả gửi, hãy kiểm tra Zalo trước khi gửi lại")
 		case result, ok := <-client.Results():
 			if !ok {
-				log.Println("Kết nối đã đóng, CLI kết thúc.")
-				return
+				if sending {
+					return fmt.Errorf("kết nối đã đóng; chưa xác định được kết quả gửi")
+				}
+				return fmt.Errorf("kết nối đã đóng, CLI kết thúc")
 			}
 			if result.Err != nil {
 				log.Print(result.Err)
 				continue
 			}
-			if result.Event.Event == "new_message" {
-				msg := result.Event.Data
-				log.Printf("📩 [Zalo Go-CLI] %s: %s", msg.SenderName, msg.Content)
+			event := result.Event
+			switch event.Event {
+			case "new_message":
+				msg := event.Data
+				log.Printf("📩 [%s:%s] %s: %s", msg.ThreadType, msg.ThreadID, msg.SenderName, msg.Content)
+			case "send_result":
+				if sending && event.ID == requestID {
+					if !event.OK {
+						return fmt.Errorf("gửi thất bại: %s", event.Error)
+					}
+					log.Printf("📤 Zalo đã chấp nhận gửi tin tới %s", to)
+					return nil
+				}
 			}
 		}
 	}

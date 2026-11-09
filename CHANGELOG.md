@@ -84,3 +84,14 @@
 * **Nguyên nhân:** Chuẩn bị đưa dữ liệu vào TUI và khắc phục CLI chờ Ctrl+C vô hạn sau khi daemon ngắt.
 * **Kiểm thử bổ sung:** internal/ipc/client_test.go dùng WebSocket cục bộ kiểm tra JSON lỗi rồi tin hợp lệ, ngắt kết nối và hủy goroutine đang chờ đọc.
 * **Kết quả:** go build ./..., go vet ./..., go test -race ./... đều qua khi dùng cache tạm và cho phép cổng localhost. Chưa kiểm chứng lại với phiên Zalo thật.
+
+### Gửi tin từ Go và chờ kết quả Zalo
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** feat(cli).
+* **Files Changed:** cmd/zalo-cli/main.go, internal/ipc/client.go, internal/ipc/protocol.go, daemon/index.mjs, daemon/ipc.mjs.
+* **Chi tiết:** Thêm -to, -type, -text; mã yêu cầu IPC; serialize writer với mutex và deadline. Daemon kiểm tra payload, chờ api.sendMessage và trả send_result cùng ID. CLI ghép phản hồi theo ID và chỉ báo thành công sau phản hồi OK, chờ tối đa 30 giây, không tự gửi lại khi kết quả chưa rõ. Không có tham số tiếp tục chế độ nhận tin cũ.
+* **Nguyên nhân:** Ghi lệnh vào socket thành công chưa xác nhận Zalo đã chấp nhận gửi tin.
+* **Tests:** daemon/ipc.test.mjs và internal/ipc/client_test.go kiểm tra lệnh JSON, phản hồi đúng ID, Zalo trả lỗi, payload lỗi, gửi nhóm và chờ API hoàn thành.
+* **Tests CLI:** cmd/zalo-cli/main_test.go chạy entrypoint logic với WebSocket giả lập để xác nhận bỏ qua ID khác và xử lý đúng thành công/thất bại.
+* **Trải nghiệm:** Log nhận tin hiển thị loại và ID hội thoại để người dùng lấy đúng -to và -type. Build, vet, race tests và kiểm thử daemon giả lập đều qua. Chưa gửi tin qua tài khoản Zalo thật.

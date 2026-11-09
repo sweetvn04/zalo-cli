@@ -1,4 +1,5 @@
 import { Zalo, ThreadType } from "zca-js";
+import { handleCommand } from "./ipc.mjs";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import WebSocket, { WebSocketServer } from "ws";
@@ -28,19 +29,9 @@ wss.on("connection", (socket) => {
   console.log("[IPC] Đã có client kết nối vào Web socket server!")
   //lang nghe lenh tu go, vi du gui tin nhan.
   socket.on("message", async (raw) => {
-    try {
-      const msg = JSON.parse(raw.toString());
-      if (msg.action === "send_message") {
-        const { thread_id, thread_type, text } = msg.payload;
-        const targetType = thread_type === "group" ? ThreadType.Group : ThreadType.User;
-
-        // dung api cua zcajs
-        await api.sendMessage({ msg: text }, thread_id, targetType);
-        console.log(`📤 Đã gửi tới ${thread_id}: "${text}"`);
-      }
-    }
-    catch (err) {
-      console.error("❌ Lỗi xử lý lệnh từ Go:", err.message);
+    const result = await handleCommand(raw, api);
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(result));
     }
   });
 
