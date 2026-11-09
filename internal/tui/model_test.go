@@ -17,6 +17,10 @@ type fakeTransport struct {
 }
 
 func (f *fakeTransport) Results() <-chan ipc.Result { return f.results }
+func (f *fakeTransport) History(id, kind string) (string, error) {
+	f.results <- ipc.Result{Event: ipc.Event{Event: "history_result", ID: "history-1", OK: true, ThreadID: id, ThreadType: kind}}
+	return "history-1", nil
+}
 func (f *fakeTransport) ListRecipients() (string, error) {
 	f.results <- ipc.Result{Event: ipc.Event{Event: "recipients_result", ID: "list-1", OK: true,
 		Recipients: []ipc.Recipient{{ThreadID: "an", ThreadType: "user", Name: "An"}}}}

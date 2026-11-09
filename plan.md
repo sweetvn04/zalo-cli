@@ -241,4 +241,4 @@ zalo-cli/
 
 ### Cập nhật triển khai — 2026-11-09
 
-Phase 2 và giao diện cơ bản Phase 3 đã triển khai. Chạy daemon trước, sau đó dùng `go run ./cmd/zalo-cli -tui`. Tab đổi cột, mũi tên chọn người nhận, Enter mở chat/gửi, PgUp/PgDn cuộn, F5 tải danh sách, Esc thoát. Giao diện giữ tối đa 500 tin mỗi hội thoại trong lần mở ứng dụng; chưa tải lịch sử cũ hoặc tự reconnect. Build, vet, race tests và thử terminal với daemon mẫu đã qua; cần Bảo kiểm chứng giao diện với Zalo thật.
+Phase 2 và giao diện cơ bản Phase 3 đã triển khai. Chạy daemon trước, sau đó dùng `go run ./cmd/zalo-cli -tui`. Tab đổi cột, mũi tên chọn người nhận, Enter mở chat/gửi, PgUp/PgDn cuộn, F5 tải danh sách, Esc thoát. Giao diện giữ tối đa 500 tin mỗi hội thoại trong bộ nhớ, tự tải tối đa 100 tin văn bản gần đây Zalo cung cấp khi mở chat; F6 tải lại lịch sử. Chưa lưu tin xuống đĩa hoặc tự reconnect. Build, vet, race tests và thử terminal với daemon mẫu đã qua; cần Bảo kiểm chứng giao diện với Zalo thật.

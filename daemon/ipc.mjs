@@ -1,4 +1,5 @@
 import { ThreadType } from "zca-js";
+import { loadHistory } from "./history.mjs";
 
 // Chuẩn hóa phản hồi IPC để client ghép đúng kết quả với lệnh đã gửi.
 export async function handleCommand(raw, api) {
@@ -7,6 +8,17 @@ export async function handleCommand(raw, api) {
   try {
     const command = JSON.parse(raw.toString());
     id = command?.id;
+    if (command?.action === "get_history") {
+      event = "history_result";
+      const { thread_id, thread_type } = command.payload ?? {};
+      if (typeof thread_id !== "string" || !thread_id.trim() ||
+          !["user", "group"].includes(thread_type)) {
+        throw new Error("Hội thoại không hợp lệ");
+      }
+      if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
+      const history = await loadHistory(api, thread_id, thread_type);
+      return { event, id, ok: true, thread_id, thread_type, ...history };
+    }
     if (command?.action === "list_recipients") {
       event = "recipients_result";
       if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
@@ -49,8 +61,10 @@ export async function handleCommand(raw, api) {
       throw new Error("Loại hội thoại phải là user hoặc group");
     }
     if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
-    await api.sendMessage({ msg: text }, thread_id, thread_type === "group" ? ThreadType.Group : ThreadType.User);
-    return { event: "send_result", id, ok: true };
+    const sent = await api.sendMessage({ msg: text }, thread_id, thread_type === "group" ? ThreadType.Group : ThreadType.User);
+    const result = { event: "send_result", id, ok: true };
+    if (sent?.message?.msgId != null) result.msg_id = String(sent.message.msgId);
+    return result;
   } catch (error) {
     return { event, id, ok: false, error: error.message };
   }

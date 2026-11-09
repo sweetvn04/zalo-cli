@@ -1172,3 +1172,321 @@ RuntimeError: Fixture could not start: BUSY EADDRINUSE
 - Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
 ok  	zalo-cli/internal/ipc	(cached)
 ok  	zalo-cli/internal/tui	1.067s
+
+### TUI lưu bước — 2026-11-09T20:18:13.095685+07:00
+- Lệnh: `git add -- internal/tui cmd/zalo-cli/main.go go.mod go.sum plan.md CHANGELOG.md COMMAND_LOG.md` (GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache).
+- Mục đích: Xác nhận kiểm thử và lưu giao diện đã hoàn thiện.
+- Kết quả: Exit 0. Thành công.
+
+### TUI lưu bước — 2026-11-09T20:18:13.102311+07:00
+- Lệnh: `git commit -m feat(tui): add interactive two-column chat interface` (GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache).
+- Mục đích: Xác nhận kiểm thử và lưu giao diện đã hoàn thiện.
+- Kết quả: Exit 0. [main 5da1154] feat(tui): add interactive two-column chat interface
+ 9 files changed, 1070 insertions(+), 8 deletions(-)
+ create mode 100644 internal/tui/model.go
+ create mode 100644 internal/tui/model_test.go
+ create mode 100644 internal/tui/view.go
+
+### Lịch sử khảo sát — 2026-11-09T20:36:30.297569+07:00
+- Lệnh: `git status --short`
+- Mục đích: Xác định API lịch sử và luồng mở chat.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### Lịch sử khảo sát — 2026-11-09T20:36:30.304944+07:00
+- Lệnh: `rg -n -i "history|oldmessages|recentmessages|fetchmessages|getmessages" daemon/node_modules/zca-js/dist -g "*.d.ts"`
+- Mục đích: Xác định API lịch sử và luồng mở chat.
+- Kết quả: Exit 0, 1052 ký tự output.
+
+### Lịch sử khảo sát — 2026-11-09T20:36:30.306874+07:00
+- Lệnh: `cat daemon/ipc.mjs`
+- Mục đích: Xác định API lịch sử và luồng mở chat.
+- Kết quả: Exit 0, 2438 ký tự output.
+
+### Lịch sử khảo sát — 2026-11-09T20:36:30.308351+07:00
+- Lệnh: `cat internal/tui/model.go`
+- Mục đích: Xác định API lịch sử và luồng mở chat.
+- Kết quả: Exit 0, 9757 ký tự output.
+
+### Lịch sử đọc API — 2026-11-09T20:36:40.591136+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/apis/getGroupChatHistory.d.ts daemon/node_modules/zca-js/dist/apis/getGroupChatHistory.js`
+- Mục đích: Đọc schema và cơ chế lịch sử Zalo.
+- Kết quả: Exit 0, 1767 ký tự output.
+
+### Lịch sử đọc API — 2026-11-09T20:36:40.592687+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/apis/listen.d.ts`
+- Mục đích: Đọc schema và cơ chế lịch sử Zalo.
+- Kết quả: Exit 0, 3171 ký tự output.
+
+### Lịch sử đọc API — 2026-11-09T20:36:40.595232+07:00
+- Lệnh: `rg -n "old_messages|oldMessages|requestOldMessages|hasMore|lastMsgId" daemon/node_modules/zca-js/dist/apis/listen.js`
+- Mục đích: Đọc schema và cơ chế lịch sử Zalo.
+- Kết quả: Exit 0, 480 ký tự output.
+
+### Lịch sử đọc API — 2026-11-09T20:36:40.596932+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/models/Message.d.ts`
+- Mục đích: Đọc schema và cơ chế lịch sử Zalo.
+- Kết quả: Exit 0, 2030 ký tự output.
+
+### Lịch sử schema — 2026-11-09T20:36:49.155814+07:00
+- Lệnh: `sed -n "250,310p" daemon/node_modules/zca-js/dist/apis/listen.js`
+- Mục đích: Kiểm tra listener, timestamp và ID khi gửi.
+- Kết quả: Exit 0, 3891 ký tự output.
+
+### Lịch sử schema — 2026-11-09T20:36:49.158185+07:00
+- Lệnh: `sed -n "355,400p" daemon/node_modules/zca-js/dist/apis/listen.js`
+- Mục đích: Kiểm tra listener, timestamp và ID khi gửi.
+- Kết quả: Exit 0, 1380 ký tự output.
+
+### Lịch sử schema — 2026-11-09T20:36:49.159926+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/apis/sendMessage.d.ts`
+- Mục đích: Kiểm tra listener, timestamp và ID khi gửi.
+- Kết quả: Exit 0, 2297 ký tự output.
+
+### Lịch sử schema — 2026-11-09T20:36:49.164514+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/models/Message.js`
+- Mục đích: Kiểm tra listener, timestamp và ID khi gửi.
+- Kết quả: Exit 0, 872 ký tự output.
+
+### Lịch sử schema — 2026-11-09T20:36:49.170040+07:00
+- Lệnh: `cat daemon/index.mjs`
+- Mục đích: Kiểm tra listener, timestamp và ID khi gửi.
+- Kết quả: Exit 0, 3445 ký tự output.
+
+### Lịch sử triển khai — 2026-11-09T20:39:46.011218+07:00
+- Lệnh: `gofmt -w internal/ipc internal/tui`
+- Mục đích: Kiểm tra build và bảo toàn gửi/danh sách khi thêm lịch sử.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử triển khai — 2026-11-09T20:39:46.539394+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Kiểm tra build và bảo toàn gửi/danh sách khi thêm lịch sử.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử triển khai — 2026-11-09T20:39:46.564815+07:00
+- Lệnh: `node --check daemon/history.mjs`
+- Mục đích: Kiểm tra build và bảo toàn gửi/danh sách khi thêm lịch sử.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử triển khai — 2026-11-09T20:39:46.787361+07:00
+- Lệnh: `node daemon/ipc.test.mjs`
+- Mục đích: Kiểm tra build và bảo toàn gửi/danh sách khi thêm lịch sử.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.728825
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.28198
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.287759
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.182191
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 7.654466
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.1814
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24.351029
+
+### Lịch sử kiểm chứng — 2026-11-09T20:40:52.891642+07:00
+- Lệnh: `gofmt -w internal/tui`
+- Mục đích: Kiểm tra lịch sử và ghép tin an toàn.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử kiểm chứng — 2026-11-09T20:40:53.135720+07:00
+- Lệnh: `node daemon/history.test.mjs`
+- Mục đích: Kiểm tra lịch sử và ghép tin an toàn.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 2.045782
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.107264
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.466451
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.340894
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.25204
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 19.229264
+
+### Lịch sử kiểm chứng — 2026-11-09T20:40:53.533832+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
+- Mục đích: Kiểm tra lịch sử và ghép tin an toàn.
+- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.021s
+
+### Lịch sử kiểm chứng — 2026-11-09T20:40:53.667656+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Kiểm tra lịch sử và ghép tin an toàn.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử kiểm chứng — 2026-11-09T20:40:53.671825+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra lịch sử và ghép tin an toàn.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử fixture — 2026-11-09
+- Lệnh: Python heredoc cập nhật daemon mẫu và kiểm tra màn hình trong /tmp/zalo-tui-fixture.mjs, /tmp/zalo-tui-pty.py.
+- Mục đích: Smoke test nhận lịch sử qua entrypoint TUI và vẫn gửi được tin.
+- Kết quả: Đã cập nhật fixture nếu tồn tại.
+
+### Lịch sử kiểm tra cuối — 2026-11-09T20:41:49.724331+07:00
+- Lệnh: `gofmt -w internal/tui`
+- Mục đích: Xác nhận build và các tính năng cũ.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử kiểm tra cuối — 2026-11-09T20:41:50.321957+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Xác nhận build và các tính năng cũ.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử kiểm tra cuối — 2026-11-09T20:41:50.347950+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Xác nhận build và các tính năng cũ.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử kiểm tra cuối — 2026-11-09T20:41:50.576215+07:00
+- Lệnh: `node daemon/ipc.test.mjs`
+- Mục đích: Xác nhận build và các tính năng cũ.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.872644
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.322596
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.288743
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.182295
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 7.761776
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.202535
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 25.612232
+
+### Lịch sử kiểm tra cuối — 2026-11-09T20:41:50.579725+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Xác nhận build và các tính năng cũ.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử race và TUI — 2026-11-09T20:41:56.692623+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
+- Mục đích: Kiểm tra race, tải tin cũ và gửi tin qua terminal mẫu.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
+ok  	zalo-cli/internal/ipc	1.015s
+ok  	zalo-cli/internal/tui	1.077s
+
+### TUI build fixture — 2026-11-09T20:41:57.191655
+- Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
+- Mục đích: Đổi endpoint trong binary kiểm thử sang cổng giả lập ngẫu nhiên.
+- Kết quả: Exit 0. Thành công.
+
+### Lịch sử race và TUI — 2026-11-09T20:41:59.838164+07:00
+- Lệnh: `python3 /tmp/zalo-tui-pty.py`
+- Mục đích: Kiểm tra race, tải tin cũ và gửi tin qua terminal mẫu.
+- Kết quả: Exit 0. PASS: CLI -tui opened, selected recipient, typed Vietnamese, received send acknowledgement and quit with Esc.
+
+### Lịch sử hoàn thiện — 2026-11-09T20:42:46.913161+07:00
+- Lệnh: `gofmt -w internal/tui`
+- Mục đích: Cập nhật tiến độ và xác nhận bản cuối.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử hoàn thiện — 2026-11-09T20:42:47.487962+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Cập nhật tiến độ và xác nhận bản cuối.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử hoàn thiện — 2026-11-09T20:42:47.870195+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
+- Mục đích: Cập nhật tiến độ và xác nhận bản cuối.
+- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.019s
+
+### Lịch sử hoàn thiện — 2026-11-09T20:42:47.874395+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Cập nhật tiến độ và xác nhận bản cuối.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử hoàn thiện — 2026-11-09T20:42:47.879319+07:00
+- Lệnh: `git diff --stat`
+- Mục đích: Cập nhật tiến độ và xác nhận bản cuối.
+- Kết quả: Exit 0. CHANGELOG.md               |  10 ++
+ COMMAND_LOG.md             | 303 +++++++++++++++++++++++++++++++++++++++++++++
+ daemon/index.mjs           |  18 +--
+ daemon/ipc.mjs             |  18 ++-
+ internal/ipc/client.go     |   7 ++
+ internal/ipc/protocol.go   |   5 +
+ internal/tui/model.go      |  52 +++++++-
+ internal/tui/model_test.go |   4 +
+ internal/tui/view.go       |  23 +++-
+ plan.md                    |   2 +-
+ 10 files changed, 416 insertions(+), 26 deletions(-)

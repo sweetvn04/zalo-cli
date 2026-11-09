@@ -17,6 +17,7 @@ type transport interface {
 	Results() <-chan ipc.Result
 	ListRecipients() (string, error)
 	SendMessage(string, string, string) (string, error)
+	History(string, string) (string, error)
 }
 
 type packet struct {
@@ -25,6 +26,7 @@ type packet struct {
 }
 
 type requestStarted struct {
+	thread  string
 	kind    string
 	id      string
 	err     error
@@ -32,16 +34,19 @@ type requestStarted struct {
 }
 
 type requestExpired struct {
+	thread  string
 	kind    string
 	attempt int
 }
 
 type chatLine struct {
+	timestamp               int64
 	id, sender, text, state string
 	self                    bool
 }
 
 type outgoing struct {
+	thread  string
 	id      string
 	line    *chatLine
 	attempt int
@@ -54,6 +59,7 @@ type model struct {
 	cursor        int
 	active        string
 	history       map[string][]*chatLine
+	historyStates map[string]*historyState
 	drafts        map[string]string
 	unread        map[string]int
 	filter        textinput.Model
@@ -98,7 +104,8 @@ func newModel(client transport) model {
 		client: client, filter: filter, composer: composer,
 		chat: viewport.New(40, 10), connected: true,
 		history: make(map[string][]*chatLine), drafts: make(map[string]string),
-		unread: make(map[string]int), status: "Đang tải bạn bè và nhóm...",
+		historyStates: make(map[string]*historyState),
+		unread:        make(map[string]int), status: "Đang tải bạn bè và nhóm...",
 		loading: true, listAttempt: 1, earlyList: make(map[string]ipc.Event),
 	}
 	m.resize(100, 30)
@@ -126,7 +133,7 @@ func (m model) loadList() tea.Cmd {
 }
 
 func expires(kind string, attempt int) tea.Cmd {
-	return tea.Tick(30*time.Second, func(time.Time) tea.Msg { return requestExpired{kind, attempt} })
+	return tea.Tick(30*time.Second, func(time.Time) tea.Msg { return requestExpired{kind: kind, attempt: attempt} })
 }
 
 func (m model) visible() []ipc.Recipient {
@@ -163,7 +170,7 @@ func (m *model) openSelected() tea.Cmd {
 	m.editing = true
 	m.filter.Blur()
 	m.refreshChat(true)
-	return m.composer.Focus()
+	return tea.Batch(m.composer.Focus(), m.loadHistory(false))
 }
 
 func (m *model) finishSend(ok bool, message string) {
@@ -183,6 +190,8 @@ func (m *model) finishSend(ok bool, message string) {
 
 func (m *model) handleEvent(event ipc.Event) {
 	switch event.Event {
+	case "history_result":
+		m.handleHistory(event)
 	case "recipients_result":
 		if !m.loading {
 			return
@@ -238,7 +247,7 @@ func (m *model) handleEvent(event ipc.Event) {
 		if !found {
 			m.recipients = append(m.recipients, r)
 		}
-		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf})
+		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp})
 		if k != m.active {
 			m.unread[k]++
 		} else {
@@ -251,6 +260,17 @@ func (m *model) handleEvent(event ipc.Event) {
 		if m.pending.id == "" {
 			m.pending.early[event.ID] = event
 		} else if event.ID == m.pending.id {
+			if event.OK && event.MsgID != "" {
+				m.pending.line.id = event.MsgID
+				// Lịch sử có thể chứa tin này trước khi phản hồi gửi về tới UI.
+				var lines []*chatLine
+				for _, line := range m.history[m.pending.thread] {
+					if line == m.pending.line || line.id != event.MsgID {
+						lines = append(lines, line)
+					}
+				}
+				m.history[m.pending.thread] = lines
+			}
 			message := "Gửi thất bại: " + event.Error
 			m.finishSend(event.OK, message)
 		}
@@ -273,6 +293,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if !msg.open {
 			m.connected = false
 			m.loading = false
+			for _, state := range m.historyStates {
+				state.loading = false
+			}
 			m.finishSend(false, "Chưa rõ kết quả gửi; kiểm tra Zalo trước khi gửi lại.")
 			m.status = "Đã mất kết nối daemon. Esc để thoát, khởi động lại daemon rồi mở lại giao diện."
 			return m, nil
@@ -284,6 +307,10 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, m.listen()
 	case requestStarted:
+		if msg.kind == "history" {
+			m.historyStarted(msg)
+			return m, nil
+		}
 		if msg.kind == "list" && m.loading && msg.attempt == m.listAttempt {
 			if msg.err != nil {
 				m.loading = false
@@ -307,6 +334,17 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case requestExpired:
+		if msg.kind == "history" {
+			if state := m.historyStates[msg.thread]; state != nil && state.loading && state.attempt == msg.attempt {
+				state.loading = false
+				state.error = "Hết thời gian tải tin cũ. F6 để thử lại."
+				if m.active == msg.thread {
+					m.status = state.error
+				}
+				m.refreshChat(false)
+			}
+			return m, nil
+		}
 		if msg.kind == "send" && m.pending != nil && m.pending.attempt == msg.attempt {
 			m.finishSend(false, "Chưa rõ kết quả gửi; kiểm tra Zalo trước khi gửi lại.")
 		} else if msg.kind == "list" && m.loading && m.listAttempt == msg.attempt {
@@ -322,6 +360,8 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		switch msg.String() {
+		case "f6":
+			return m, m.loadHistory(true)
 		case "tab", "shift+tab":
 			if !m.editing {
 				return m, m.openSelected()
@@ -365,8 +405,8 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			m.sendAttempt++
-			line := &chatLine{sender: "Bạn", text: text, self: true, state: "Đang gửi..."}
-			m.pending = &outgoing{line: line, attempt: m.sendAttempt, early: make(map[string]ipc.Event)}
+			line := &chatLine{sender: "Bạn", text: text, self: true, state: "Đang gửi...", timestamp: time.Now().UnixMilli()}
+			m.pending = &outgoing{thread: m.active, line: line, attempt: m.sendAttempt, early: make(map[string]ipc.Event)}
 			m.appendLine(m.active, line)
 			m.composer.Reset()
 			m.drafts[m.active] = ""

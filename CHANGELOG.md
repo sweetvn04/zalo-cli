@@ -116,3 +116,13 @@
 * **Tests:** internal/tui/model_test.go kiểm tra phản hồi đến sớm, đổi chat khi gửi, draft riêng, routing/dedup/unread, disconnect, timeout cũ, Unicode/resize và event loop Bubble Tea thật với transport giả lập.
 * **Files Changed bổ sung:** internal/tui/model_test.go, plan.md. Cập nhật các mốc Phase 2/3 theo thực tế. Khi cửa sổ quá nhỏ chỉ nhận phím thoát để tránh gửi tin ngoài ý muốn.
 * **Kiểm chứng:** Build và vet qua; race tests toàn bộ qua; entrypoint -tui đã thử trong PTY với daemon mẫu, chọn người nhận, nhập tiếng Việt, gửi/nhận xác nhận và Esc. Chưa thử UI bằng tài khoản Zalo thật.
+
+### Tải tin nhắn cũ khi mở cuộc chat
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** feat(history).
+* **Files Changed:** daemon/history.mjs, daemon/ipc.mjs, daemon/index.mjs, internal/ipc/client.go, internal/ipc/protocol.go, internal/tui/model.go, internal/tui/history.go, internal/tui/view.go, internal/tui/model_test.go.
+* **Chi tiết:** Thêm get_history/history_result. Nhóm lấy tối đa 100 tin qua getGroupChatHistory; cá nhân lấy snapshot toàn cục qua old_messages, tối đa 10 trang/15 giây rồi lọc đúng hội thoại, cache 30 giây và single-flight để không ghép nhầm phản hồi không có request ID. Ngừng request cá nhân sau timeout cho tới kết nối lại nhằm tránh phản hồi đến muộn bị nhầm. UI tải lịch sử khi mở chat, F6 tải lại, ghép với realtime theo ID và timestamp, xử lý phản hồi sớm/đổi chat. Phản hồi gửi bổ sung ID tin để loại trùng tin của chính mình trong lịch sử.
+* **Giới hạn:** Tin văn bản gần đây do Zalo cung cấp, có cờ lịch sử một phần; chưa lưu tin xuống đĩa hay tải toàn bộ lịch sử.
+* **Tests:** daemon/history.test.mjs và internal/tui/history_test.go kiểm tra phân trang/single-flight, lọc đúng hội thoại, loại trùng realtime và tin của chính mình, lỗi giữ tin đã có, timeout cũ và phản hồi đến sớm.
+* **Files Changed bổ sung:** plan.md. Build, vet, race tests, 11 ca Node và thử terminal mẫu tải tin cũ rồi gửi tiếng Việt đều qua. Chưa kiểm chứng lịch sử trên tài khoản Zalo thật.

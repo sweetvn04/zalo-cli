@@ -66,7 +66,17 @@ func (m *model) refreshChat(bottom bool) {
 		lines = append(lines, "")
 	}
 	if len(lines) == 0 {
-		lines = []string{muted.Render("Chưa có tin nhắn trong lần mở này."), "", muted.Render("Tin mới sẽ hiện ở đây.")}
+		text := "Chưa có tin nhắn."
+		if state := m.historyStates[m.active]; state != nil {
+			if state.loading {
+				text = "Đang tải tin nhắn cũ..."
+			} else if state.error != "" {
+				text = state.error
+			} else if state.loaded {
+				text = "Không có tin văn bản trong dữ liệu Zalo trả về."
+			}
+		}
+		lines = []string{muted.Render(ansi.Hardwrap(text, m.chat.Width, false)), "", muted.Render("Tin mới sẽ hiện ở đây.")}
 	}
 	m.chat.SetContent(strings.Join(lines, "\n"))
 	if bottom {
@@ -141,7 +151,14 @@ func (m model) View() string {
 		if r.ThreadType == "group" {
 			subtitle = "Nhóm"
 		}
-		subtitle += " · Tin nhắn trong lần mở này"
+		subtitle += " · Tin văn bản gần đây · F6 tải lại"
+		if state := m.historyStates[m.active]; state != nil {
+			if state.loading {
+				subtitle = "Đang tải tin nhắn cũ..."
+			} else if state.partial {
+				subtitle += " · Một phần lịch sử"
+			}
+		}
 	}
 	input := m.composer.View()
 	if !m.connected {
@@ -155,6 +172,6 @@ func (m model) View() string {
 	}, "\n")
 	right := panel.BorderForeground(rightColor).Width(rightWidth + 2).Height(innerHeight).Render(chat)
 	footer := clip(" "+oneLine(m.status), m.width)
-	help := muted.Render(clip(" Tab đổi cột · ↑↓ chọn · Enter mở/gửi · PgUp/PgDn cuộn · F5 tải lại · Esc thoát", m.width))
+	help := muted.Render(clip(" Tab đổi cột · ↑↓ chọn · Enter mở/gửi · PgUp/PgDn cuộn · F5 danh sách · F6 tin cũ · Esc thoát", m.width))
 	return header + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, left, right) + "\n" + footer + "\n" + help
 }

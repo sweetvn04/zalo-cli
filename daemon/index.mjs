@@ -1,5 +1,6 @@
-import { Zalo, ThreadType } from "zca-js";
+import { Zalo } from "zca-js";
 import { handleCommand } from "./ipc.mjs";
+import { normalizeMessage } from "./history.mjs";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import WebSocket, { WebSocketServer } from "ws";
@@ -83,19 +84,8 @@ console.log("✅ ĐÃ ĐĂNG NHẬP THÀNH CÔNG! Đang lắng nghe tin nhắn..
 
 // 2. Lắng nghe tin nhắn đến
 api.listener.on("message", (message) => {
-  const isPlainText = typeof message.data.content === "string";
-  if (!isPlainText) return;
-  // Đóng gói dữ liệu tin nhắn sạch sẽ
-  const eventData = {
-    msg_id: message.data.msgId,
-    thread_id: message.threadId,
-    thread_type: message.type === ThreadType.Group ? "group" : "user",
-    sender_id: message.data.uidFrom,
-    sender_name: message.data.dName || "Người lạ",
-    content: message.data.content,
-    timestamp: Number(message.data.ts),
-    is_self: !!message.isSelf,
-  };
+  const eventData = normalizeMessage(message);
+  if (!eventData) return;
 
   console.log(`📩 [${eventData.sender_name}]: ${eventData.content}`);
 

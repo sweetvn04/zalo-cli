@@ -100,6 +100,13 @@ func (c *Client) ListRecipients() (string, error) {
 	return c.request("list_recipients", nil)
 }
 
+func (c *Client) History(threadID, threadType string) (string, error) {
+	if strings.TrimSpace(threadID) == "" || (threadType != "user" && threadType != "group") {
+		return "", fmt.Errorf("hội thoại không hợp lệ")
+	}
+	return c.request("get_history", &SendPayload{ThreadID: threadID, ThreadType: threadType})
+}
+
 func (c *Client) request(action string, payload *SendPayload) (string, error) {
 	id := fmt.Sprintf("req-%d", c.nextID.Add(1))
 	request := SendRequest{ID: id, Action: action, Payload: payload}
