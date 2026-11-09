@@ -2,7 +2,34 @@ import { ThreadType } from "zca-js";
 
 // Dùng cùng schema cho tin realtime và lịch sử.
 export function normalizeMessage(message) {
-  if (typeof message.data?.content !== "string") return null;
+  let content = message.data?.content;
+  let kind = "text";
+  let imageURL = "";
+  if (message.data?.msgType === "chat.photo") {
+    kind = "image";
+    if (typeof content === "string") {
+      try { content = JSON.parse(content); } catch { content = { href: content }; }
+    }
+    if (!content || typeof content !== "object") content = {};
+    let params = content.params ?? {};
+    if (typeof params === "string") {
+      try { params = JSON.parse(params); } catch { params = {}; }
+    }
+    if (!params || typeof params !== "object") params = {};
+    const candidates = [content.hdUrl, params.hdUrl, content.rawUrl, params.rawUrl,
+      content.oriUrl, params.oriUrl, content.normalUrl, params.normalUrl,
+      content.href, content.thumb, content.thumbUrl, params.thumbUrl];
+    imageURL = candidates.find(value => {
+      if (typeof value !== "string") return false;
+      try {
+        const url = new URL(value);
+        return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password;
+      } catch { return false; }
+    }) ?? "";
+    content = String(content.title || content.description || "");
+  } else if (typeof content !== "string") {
+    return null;
+  }
   const timestamp = Number(message.data.ts);
   return {
     msg_id: String(message.data.msgId ?? ""),
@@ -10,7 +37,9 @@ export function normalizeMessage(message) {
     thread_type: message.type === ThreadType.Group ? "group" : "user",
     sender_id: String(message.data.uidFrom ?? ""),
     sender_name: message.isSelf ? "Bạn" : message.data.dName || "Người gửi",
-    content: message.data.content,
+    content,
+    kind,
+    image_url: imageURL,
     timestamp: Number.isSafeInteger(timestamp) ? timestamp : 0,
     is_self: !!message.isSelf,
   };

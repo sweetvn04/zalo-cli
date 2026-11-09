@@ -156,3 +156,13 @@
 * **Chi tiết:** Cache 60 giây và single-flight theo phiên api. Khi HTTP 429, giữ cache cũ, thông báo tiếng Việt và tạm dừng gọi API 60 giây, tăng dần tối đa 5 phút nếu tiếp tục bị 429. Không tự retry. IPC trả notice/retry_after, UI chặn F5 trong thời gian chờ, CLI hiển thị thông báo cache. Nếu chưa có cache, trả lỗi có thời gian chờ và UI giữ danh sách hiện tại.
 * **Tests:** daemon/recipients.test.mjs và internal/tui/model_test.go kiểm tra TTL, single-flight, 429 có/không có cache, backoff tăng dần, giữ chat và chặn/mở lại F5 theo cooldown.
 * **Kết quả:** Build, vet, kiểm tra race Go và 20 ca Node đều qua, gồm tái hiện HTTP 429 với cache cũ/không cache. Chưa xác nhận thời gian Zalo thực tế gỡ giới hạn; cooldown là chính sách cục bộ của ứng dụng.
+
+### Nhận và mở tin nhắn ảnh
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** feat(images).
+* **Files Changed:** daemon/history.mjs, daemon/index.mjs, internal/ipc/protocol.go, internal/tui/model.go, internal/tui/view.go, internal/tui/history.go, internal/tui/images.go, internal/tui/images_test.go, internal/media/image.go, internal/media/image_test.go.
+* **Chi tiết:** Chuẩn hóa chat.photo thành kind/image_url và chú thích cho cả realtime/lịch sử, ưu tiên ảnh chất lượng cao. TUI hiển thị [Ảnh], F8/Ctrl+O mở danh sách ảnh, mũi tên chọn và Enter mở, Esc quay về chat. Chọn bằng pointer để lịch sử mới chèn không đổi ảnh đang chọn; giữ nguyên draft. Tải theo yêu cầu vào cache riêng tư, file 0600, kiểm tra định dạng raster và giới hạn 25 MiB, chặn URL ngoài HTTP(S)/máy nội bộ kể cả DNS/redirect, timeout tải 30 giây, mở file cục bộ qua xdg-open không qua shell. F6 cập nhật URL ảnh cùng ID để xử lý URL cũ hết hạn.
+* **Giới hạn:** Chưa hiển thị ảnh inline trong terminal hoặc gửi ảnh; phụ thuộc URL ảnh còn truy cập được và trình xem ảnh của Linux.
+* **Tests:** Bổ sung daemon/history.test.mjs kiểm tra URL HD/params, ảnh trong lịch sử và URL không hợp lệ; media/image_test.go kiểm tra cache 0600/0700, giới hạn kích thước, MIME sniffing, URL hết hạn/nội bộ; tui/images_test.go kiểm tra chọn ảnh ổn định, giữ draft, menu resize và cập nhật URL ảnh hết hạn.
+* **Files Changed bổ sung:** daemon/history.test.mjs, plan.md. Build, vet, race tests toàn bộ, 23 ca Node và thử terminal mẫu mở/đóng menu F8 đều qua. Kiểm thử tải ảnh dùng HTTP giả lập và mở ảnh dùng hàm giả lập; chưa mở trình xem thật hoặc kiểm chứng URL ảnh từ tài khoản thật.

@@ -20,6 +20,8 @@ type Event struct {
 }
 
 type Message struct {
+	Kind       string `json:"kind,omitempty"`
+	ImageURL   string `json:"image_url,omitempty"`
 	MsgID      string `json:"msg_id"`
 	ThreadID   string `json:"thread_id"`
 	ThreadType string `json:"thread_type"`

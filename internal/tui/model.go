@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"zalo-cli/internal/ipc"
+	"zalo-cli/internal/media"
 )
 
 // transport giữ UI độc lập với socket để có thể thử luồng giao diện cục bộ.
@@ -40,6 +41,7 @@ type requestExpired struct {
 }
 
 type chatLine struct {
+	kind, imageURL          string
 	timestamp               int64
 	id, sender, text, state string
 	self                    bool
@@ -54,28 +56,32 @@ type outgoing struct {
 }
 
 type model struct {
-	client        transport
-	recipients    []ipc.Recipient
-	cursor        int
-	active        string
-	history       map[string][]*chatLine
-	historyStates map[string]*historyState
-	drafts        map[string]string
-	unread        map[string]int
-	filter        textinput.Model
-	composer      textinput.Model
-	chat          viewport.Model
-	editing       bool
-	connected     bool
-	loading       bool
-	listID        string
-	listNextLoad  time.Time
-	listAttempt   int
-	earlyList     map[string]ipc.Event
-	pending       *outgoing
-	sendAttempt   int
-	status        string
-	width, height int
+	ctx                     context.Context
+	openImage               func(context.Context, string) error
+	imageMenu, imageOpening bool
+	selectedImage           *chatLine
+	client                  transport
+	recipients              []ipc.Recipient
+	cursor                  int
+	active                  string
+	history                 map[string][]*chatLine
+	historyStates           map[string]*historyState
+	drafts                  map[string]string
+	unread                  map[string]int
+	filter                  textinput.Model
+	composer                textinput.Model
+	chat                    viewport.Model
+	editing                 bool
+	connected               bool
+	loading                 bool
+	listID                  string
+	listNextLoad            time.Time
+	listAttempt             int
+	earlyList               map[string]ipc.Event
+	pending                 *outgoing
+	sendAttempt             int
+	status                  string
+	width, height           int
 }
 
 func Run(ctx context.Context, url string) error {
@@ -84,7 +90,9 @@ func Run(ctx context.Context, url string) error {
 		return err
 	}
 	defer client.Close()
-	_, err = tea.NewProgram(newModel(client), tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithContext(ctx)).Run()
+	m := newModel(client)
+	m.ctx = ctx
+	_, err = tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithContext(ctx)).Run()
 	if ctx.Err() != nil {
 		return nil
 	}
@@ -102,6 +110,7 @@ func newModel(client transport) model {
 	composer.Prompt = "> "
 	composer.CharLimit = 2000
 	m := model{
+		ctx: context.Background(), openImage: media.OpenImage,
 		client: client, filter: filter, composer: composer,
 		chat: viewport.New(40, 10), connected: true,
 		history: make(map[string][]*chatLine), drafts: make(map[string]string),
@@ -254,7 +263,7 @@ func (m *model) handleEvent(event ipc.Event) {
 		if !found {
 			m.recipients = append(m.recipients, r)
 		}
-		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp})
+		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp, kind: msg.Kind, imageURL: msg.ImageURL})
 		if k != m.active {
 			m.unread[k]++
 		} else {
@@ -290,10 +299,21 @@ func (m *model) appendLine(k string, line *chatLine) {
 
 func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := message.(type) {
+	case imageOpened:
+		m.imageOpening = false
+		if msg.err != nil {
+			m.status = "Không mở được ảnh: " + msg.err.Error()
+		} else {
+			m.status = "Đã mở ảnh bằng ứng dụng mặc định."
+		}
+		return m, nil
 	case tea.WindowSizeMsg:
 		m.resize(msg.Width, msg.Height)
 		return m, nil
 	case tea.MouseMsg:
+		if m.imageMenu {
+			return m, nil
+		}
 		if m.width < 68 || m.height < 18 {
 			return m, nil
 		}
@@ -381,13 +401,28 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case tea.KeyMsg:
-		if msg.String() == "ctrl+c" || msg.String() == "esc" {
+		if msg.String() == "ctrl+c" {
+			return m, tea.Quit
+		}
+		if m.imageMenu {
+			return m.updateImageMenu(msg)
+		}
+		if msg.String() == "esc" {
 			return m, tea.Quit
 		}
 		if m.width < 68 || m.height < 18 {
 			return m, nil
 		}
 		switch msg.String() {
+		case "f8", "ctrl+o":
+			images := m.images()
+			if len(images) == 0 {
+				m.status = "Cuộc chat này chưa có ảnh đã tải. F6/F7 để lấy tin cũ."
+				return m, nil
+			}
+			m.imageMenu = true
+			m.selectedImage = images[len(images)-1]
+			return m, nil
 		case "f7":
 			return m, m.loadOlder()
 		case "ctrl+home":

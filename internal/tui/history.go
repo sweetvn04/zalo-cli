@@ -143,26 +143,31 @@ func (m *model) handleHistory(event ipc.Event) {
 }
 
 func (m *model) mergeHistory(k string, messages []ipc.Message) {
-	seen := make(map[string]bool)
+	seen := make(map[string]*chatLine)
 	for _, line := range m.history[k] {
 		if line.id != "" {
-			seen[line.id] = true
+			seen[line.id] = line
 		}
 	}
 	for _, message := range messages {
 		if message.ThreadType+":"+message.ThreadID != k {
 			continue
 		}
-		if message.MsgID != "" && seen[message.MsgID] {
+		if existing := seen[message.MsgID]; message.MsgID != "" && existing != nil {
+			if message.Kind == "image" && message.ImageURL != "" {
+				existing.kind, existing.imageURL = message.Kind, message.ImageURL
+			}
 			continue
 		}
-		if message.MsgID != "" {
-			seen[message.MsgID] = true
-		}
-		m.history[k] = append(m.history[k], &chatLine{
+		line := &chatLine{
 			id: message.MsgID, sender: message.SenderName, text: message.Content,
 			self: message.IsSelf, timestamp: message.Timestamp,
-		})
+			kind: message.Kind, imageURL: message.ImageURL,
+		}
+		m.history[k] = append(m.history[k], line)
+		if message.MsgID != "" {
+			seen[message.MsgID] = line
+		}
 	}
 	sort.SliceStable(m.history[k], func(i, j int) bool {
 		return m.history[k][i].timestamp < m.history[k][j].timestamp

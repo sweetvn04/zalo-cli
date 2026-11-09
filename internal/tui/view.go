@@ -48,6 +48,7 @@ func (m *model) resize(width, height int) {
 
 func (m *model) refreshChat(bottom bool) {
 	var lines []string
+	imageNumber := 0
 	for _, line := range m.history[m.active] {
 		name := oneLine(line.sender)
 		if name == "" {
@@ -59,7 +60,13 @@ func (m *model) refreshChat(bottom bool) {
 			style = style.Foreground(green)
 		}
 		lines = append(lines, style.Render(clip(name, m.chat.Width)))
-		lines = append(lines, ansi.Hardwrap(clean(line.text), m.chat.Width, false))
+		if line.kind == "image" {
+			imageNumber++
+			lines = append(lines, bright.Render(clip(fmt.Sprintf("[Ảnh %d] · F8 để chọn và mở", imageNumber), m.chat.Width)))
+		}
+		if line.text != "" {
+			lines = append(lines, ansi.Hardwrap(clean(line.text), m.chat.Width, false))
+		}
 		if line.state != "" {
 			lines = append(lines, muted.Render(ansi.Hardwrap(clean(line.state), m.chat.Width, false)))
 		}
@@ -73,7 +80,7 @@ func (m *model) refreshChat(bottom bool) {
 			} else if state.error != "" {
 				text = state.error
 			} else if state.loaded {
-				text = "Không có tin văn bản trong dữ liệu Zalo trả về."
+				text = "Không có tin nhắn trong dữ liệu Zalo trả về."
 			}
 		}
 		lines = []string{muted.Render(ansi.Hardwrap(text, m.chat.Width, false)), "", muted.Render("Tin mới sẽ hiện ở đây.")}
@@ -88,12 +95,15 @@ func (m model) View() string {
 	if m.width < 68 || m.height < 18 {
 		return clip("Cửa sổ cần ít nhất 68 × 18. Phóng to terminal hoặc Esc để thoát.", m.width)
 	}
+	if m.imageMenu {
+		return m.imageView()
+	}
 	connection := lipgloss.NewStyle().Foreground(green).Render("● Đã kết nối")
 	if !m.connected {
 		connection = lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Render("● Mất kết nối")
 	}
 	header := bright.Render(" ZALO") + "  " + muted.Render("TERMINAL") + "    " + connection
-	header += "\n" + muted.Render(" Tin nhắn văn bản · Bạn bè & nhóm")
+	header += "\n" + muted.Render(" Tin nhắn & ảnh · Bạn bè & nhóm")
 	bodyHeight := m.height - 4
 	leftWidth := m.sidebarWidth() - 4
 	innerHeight := bodyHeight - 2
@@ -172,6 +182,6 @@ func (m model) View() string {
 	}, "\n")
 	right := panel.BorderForeground(rightColor).Width(rightWidth + 2).Height(innerHeight).Render(chat)
 	footer := clip(" "+oneLine(m.status), m.width)
-	help := muted.Render(clip(" Chuột/↑↓/PgUp cuộn · F7 thêm tin cũ · Tab đổi cột · Enter gửi · F6 tải lại · Esc thoát", m.width))
+	help := muted.Render(clip(" F8 xem ảnh · Chuột/↑↓ cuộn · F7 tin cũ · Tab đổi cột · Enter gửi · F6 tải lại · Esc thoát", m.width))
 	return header + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, left, right) + "\n" + footer + "\n" + help
 }

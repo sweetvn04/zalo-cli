@@ -2059,3 +2059,396 @@ ok  	zalo-cli/internal/tui	1.102s
 - Lệnh: `git diff --check`
 - Mục đích: Lưu cache/cooldown đã kiểm chứng.
 - Kết quả: Exit 0. Thành công.
+
+### Lưu bản sửa F5 — 2026-11-09T21:50:22.562411+07:00
+- Lệnh: `git add -- daemon/recipients.mjs daemon/recipients.test.mjs daemon/ipc.mjs internal/ipc/protocol.go internal/tui/model.go internal/tui/model_test.go cmd/zalo-cli/recipients.go CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu cache/cooldown đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu bản sửa F5 — 2026-11-09T21:50:22.568597+07:00
+- Lệnh: `git commit -m fix(recipients): cache refreshes and back off on rate limits`
+- Mục đích: Lưu cache/cooldown đã kiểm chứng.
+- Kết quả: Exit 0. [main 409b851] fix(recipients): cache refreshes and back off on rate limits
+ 9 files changed, 417 insertions(+), 27 deletions(-)
+ create mode 100644 daemon/recipients.mjs
+ create mode 100644 daemon/recipients.test.mjs
+
+### Tên người nhận khảo sát — 2026-11-09T21:52:16.891100+07:00
+- Lệnh: `git status --short`
+- Mục đích: Truy nguồn tên nhóm so với nội dung tin.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### Tên người nhận khảo sát — 2026-11-09T21:52:16.892968+07:00
+- Lệnh: `cat daemon/recipients.mjs`
+- Mục đích: Truy nguồn tên nhóm so với nội dung tin.
+- Kết quả: Exit 0, 2958 ký tự output.
+
+### Tên người nhận khảo sát — 2026-11-09T21:52:16.896946+07:00
+- Lệnh: `rg -n "Name:|Name =|\.Name|Content" internal/tui/model.go internal/tui/view.go daemon/history.mjs`
+- Mục đích: Truy nguồn tên nhóm so với nội dung tin.
+- Kết quả: Exit 0, 592 ký tự output.
+
+### Tên người nhận khảo sát — 2026-11-09T21:52:16.898863+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/apis/getGroupInfo.js`
+- Mục đích: Truy nguồn tên nhóm so với nội dung tin.
+- Kết quả: Exit 0, 1118 ký tự output.
+
+### Tên người nhận khảo sát — 2026-11-09T21:52:16.900494+07:00
+- Lệnh: `sed -n "90,125p" daemon/node_modules/zca-js/dist/models/Group.d.ts`
+- Mục đích: Truy nguồn tên nhóm so với nội dung tin.
+- Kết quả: Exit 0, 750 ký tự output.
+
+### Chuẩn bị kiểm tra tên — 2026-11-09
+- Lệnh: Python heredoc tạo /tmp/zalo-recipient-check.mjs.
+- Mục đích: Đọc danh sách qua daemon đang chạy, chỉ in mục tên con cá và loại hội thoại.
+- Kết quả: Đã ghi công cụ kiểm tra chỉ đọc; không đọc cookie hoặc gửi tin.
+
+### Đọc tên từ daemon — 2026-11-09T21:52:45.215400+07:00
+- Lệnh: `node /tmp/zalo-recipient-check.mjs`
+- Mục đích: Xác nhận nguồn tên nhóm từ phản hồi danh sách thực tế.
+- Kết quả: Exit 0. {"matches":[{"name":"con cá","type":"group"}],"count":6}
+
+### Ảnh khảo sát — 2026-11-09T23:08:57.182460+07:00
+- Lệnh: `git status --short`
+- Mục đích: Đọc schema ảnh và luồng hiển thị hiện tại.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### Ảnh khảo sát — 2026-11-09T23:08:57.184028+07:00
+- Lệnh: `cat daemon/history.mjs`
+- Mục đích: Đọc schema ảnh và luồng hiển thị hiện tại.
+- Kết quả: Exit 0, 6413 ký tự output.
+
+### Ảnh khảo sát — 2026-11-09T23:08:57.185619+07:00
+- Lệnh: `cat internal/ipc/protocol.go`
+- Mục đích: Đọc schema ảnh và luồng hiển thị hiện tại.
+- Kết quả: Exit 0, 1847 ký tự output.
+
+### Ảnh khảo sát — 2026-11-09T23:08:57.186986+07:00
+- Lệnh: `cat internal/tui/view.go`
+- Mục đích: Đọc schema ảnh và luồng hiển thị hiện tại.
+- Kết quả: Exit 0, 5697 ký tự output.
+
+### Ảnh khảo sát — 2026-11-09T23:08:57.188452+07:00
+- Lệnh: `cat internal/tui/history.go`
+- Mục đích: Đọc schema ảnh và luồng hiển thị hiện tại.
+- Kết quả: Exit 0, 4381 ký tự output.
+
+### Ảnh khảo sát — 2026-11-09T23:08:57.191260+07:00
+- Lệnh: `rg -n "chatLine|new_message|KeyMsg|f7|MouseMsg" internal/tui/model.go`
+- Mục đích: Đọc schema ảnh và luồng hiển thị hiện tại.
+- Kết quả: Exit 0, 600 ký tự output.
+
+### Ảnh khảo sát — 2026-11-09T23:08:57.197640+07:00
+- Lệnh: `rg -n "chat.photo|hdUrl|normalUrl|thumbUrl|rawUrl|photoUrl|imageUrl" daemon/node_modules/zca-js/dist -g "*.js" -g "*.d.ts"`
+- Mục đích: Đọc schema ảnh và luồng hiển thị hiện tại.
+- Kết quả: Exit 0, 4407 ký tự output.
+
+### Ảnh kiểm chứng — 2026-11-09T23:18:56.983892+07:00
+- Lệnh: `gofmt -w internal/media internal/tui internal/ipc/protocol.go`
+- Mục đích: Kiểm tra tải/cache ảnh, lựa chọn và luồng lịch sử.
+- Kết quả: Exit 0. Không có output.
+
+### Ảnh kiểm chứng — 2026-11-09T23:18:57.591209+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Kiểm tra tải/cache ảnh, lựa chọn và luồng lịch sử.
+- Kết quả: Exit 0. Không có output.
+
+### Ảnh kiểm chứng — 2026-11-09T23:18:58.103396+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
+- Mục đích: Kiểm tra tải/cache ảnh, lựa chọn và luồng lịch sử.
+- Kết quả: Exit 0. ok  	zalo-cli/internal/media	0.016s
+ok  	zalo-cli/internal/tui	0.030s
+
+### Ảnh kiểm chứng — 2026-11-09T23:18:58.326869+07:00
+- Lệnh: `node daemon/history.test.mjs`
+- Mục đích: Kiểm tra tải/cache ảnh, lựa chọn và luồng lịch sử.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 2.105681
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.098592
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.413705
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.334635
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.198375
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.465464
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.640104
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.448222
+  ...
+# Subtest: phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+ok 9 - phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+  ---
+  duration_ms: 1.392309
+  ...
+# Subtest: hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+  ---
+  duration_ms: 6.409736
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 23.696133
+
+### Ảnh kiểm chứng — 2026-11-09T23:18:58.330711+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra tải/cache ảnh, lựa chọn và luồng lịch sử.
+- Kết quả: Exit 0. Không có output.
+
+### Chuẩn bị test menu ảnh — 2026-11-09
+- Lệnh: Python heredoc cập nhật fixture và harness PTY trong /tmp với tin ảnh mẫu và phím F8/Esc.
+- Mục đích: Kiểm tra menu ảnh qua entrypoint thật mà không tải ảnh ngoài hoặc mở trình xem thật.
+- Kết quả: Đã cập nhật công cụ tạm.
+
+### Ảnh hồi quy — 2026-11-09T23:24:26.602616+07:00
+- Lệnh: `node daemon/history.test.mjs`
+- Mục đích: Kiểm tra schema ảnh và bảo toàn các chức năng đã có.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 2.084745
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.091488
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.417026
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.382721
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.202273
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.495441
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.642552
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.461449
+  ...
+# Subtest: phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+ok 9 - phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+  ---
+  duration_ms: 1.83086
+  ...
+# Subtest: hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+  ---
+  duration_ms: 6.695561
+  ...
+# Subtest: tin ảnh ưu tiên URL HD trong params và giữ chú thích
+ok 11 - tin ảnh ưu tiên URL HD trong params và giữ chú thích
+  ---
+  duration_ms: 0.395081
+  ...
+# Subtest: ảnh trong lịch sử dùng cùng schema với ảnh realtime
+ok 12 - ảnh trong lịch sử dùng cùng schema với ảnh realtime
+  ---
+  duration_ms: 0.350023
+  ...
+# Subtest: ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+ok 13 - ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+  ---
+  duration_ms: 0.296668
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 28.254768
+
+### Ảnh hồi quy — 2026-11-09T23:24:26.851445+07:00
+- Lệnh: `node daemon/ipc.test.mjs`
+- Mục đích: Kiểm tra schema ảnh và bảo toàn các chức năng đã có.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.707214
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.280027
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.2944
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.189743
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 7.893257
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.194925
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 25.46899
+
+### Ảnh hồi quy — 2026-11-09T23:24:27.054083+07:00
+- Lệnh: `node daemon/recipients.test.mjs`
+- Mục đích: Kiểm tra schema ảnh và bảo toàn các chức năng đã có.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: cache F5 60 giây, hết hạn mới gọi lại Zalo
+ok 1 - cache F5 60 giây, hết hạn mới gọi lại Zalo
+  ---
+  duration_ms: 1.655402
+  ...
+# Subtest: 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+ok 2 - 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+  ---
+  duration_ms: 0.468337
+  ...
+# Subtest: nhiều client dùng chung một lượt tải danh sách
+ok 3 - nhiều client dùng chung một lượt tải danh sách
+  ---
+  duration_ms: 0.217886
+  ...
+# Subtest: 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+ok 4 - 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+  ---
+  duration_ms: 0.37165
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16.334002
+
+### Ảnh hồi quy — 2026-11-09T23:24:27.077971+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Kiểm tra schema ảnh và bảo toàn các chức năng đã có.
+- Kết quả: Exit 0. Không có output.
+
+### Ảnh hồi quy — 2026-11-09T23:24:27.102125+07:00
+- Lệnh: `node --check /tmp/zalo-tui-fixture.mjs`
+- Mục đích: Kiểm tra schema ảnh và bảo toàn các chức năng đã có.
+- Kết quả: Exit 0. Không có output.
+
+### Ảnh hồi quy — 2026-11-09T23:24:27.259052+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Kiểm tra schema ảnh và bảo toàn các chức năng đã có.
+- Kết quả: Exit 0. Không có output.
+
+### Ảnh hồi quy — 2026-11-09T23:24:27.262971+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra schema ảnh và bảo toàn các chức năng đã có.
+- Kết quả: Exit 0. Không có output.
+
+### Ảnh race và terminal — 2026-11-09T23:24:36.481532+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
+- Mục đích: Kiểm tra toàn bộ Go và menu ảnh qua terminal mẫu.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
+ok  	zalo-cli/internal/ipc	1.015s
+ok  	zalo-cli/internal/media	1.030s
+ok  	zalo-cli/internal/tui	1.200s
+
+### TUI build fixture — 2026-11-09T23:24:36.982633
+- Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
+- Mục đích: Đổi endpoint trong binary kiểm thử sang cổng giả lập ngẫu nhiên.
+- Kết quả: Exit 0. Thành công.
+
+### Ảnh race và terminal — 2026-11-09T23:24:41.017233+07:00
+- Lệnh: `python3 /tmp/zalo-tui-pty.py`
+- Mục đích: Kiểm tra toàn bộ Go và menu ảnh qua terminal mẫu.
+- Kết quả: Exit 0. PASS: CLI -tui received history, sent Vietnamese, requested the next cursor via F7, opened the F8 image picker, returned to chat, accepted mouse wheel and quit with Esc.
+
+### Ảnh hoàn thiện — 2026-11-09T23:27:06.675298+07:00
+- Lệnh: `command -v xdg-open`
+- Mục đích: Kiểm tra trình mở ảnh và thay đổi cuối.
+- Kết quả: Exit 0. /usr/bin/xdg-open
+
+### Ảnh hoàn thiện — 2026-11-09T23:27:06.679652+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra trình mở ảnh và thay đổi cuối.
+- Kết quả: Exit 0. Không có output.
+
+### Ảnh hoàn thiện — 2026-11-09T23:27:06.683610+07:00
+- Lệnh: `git diff --stat`
+- Mục đích: Kiểm tra trình mở ảnh và thay đổi cuối.
+- Kết quả: Exit 0. CHANGELOG.md             |  10 ++
+ COMMAND_LOG.md           | 378 +++++++++++++++++++++++++++++++++++++++++++++++
+ daemon/history.mjs       |  33 ++++-
+ daemon/history.test.mjs  |  29 ++++
+ daemon/index.mjs         |   3 +-
+ internal/ipc/protocol.go |   2 +
+ internal/tui/history.go  |  21 ++-
+ internal/tui/model.go    |  85 +++++++----
+ internal/tui/view.go     |  18 ++-
+ plan.md                  |   4 +-
+ 10 files changed, 542 insertions(+), 41 deletions(-)

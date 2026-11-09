@@ -177,3 +177,32 @@ test("hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
   assert.deepEqual(first.messages.map(m => m.msg_id), ["200"]);
   assert.deepEqual(older.messages.map(m => m.msg_id), ["100"]);
 });
+
+test("tin ảnh ưu tiên URL HD trong params và giữ chú thích", () => {
+  const photo = message("photo-1", "an", 1000, {
+    title: "Ảnh đi chơi", href: "https://photo.talk.zdn.vn/normal.jpg",
+    params: JSON.stringify({hdUrl: "https://photo.talk.zdn.vn/hd.jpg"}),
+  });
+  photo.data.msgType = "chat.photo";
+  const normalized = normalizeMessage(photo);
+  assert.equal(normalized.kind, "image");
+  assert.equal(normalized.image_url, "https://photo.talk.zdn.vn/hd.jpg");
+  assert.equal(normalized.content, "Ảnh đi chơi");
+});
+
+test("ảnh trong lịch sử dùng cùng schema với ảnh realtime", async () => {
+  const photo = message("123", "group-1", 1000, JSON.stringify({href: "https://photo.talk.zdn.vn/old.jpg"}), ThreadType.Group);
+  photo.data.msgType = "chat.photo";
+  const response = await loadHistory({ async getGroupChatHistory() { return {more: 0, groupMsgs: [photo]}; } }, "group-1", "group");
+  assert.equal(response.messages.length, 1);
+  assert.equal(response.messages[0].kind, "image");
+  assert.equal(response.messages[0].image_url, "https://photo.talk.zdn.vn/old.jpg");
+});
+
+test("ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script", () => {
+  const photo = message("photo-2", "an", 1000, {href: "file:///tmp/a.png", thumb: "javascript:alert(1)"});
+  photo.data.msgType = "chat.photo";
+  const normalized = normalizeMessage(photo);
+  assert.equal(normalized.kind, "image");
+  assert.equal(normalized.image_url, "");
+});

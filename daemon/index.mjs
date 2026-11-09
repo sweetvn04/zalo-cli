@@ -87,7 +87,8 @@ api.listener.on("message", (message) => {
   const eventData = normalizeMessage(message);
   if (!eventData) return;
 
-  console.log(`📩 [${eventData.sender_name}]: ${eventData.content}`);
+  const content = eventData.kind === "image" ? "[Ảnh] " + eventData.content : eventData.content;
+  console.log(`📩 [${eventData.sender_name}]: ${content}`);
 
   // 👈 MỚI: Bắn tin nhắn sang Go CLI qua WebSocket!
   broadcast("new_message", eventData);
