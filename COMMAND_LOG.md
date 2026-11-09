@@ -1844,3 +1844,218 @@ ok  	zalo-cli/internal/tui	1.105s
 - Lệnh: `git diff --check`
 - Mục đích: Kiểm tra định dạng trước commit.
 - Kết quả: Exit 0. Không có output.
+
+### Lưu cuộn và phân trang — 2026-11-09T21:39:34.600872+07:00
+- Lệnh: `git add -- daemon/history.mjs daemon/history.test.mjs daemon/ipc.mjs internal/ipc/client.go internal/ipc/protocol.go internal/tui plan.md CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu bản sửa cuộn và tải thêm đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu cuộn và phân trang — 2026-11-09T21:39:34.607029+07:00
+- Lệnh: `git commit -m fix(tui): enable chat scrolling and paginate older messages`
+- Mục đích: Lưu bản sửa cuộn và tải thêm đã kiểm chứng.
+- Kết quả: Exit 0. [main 7b274a2] fix(tui): enable chat scrolling and paginate older messages
+ 13 files changed, 459 insertions(+), 34 deletions(-)
+
+### F5 429 khảo sát — 2026-11-09T21:47:29.307439+07:00
+- Lệnh: `git status --short`
+- Mục đích: Kiểm tra request danh sách và xử lý lỗi 429.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### F5 429 khảo sát — 2026-11-09T21:47:29.309025+07:00
+- Lệnh: `cat daemon/ipc.mjs`
+- Mục đích: Kiểm tra request danh sách và xử lý lỗi 429.
+- Kết quả: Exit 0, 3314 ký tự output.
+
+### F5 429 khảo sát — 2026-11-09T21:47:29.310433+07:00
+- Lệnh: `cat daemon/ipc.test.mjs`
+- Mục đích: Kiểm tra request danh sách và xử lý lỗi 429.
+- Kết quả: Exit 0, 3543 ký tự output.
+
+### F5 429 khảo sát — 2026-11-09T21:47:29.311842+07:00
+- Lệnh: `sed -n "190,235p" internal/tui/model.go`
+- Mục đích: Kiểm tra request danh sách và xử lý lỗi 429.
+- Kết quả: Exit 0, 1183 ký tự output.
+
+### F5 refactor danh sách — 2026-11-09
+- Lệnh: Python heredoc thay nhánh list_recipients trong daemon/ipc.mjs bằng loadRecipients và giữ retry_after trong lỗi.
+- Mục đích: Dùng cache và cooldown chung cho CLI/TUI.
+- Kết quả: Đã cập nhật IPC handler.
+
+### F5 cache kiểm chứng — 2026-11-09T21:49:30.233642+07:00
+- Lệnh: `gofmt -w internal/ipc/protocol.go internal/tui/model.go internal/tui/model_test.go cmd/zalo-cli/recipients.go`
+- Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
+- Kết quả: Exit 0. Không có output.
+
+### F5 cache kiểm chứng — 2026-11-09T21:49:30.482668+07:00
+- Lệnh: `node daemon/recipients.test.mjs`
+- Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: cache F5 60 giây, hết hạn mới gọi lại Zalo
+ok 1 - cache F5 60 giây, hết hạn mới gọi lại Zalo
+  ---
+  duration_ms: 1.787424
+  ...
+# Subtest: 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+ok 2 - 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+  ---
+  duration_ms: 0.455905
+  ...
+# Subtest: nhiều client dùng chung một lượt tải danh sách
+ok 3 - nhiều client dùng chung một lượt tải danh sách
+  ---
+  duration_ms: 0.269426
+  ...
+# Subtest: 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+ok 4 - 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+  ---
+  duration_ms: 0.361277
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 17.7649
+
+### F5 cache kiểm chứng — 2026-11-09T21:49:30.725344+07:00
+- Lệnh: `node daemon/ipc.test.mjs`
+- Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.78301
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.303517
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.297648
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.182172
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 8.168176
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.217661
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 25.837868
+
+### F5 cache kiểm chứng — 2026-11-09T21:49:30.943301+07:00
+- Lệnh: `node daemon/history.test.mjs`
+- Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 1.950609
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.046305
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.41329
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.296979
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.198272
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.492201
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.582754
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.422872
+  ...
+# Subtest: phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+ok 9 - phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+  ---
+  duration_ms: 1.612156
+  ...
+# Subtest: hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+  ---
+  duration_ms: 8.375498
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24.546352
+
+### F5 cache kiểm chứng — 2026-11-09T21:49:31.482385+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
+- Kết quả: Exit 0. Không có output.
+
+### F5 cache kiểm chứng — 2026-11-09T21:49:31.864078+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
+- Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
+- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.023s
+
+### F5 cache kiểm chứng — 2026-11-09T21:49:31.997487+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
+- Kết quả: Exit 0. Không có output.
+
+### F5 cache kiểm chứng — 2026-11-09T21:49:32.001291+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
+- Kết quả: Exit 0. Không có output.
+
+### F5 race kiểm chứng — 2026-11-09T21:49:46.818604+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
+- Mục đích: Kiểm tra race sau khi thêm cooldown UI và thông báo CLI.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.020s
+ok  	zalo-cli/internal/ipc	1.012s
+ok  	zalo-cli/internal/tui	1.102s
+
+### Lưu bản sửa F5 — 2026-11-09T21:50:22.556831+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Lưu cache/cooldown đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.

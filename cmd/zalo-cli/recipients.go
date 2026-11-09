@@ -34,6 +34,9 @@ func runList(ctx context.Context, url, text string, input io.Reader, output io.W
 		return fmt.Errorf("lấy danh sách thất bại: %s", response.Error)
 	}
 	recipients := response.Recipients
+	if response.Notice != "" {
+		fmt.Fprintln(output, response.Notice)
+	}
 	if len(recipients) == 0 {
 		fmt.Fprintln(output, "Danh sách bạn bè và nhóm đang trống.")
 		return nil

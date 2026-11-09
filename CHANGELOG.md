@@ -146,3 +146,13 @@
 * **Chi tiết:** Bật mouse cell motion, xử lý wheel theo cột, mũi tên khi soạn và PgUp/PgDn cuộn chat; Ctrl+Home/End đầu/cuối. before_id/cursor/has_more cho phép tải tiếp với F7 hoặc khi cuộn tới đầu. Cache riêng từng con trỏ, tuần tự hóa các request cùng loại để không nhầm phản hồi WebSocket. Không cắt 500 tin đã tải; giữ vị trí đọc khi thêm tin cũ phía trên. Hiển thị số tin và phần trăm cuộn.
 * **Giới hạn:** Chỉ tải tiếp khi Zalo trả con trỏ tiến được; không bảo đảm toàn bộ lịch sử máy chủ còn lưu hoặc cho phép truy cập.
 * **Files Changed bổ sung:** plan.md. Build, vet, race tests toàn bộ, 16 ca Node và terminal mẫu với F7/mouse wheel đã qua. Kiểm thử xác nhận đủ 250 tin qua nhiều trang, giữ trên 500 tin và giữ nguyên viewport khi thêm tin phía trước. Chưa xác nhận phân trang mới trên tài khoản thật.
+
+### Chống HTTP 429 khi nhấn F5 tải danh sách
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** fix(recipients).
+* **Files Changed:** daemon/recipients.mjs, daemon/ipc.mjs, internal/ipc/protocol.go, internal/tui/model.go, cmd/zalo-cli/recipients.go.
+* **Nguyên nhân:** Mỗi lần F5 gọi lại chuỗi API bạn bè, danh sách nhóm và thông tin nhóm, dễ nhận HTTP 429 khi thao tác lặp lại hoặc mở nhiều client.
+* **Chi tiết:** Cache 60 giây và single-flight theo phiên api. Khi HTTP 429, giữ cache cũ, thông báo tiếng Việt và tạm dừng gọi API 60 giây, tăng dần tối đa 5 phút nếu tiếp tục bị 429. Không tự retry. IPC trả notice/retry_after, UI chặn F5 trong thời gian chờ, CLI hiển thị thông báo cache. Nếu chưa có cache, trả lỗi có thời gian chờ và UI giữ danh sách hiện tại.
+* **Tests:** daemon/recipients.test.mjs và internal/tui/model_test.go kiểm tra TTL, single-flight, 429 có/không có cache, backoff tăng dần, giữ chat và chặn/mở lại F5 theo cooldown.
+* **Kết quả:** Build, vet, kiểm tra race Go và 20 ca Node đều qua, gồm tái hiện HTTP 429 với cache cũ/không cache. Chưa xác nhận thời gian Zalo thực tế gỡ giới hạn; cooldown là chính sách cục bộ của ứng dụng.

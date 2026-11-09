@@ -164,3 +164,24 @@ func TestProgramReceivesListAndSendsThroughTransport(t *testing.T) {
 		}
 	}
 }
+
+func TestF5RateLimitKeepsRecipientsAndHonorsCooldown(t *testing.T) {
+	m := fixture()
+	m.loading = true
+	m.listID = "refresh-1"
+	m.handleEvent(ipc.Event{Event: "recipients_result", ID: "refresh-1", OK: false,
+		Error: "Zalo đang giới hạn yêu cầu", RetryAfter: 60})
+	if len(m.recipients) != 2 || m.active != "user:an" {
+		t.Fatal("refresh failure changed current recipients or conversation")
+	}
+	updated, command := m.Update(tea.KeyMsg{Type: tea.KeyF5})
+	m = updated.(model)
+	if command != nil || m.loading || !strings.Contains(m.status, "giây") {
+		t.Fatal("F5 must wait during cooldown")
+	}
+	m.listNextLoad = time.Now().Add(-time.Second)
+	updated, command = m.Update(tea.KeyMsg{Type: tea.KeyF5})
+	if command == nil || !updated.(model).loading {
+		t.Fatal("refresh must work after cooldown")
+	}
+}

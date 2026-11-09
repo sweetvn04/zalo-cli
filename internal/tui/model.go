@@ -69,6 +69,7 @@ type model struct {
 	connected     bool
 	loading       bool
 	listID        string
+	listNextLoad  time.Time
 	listAttempt   int
 	earlyList     map[string]ipc.Event
 	pending       *outgoing
@@ -205,6 +206,9 @@ func (m *model) handleEvent(event ipc.Event) {
 			return
 		}
 		m.loading = false
+		if event.RetryAfter > 0 {
+			m.listNextLoad = time.Now().Add(time.Duration(event.RetryAfter) * time.Second)
+		}
 		if !event.OK {
 			m.status = "Không tải được danh sách: " + event.Error
 			return
@@ -222,6 +226,9 @@ func (m *model) handleEvent(event ipc.Event) {
 		m.recipients = event.Recipients
 		m.cursor = 0
 		m.status = fmt.Sprintf("Đã tải %d người nhận. Chọn tên rồi Enter.", len(m.recipients))
+		if event.Notice != "" {
+			m.status = event.Notice
+		}
 	case "new_message":
 		msg := event.Data
 		r := ipc.Recipient{ThreadID: msg.ThreadID, ThreadType: msg.ThreadType, Name: msg.SenderName}
@@ -399,6 +406,10 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.composer.Blur()
 			return m, m.filter.Focus()
 		case "f5":
+			if remaining := time.Until(m.listNextLoad); remaining > 0 {
+				m.status = fmt.Sprintf("Đang giữ danh sách hiện tại. Có thể tải lại sau %d giây.", int(remaining.Seconds())+1)
+				return m, nil
+			}
 			if m.connected && !m.loading {
 				m.loading, m.listID = true, ""
 				m.earlyList = make(map[string]ipc.Event)
