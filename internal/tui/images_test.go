@@ -65,3 +65,17 @@ func TestRefreshingPhotoUpdatesExpiredURLWithoutDuplicate(t *testing.T) {
 		t.Fatal("photo refresh failed")
 	}
 }
+
+func TestArchivedPhotoReplacesRemoteSourceAndShowsSavedState(t *testing.T) {
+	m := fixture()
+	photo := &chatLine{id: "photo", kind: "image", imageURL: "https://example.org/expired"}
+	m.appendLine(m.active, photo)
+	m.handleEvent(ipc.Event{Event: "media_updated", Data: ipc.Message{MsgID: "photo", ThreadID: "an", ThreadType: "user", Kind: "image",
+		ImageURL: "https://example.org/expired", ImageLocal: "archive:1001/" + strings.Repeat("a", 64) + ".jpg", ImageState: "ready"}})
+	if len(m.history[m.active]) != 1 || !strings.HasPrefix(photo.imageURL, "archive:") || photo.mediaState != "ready" {
+		t.Fatal("UI did not prefer permanently archived image")
+	}
+	if !strings.Contains(m.chat.View(), "Đã lưu máy") {
+		t.Fatal("saved state missing")
+	}
+}

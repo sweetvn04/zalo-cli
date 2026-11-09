@@ -108,6 +108,9 @@ func (c *Client) History(threadID, threadType string, beforeID ...string) (strin
 	if len(beforeID) > 0 {
 		payload.BeforeID = beforeID[0]
 	}
+	if len(beforeID) > 1 {
+		payload.ArchiveBefore = beforeID[1]
+	}
 	return c.request("get_history", payload)
 }
 

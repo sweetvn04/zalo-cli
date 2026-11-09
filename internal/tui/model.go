@@ -41,6 +41,7 @@ type requestExpired struct {
 }
 
 type chatLine struct {
+	mediaState                                  string
 	preview, previewError                       string
 	previewLoading                              bool
 	previewWidth, previewHeight, previewAttempt int
@@ -215,6 +216,15 @@ func (m *model) finishSend(ok bool, message string) {
 
 func (m *model) handleEvent(event ipc.Event) {
 	switch event.Event {
+	case "archive_status":
+		m.status = event.Data.Notice
+	case "media_updated":
+		msg := event.Data
+		k := msg.ThreadType + ":" + msg.ThreadID
+		m.mergeHistory(k, []ipc.Message{msg})
+		if m.active == k {
+			m.refreshChat(false)
+		}
 	case "history_result":
 		m.handleHistory(event)
 	case "recipients_result":
@@ -278,7 +288,7 @@ func (m *model) handleEvent(event ipc.Event) {
 		if !found {
 			m.recipients = append(m.recipients, r)
 		}
-		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp, kind: msg.Kind, imageURL: msg.ImageURL})
+		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp, kind: msg.Kind, imageURL: msg.ImageSource(), mediaState: msg.ImageState})
 		if k != m.active {
 			m.unread[k]++
 		} else {
@@ -304,6 +314,9 @@ func (m *model) handleEvent(event ipc.Event) {
 			}
 			message := "Gửi thất bại: " + event.Error
 			m.finishSend(event.OK, message)
+			if event.Notice != "" {
+				m.status = event.Notice
+			}
 		}
 	}
 }
@@ -370,6 +383,11 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.status = msg.result.Err.Error()
 		} else {
 			m.handleEvent(msg.result.Event)
+		}
+		if msg.result.Event.Event == "archive_updated" {
+			if r, ok := m.recipient(); ok && r.ThreadType == msg.result.Event.Data.ThreadType {
+				return m, tea.Batch(m.listen(), m.loadHistory(true), m.ensurePreview(false))
+			}
 		}
 		return m, tea.Batch(m.listen(), m.ensurePreview(false))
 	case requestStarted:

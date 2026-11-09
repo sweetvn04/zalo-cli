@@ -3,7 +3,7 @@ import { loadHistory } from "./history.mjs";
 import { loadRecipients } from "./recipients.mjs";
 
 // Chuẩn hóa phản hồi IPC để client ghép đúng kết quả với lệnh đã gửi.
-export async function handleCommand(raw, api) {
+export async function handleCommand(raw, api, archive = null) {
   let id;
   let event = "send_result";
   try {
@@ -11,10 +11,15 @@ export async function handleCommand(raw, api) {
     id = command?.id;
     if (command?.action === "get_history") {
       event = "history_result";
-      const { thread_id, thread_type, before_id = "" } = command.payload ?? {};
+      const { thread_id, thread_type, before_id = "", archive_before = "" } = command.payload ?? {};
       if (typeof thread_id !== "string" || !thread_id.trim() ||
           !["user", "group"].includes(thread_type)) {
         throw new Error("Hội thoại không hợp lệ");
+      }
+      if (archive) {
+        if (typeof archive_before !== "string" || archive_before.length > 2048) throw new Error("Con trỏ kho local không hợp lệ");
+        const local = archive.history(thread_id,thread_type,archive_before);
+        return { event,id,ok:true,thread_id,thread_type,...local };
       }
       if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
       if (typeof before_id !== "string" || (before_id && !/^\d+$/.test(before_id))) {
@@ -25,8 +30,20 @@ export async function handleCommand(raw, api) {
     }
     if (command?.action === "list_recipients") {
       event = "recipients_result";
+      if (!api && archive) return {event,id,ok:true,recipients:archive.recipients(),notice:"Đang đọc kho offline trên máy."};
       if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
-      const list = await loadRecipients(api);
+      let list;
+      try {
+        list = await loadRecipients(api);
+        if (archive) {
+          archive.saveRecipients(list.recipients);
+          list = {...list,recipients:archive.recipients()};
+        }
+      } catch (error) {
+        const saved = archive?.recipients() ?? [];
+        if (!saved.length) throw error;
+        list = {recipients:saved,notice:"Zalo chưa trả danh sách mới. Đang dùng danh sách lưu trên máy.",retry_after:error.retryAfter || 60};
+      }
       return { event, id, ok: true, ...list };
     }
     if (command?.action !== "send_message") {
@@ -44,6 +61,14 @@ export async function handleCommand(raw, api) {
     const sent = await api.sendMessage({ msg: text }, thread_id, thread_type === "group" ? ThreadType.Group : ThreadType.User);
     const result = { event: "send_result", id, ok: true };
     if (sent?.message?.msgId != null) result.msg_id = String(sent.message.msgId);
+    if (archive) {
+      try {
+        archive.save({msg_id:result.msg_id || "",thread_id,thread_type,sender_id:archive.account,sender_name:"Bạn",
+          content:text,kind:"text",timestamp:Date.now(),is_self:true});
+      } catch (error) {
+        result.notice = "Tin đã gửi nhưng chưa lưu được trên máy: "+error.message;
+      }
+    }
     return result;
   } catch (error) {
     const result = { event, id, ok: false, error: error.message };

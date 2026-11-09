@@ -2873,3 +2873,1221 @@ ok  	zalo-cli/internal/tui	1.212s
  internal/tui/view.go         |  36 ++++++++--
  plan.md                      |   2 +-
  11 files changed, 287 insertions(+), 54 deletions(-)
+
+### Lưu chọn ảnh inline — 2026-11-10T00:04:40.499132+07:00
+- Lệnh: `git add -- internal/tui internal/media go.mod go.sum plan.md CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu điều hướng tin và preview tại chỗ đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu chọn ảnh inline — 2026-11-10T00:04:40.505081+07:00
+- Lệnh: `git commit -m feat(tui): navigate messages and preview selected images inline`
+- Mục đích: Lưu điều hướng tin và preview tại chỗ đã kiểm chứng.
+- Kết quả: Exit 0. [main 5d95f71] feat(tui): navigate messages and preview selected images inline
+ 15 files changed, 683 insertions(+), 54 deletions(-)
+ create mode 100644 internal/media/preview.go
+ create mode 100644 internal/media/preview_test.go
+ create mode 100644 internal/tui/selection.go
+ create mode 100644 internal/tui/selection_test.go
+
+### Kho local khảo sát — 2026-11-10T00:09:08.907646+07:00
+- Lệnh: `git status --short`
+- Mục đích: Xác định điểm ghi tin, tài khoản và môi trường lưu trữ.
+- Kết quả: Exit 0, 18 ký tự output.
+
+### Kho local khảo sát — 2026-11-10T00:09:08.909222+07:00
+- Lệnh: `cat daemon/index.mjs daemon/ipc.mjs daemon/package.json`
+- Mục đích: Xác định điểm ghi tin, tài khoản và môi trường lưu trữ.
+- Kết quả: Exit 0, 5066 ký tự output.
+
+### Kho local khảo sát — 2026-11-10T00:09:08.915571+07:00
+- Lệnh: `rg -n "selfListen|getOwnId|uid:" daemon/node_modules/zca-js/dist/zalo.d.ts daemon/node_modules/zca-js/dist/apis.d.ts daemon/node_modules/zca-js/dist/context.d.ts`
+- Mục đích: Xác định điểm ghi tin, tài khoản và môi trường lưu trữ.
+- Kết quả: Exit 0, 335 ký tự output.
+
+### Kho local khảo sát — 2026-11-10T00:09:08.917176+07:00
+- Lệnh: `cat internal/ipc/client.go`
+- Mục đích: Xác định điểm ghi tin, tài khoản và môi trường lưu trữ.
+- Kết quả: Exit 0, 3574 ký tự output.
+
+### Kho local khảo sát — 2026-11-10T00:09:08.921189+07:00
+- Lệnh: `rg -n "imageURL|ImageURL|preview|History" internal/tui/history.go internal/tui/model.go internal/media/image.go`
+- Mục đích: Xác định điểm ghi tin, tài khoản và môi trường lưu trữ.
+- Kết quả: Exit 0, 2384 ký tự output.
+
+### Kho local khảo sát — 2026-11-10T00:09:08.922377+07:00
+- Lệnh: `command -v sqlite3`
+- Mục đích: Xác định điểm ghi tin, tài khoản và môi trường lưu trữ.
+- Kết quả: Exit 0, 17 ký tự output.
+
+### Kho local khảo sát — 2026-11-10T00:09:08.923389+07:00
+- Lệnh: `command -v g++`
+- Mục đích: Xác định điểm ghi tin, tài khoản và môi trường lưu trữ.
+- Kết quả: Exit 0, 13 ký tự output.
+
+### Archive schema — 2026-11-10T00:11:28.544878+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/zalo.d.ts`
+- Mục đích: Xác định cấu hình nhận tin của chính mình và tài khoản archive.
+- Kết quả: Exit 0. Đọc 1073 ký tự.
+
+### Archive schema — 2026-11-10T00:11:28.546441+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/apis/getOwnId.js`
+- Mục đích: Xác định cấu hình nhận tin của chính mình và tài khoản archive.
+- Kết quả: Exit 0. Đọc 130 ký tự.
+
+### Archive schema — 2026-11-10T00:11:28.547914+07:00
+- Lệnh: `sed -n "130,160p" daemon/node_modules/zca-js/dist/context.d.ts`
+- Mục đích: Xác định cấu hình nhận tin của chính mình và tài khoản archive.
+- Kết quả: Exit 0. Đọc 880 ký tự.
+
+### Archive schema — 2026-11-10T00:11:28.549281+07:00
+- Lệnh: `cat internal/tui/history.go`
+- Mục đích: Xác định cấu hình nhận tin của chính mình và tài khoản archive.
+- Kết quả: Exit 0. Đọc 4817 ký tự.
+
+### SQLite dependency — 2026-11-10T00:11:33.786666+07:00
+- Lệnh: `npm --cache /tmp/zalo-npm-cache --prefix daemon install better-sqlite3@13.0.3`
+- Mục đích: Thêm SQLite cho Node 20 để lưu archive bền vững.
+- Kết quả: Exit 0. added 2 packages, and audited 35 packages in 1s
+
+6 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'better-sqlite3@13.0.3',
+npm warn EBADENGINE   required: { node: '>=22' },
+npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+
+### SQLite tương thích Node 20 — 2026-11-10T00:13:20.232880+07:00
+- Lệnh: `npm --cache /tmp/zalo-npm-cache view better-sqlite3@12 version engines --json`
+- Mục đích: Chọn bản SQLite hỗ trợ Node 20 thay bản 13 yêu cầu Node 22.
+- Kết quả: Exit 0.
+
+### SQLite cài bản phù hợp — 2026-11-10T00:14:20.088150+07:00
+- Lệnh: `npm --cache /tmp/zalo-npm-cache --prefix daemon install better-sqlite3@12.11.1`
+- Mục đích: Cài SQLite tương thích runtime hiện tại.
+- Kết quả: Exit 0. added 36 packages, removed 1 package, changed 1 package, and audited 70 packages in 60s
+
+15 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+
+### Archive triển khai kiểm tra — 2026-11-10T00:20:38.847161+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Kiểm tra SQLite runtime, URL public và build tích hợp.
+- Kết quả: Exit 0. Không có output.
+
+### Archive triển khai kiểm tra — 2026-11-10T00:20:38.874072+07:00
+- Lệnh: `node --check daemon/archive.mjs`
+- Mục đích: Kiểm tra SQLite runtime, URL public và build tích hợp.
+- Kết quả: Exit 0. Không có output.
+
+### Archive triển khai kiểm tra — 2026-11-10T00:20:38.932684+07:00
+- Lệnh: `node --input-type=module -e 'import Database from "./daemon/node_modules/better-sqlite3/lib/index.js"; const db=new Database(":memory:"); console.log(db.prepare("select sqlite_version() as version").get()); db.close();'`
+- Mục đích: Kiểm tra SQLite runtime, URL public và build tích hợp.
+- Kết quả: Exit 0. { version: '3.53.2' }
+
+### Archive triển khai kiểm tra — 2026-11-10T00:20:38.982798+07:00
+- Lệnh: `node --input-type=module -e 'import { validateImageURL } from "./daemon/image-store.mjs"; console.log(validateImageURL("https://93.184.216.34/a").hostname);'`
+- Mục đích: Kiểm tra SQLite runtime, URL public và build tích hợp.
+- Kết quả: Exit 0. 93.184.216.34
+
+### Archive triển khai kiểm tra — 2026-11-10T00:20:38.988921+07:00
+- Lệnh: `gofmt -w internal/ipc internal/tui internal/media`
+- Mục đích: Kiểm tra SQLite runtime, URL public và build tích hợp.
+- Kết quả: Exit 0. Không có output.
+
+### Archive triển khai kiểm tra — 2026-11-10T00:20:39.673883+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Kiểm tra SQLite runtime, URL public và build tích hợp.
+- Kết quả: Exit 0. Không có output.
+
+### Archive bền vững kiểm chứng — 2026-11-10T00:24:24.502627+07:00
+- Lệnh: `node daemon/archive.test.mjs`
+- Mục đích: Kiểm tra dữ liệu sau restart và ảnh không cần URL Zalo.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: SQLite giữ tin sau restart, raw đính kèm và tách tài khoản
+ok 1 - SQLite giữ tin sau restart, raw đính kèm và tách tài khoản
+  ---
+  duration_ms: 8.525858
+  ...
+# Subtest: cursor local không mất tin cùng timestamp hoặc ID không phải số
+ok 2 - cursor local không mất tin cùng timestamp hoặc ID không phải số
+  ---
+  duration_ms: 13.895232
+  ...
+# Subtest: ảnh được tải nền một lần, giữ file sau restart và URL hết hạn
+ok 3 - ảnh được tải nền một lần, giữ file sau restart và URL hết hạn
+  ---
+  duration_ms: 4.227007
+  ...
+# Subtest: job ảnh lỗi được giữ trên đĩa và tiếp tục sau restart
+ok 4 - job ảnh lỗi được giữ trên đĩa và tiếp tục sau restart
+  ---
+  duration_ms: 3.557939
+  ...
+# Subtest: đồng bộ nền lưu lịch sử cả user/group khi không có giao diện
+ok 5 - đồng bộ nền lưu lịch sử cả user/group khi không có giao diện
+  ---
+  duration_ms: 3.561308
+  ...
+# Subtest: tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn
+ok 6 - tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn
+  ---
+  duration_ms: 16.847971
+  ...
+# Subtest: tải ảnh chặn mạng nội bộ và URL không phải HTTP
+ok 7 - tải ảnh chặn mạng nội bộ và URL không phải HTTP
+  ---
+  duration_ms: 2.106185
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 58.63066
+⚠️ Ảnh chưa lưu được, sẽ thử lại: Mất mạng
+
+### Archive bền vững kiểm chứng — 2026-11-10T00:24:24.508942+07:00
+- Lệnh: `gofmt -w internal/media internal/tui internal/ipc`
+- Mục đích: Kiểm tra dữ liệu sau restart và ảnh không cần URL Zalo.
+- Kết quả: Exit 0. Không có output.
+
+### Archive bền vững kiểm chứng — 2026-11-10T00:24:25.098900+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Kiểm tra dữ liệu sau restart và ảnh không cần URL Zalo.
+- Kết quả: Exit 0. Không có output.
+
+### Archive bền vững kiểm chứng — 2026-11-10T00:24:25.618846+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
+- Mục đích: Kiểm tra dữ liệu sau restart và ảnh không cần URL Zalo.
+- Kết quả: Exit 0. ok  	zalo-cli/internal/media	0.015s
+ok  	zalo-cli/internal/tui	0.035s
+
+### Archive bền vững kiểm chứng — 2026-11-10T00:24:25.623482+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra dữ liệu sau restart và ảnh không cần URL Zalo.
+- Kết quả: Exit 0. Không có output.
+
+### Offline E2E — 2026-11-10T00:27:50.351095
+- Lệnh: `node /tmp/zalo-offline-e2e-zgrfbnad/seed.mjs`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0. Seed persisted and closed.
+
+### Offline E2E — 2026-11-10T00:27:50.351656
+- Lệnh: `node /tmp/zalo-offline-e2e-zgrfbnad/offline.mjs --offline --account 1001`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Đã khởi động daemon offline fixture trên cổng ngẫu nhiên.
+
+### Offline E2E — 2026-11-10T00:27:50.639636
+- Lệnh: `node /tmp/zalo-offline-e2e-zgrfbnad/query.mjs 39859`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0. Offline IPC returns saved messages and local image; sending is disabled.
+
+### Offline E2E — 2026-11-10T00:27:51.053402
+- Lệnh: `go build -overlay /tmp/zalo-offline-e2e-zgrfbnad/overlay.json -o /tmp/zalo-offline-e2e-zgrfbnad/zalo ./cmd/zalo-cli`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0.
+
+### Offline E2E — 2026-11-10T00:27:51.053827
+- Lệnh: `/tmp/zalo-offline-e2e-zgrfbnad/zalo -tui`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Đã mở TUI trong PTY với dữ liệu kho offline fixture.
+
+### Offline E2E — 2026-11-10T00:27:53.074458
+- Lệnh: `offline fixture teardown`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: TUI và daemon thoát 0, SQLite đóng an toàn.
+
+### Kho offline E2E — 2026-11-10T00:27:53.087623+07:00
+- Lệnh: `python3 /tmp/zalo-archive-e2e.py`
+- Mục đích: Thử daemon offline, SQLite sau restart và ảnh local trong TUI thật.
+- Kết quả: Exit 0. PASS: archive survives daemon restart; real offline IPC and TUI display saved text and decode a locally archived image with an expired remote URL; no Zalo login or external image download.
+
+### Hoàn thiện kho local — 2026-11-10
+- Lệnh: Python heredoc định dạng block khởi động daemon, cập nhật npm test và nhật ký archive.
+- Mục đích: Làm rõ online/offline và có một lệnh kiểm tra daemon đầy đủ.
+- Kết quả: Đã cập nhật các file.
+
+### Kho local hồi quy — 2026-11-10T00:31:11.680519+07:00
+- Lệnh: `gofmt -w cmd/zalo-cli internal/ipc internal/tui internal/media`
+- Mục đích: Kiểm tra lưu gửi/nhận, ảnh và hồi quy toàn bộ daemon.
+- Kết quả: Exit 0. Không có output.
+
+### Kho local hồi quy — 2026-11-10T00:31:12.877908+07:00
+- Lệnh: `npm --prefix daemon test`
+- Mục đích: Kiểm tra lưu gửi/nhận, ảnh và hồi quy toàn bộ daemon.
+- Kết quả: Exit 0. > daemon@1.0.0 test
+> node auth.test.mjs && node ipc.test.mjs && node history.test.mjs && node recipients.test.mjs && node archive.test.mjs
+
+🔄 Đang khôi phục phiên đăng nhập cũ...
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+TAP version 13
+# Subtest: phiên hợp lệ được dùng lại, không yêu cầu QR
+ok 1 - phiên hợp lệ được dùng lại, không yêu cầu QR
+  ---
+  duration_ms: 5.261136
+  ...
+# Subtest: phiên bị từ chối hoặc JSON hỏng tự chuyển QR và lưu 0600
+ok 2 - phiên bị từ chối hoặc JSON hỏng tự chuyển QR và lưu 0600
+  ---
+  duration_ms: 3.39057
+  ...
+# Subtest: QR thất bại giữ nguyên phiên cũ
+ok 3 - QR thất bại giữ nguyên phiên cũ
+  ---
+  duration_ms: 1.256292
+  ...
+# Subtest: lần đầu đăng nhập trực tiếp bằng QR
+ok 4 - lần đầu đăng nhập trực tiếp bằng QR
+  ---
+  duration_ms: 0.707175
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22.306308
+TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.988934
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.301519
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.297982
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.189711
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 8.218639
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.314346
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 26.702149
+TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 2.132426
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.103466
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.426501
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.348257
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.202265
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.470558
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.652965
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.423381
+  ...
+# Subtest: phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+ok 9 - phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+  ---
+  duration_ms: 1.388983
+  ...
+# Subtest: hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+  ---
+  duration_ms: 6.820224
+  ...
+# Subtest: tin ảnh ưu tiên URL HD trong params và giữ chú thích
+ok 11 - tin ảnh ưu tiên URL HD trong params và giữ chú thích
+  ---
+  duration_ms: 0.386942
+  ...
+# Subtest: ảnh trong lịch sử dùng cùng schema với ảnh realtime
+ok 12 - ảnh trong lịch sử dùng cùng schema với ảnh realtime
+  ---
+  duration_ms: 0.420997
+  ...
+# Subtest: ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+ok 13 - ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+  ---
+  duration_ms: 0.278373
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 26.334079
+TAP version 13
+# Subtest: cache F5 60 giây, hết hạn mới gọi lại Zalo
+ok 1 - cache F5 60 giây, hết hạn mới gọi lại Zalo
+  ---
+  duration_ms: 2.363117
+  ...
+# Subtest: 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+ok 2 - 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+  ---
+  duration_ms: 0.541343
+  ...
+# Subtest: nhiều client dùng chung một lượt tải danh sách
+ok 3 - nhiều client dùng chung một lượt tải danh sách
+  ---
+  duration_ms: 0.222094
+  ...
+# Subtest: 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+ok 4 - 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+  ---
+  duration_ms: 0.429938
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 19.881189
+TAP version 13
+# Subtest: SQLite giữ tin sau restart, raw đính kèm và tách tài khoản
+ok 1 - SQLite giữ tin sau restart, raw đính kèm và tách tài khoản
+  ---
+  duration_ms: 8.741482
+  ...
+# Subtest: cursor local không mất tin cùng timestamp hoặc ID không phải số
+ok 2 - cursor local không mất tin cùng timestamp hoặc ID không phải số
+  ---
+  duration_ms: 13.770797
+  ...
+# Subtest: ảnh được tải nền một lần, giữ file sau restart và URL hết hạn
+ok 3 - ảnh được tải nền một lần, giữ file sau restart và URL hết hạn
+  ---
+  duration_ms: 4.218547
+  ...
+# Subtest: job ảnh lỗi được giữ trên đĩa và tiếp tục sau restart
+ok 4 - job ảnh lỗi được giữ trên đĩa và tiếp tục sau restart
+  ---
+  duration_ms: 4.48774
+  ...
+# Subtest: đồng bộ nền lưu lịch sử cả user/group khi không có giao diện
+ok 5 - đồng bộ nền lưu lịch sử cả user/group khi không có giao diện
+  ---
+  duration_ms: 4.335668
+  ...
+# Subtest: tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn
+ok 6 - tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn
+  ---
+  duration_ms: 15.810059
+  ...
+# Subtest: tải ảnh chặn mạng nội bộ và URL không phải HTTP
+ok 7 - tải ảnh chặn mạng nội bộ và URL không phải HTTP
+  ---
+  duration_ms: 1.344349
+  ...
+# Subtest: gửi tin được lưu local và lỗi lưu không báo nhầm là gửi thất bại
+ok 8 - gửi tin được lưu local và lỗi lưu không báo nhầm là gửi thất bại
+  ---
+  duration_ms: 1.838208
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60.618743
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Ảnh chưa lưu được, sẽ thử lại: Mất mạng
+
+### Kho local hồi quy — 2026-11-10T00:31:13.415897+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Kiểm tra lưu gửi/nhận, ảnh và hồi quy toàn bộ daemon.
+- Kết quả: Exit 0. Không có output.
+
+### Kho local hồi quy — 2026-11-10T00:31:13.575394+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Kiểm tra lưu gửi/nhận, ảnh và hồi quy toàn bộ daemon.
+- Kết quả: Exit 0. Không có output.
+
+### Kho local hồi quy — 2026-11-10T00:31:13.580220+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra lưu gửi/nhận, ảnh và hồi quy toàn bộ daemon.
+- Kết quả: Exit 2. COMMAND_LOG.md:3102: trailing whitespace.
++- Kết quả: Exit 0.
+
+### Archive kiểm tra cuối — 2026-11-10T00:34:42.657817+07:00
+- Lệnh: `gofmt -w internal/tui/images_test.go`
+- Mục đích: Xác nhận lưu ảnh tự động, retry bền vững và UI ưu tiên local.
+- Kết quả: Exit 0. Không có output.
+
+### Archive kiểm tra cuối — 2026-11-10T00:34:44.760245+07:00
+- Lệnh: `npm --prefix daemon test`
+- Mục đích: Xác nhận lưu ảnh tự động, retry bền vững và UI ưu tiên local.
+- Kết quả: Exit 0. > daemon@1.0.0 test
+> node auth.test.mjs && node ipc.test.mjs && node history.test.mjs && node recipients.test.mjs && node archive.test.mjs
+
+🔄 Đang khôi phục phiên đăng nhập cũ...
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+TAP version 13
+# Subtest: phiên hợp lệ được dùng lại, không yêu cầu QR
+ok 1 - phiên hợp lệ được dùng lại, không yêu cầu QR
+  ---
+  duration_ms: 3.753479
+  ...
+# Subtest: phiên bị từ chối hoặc JSON hỏng tự chuyển QR và lưu 0600
+ok 2 - phiên bị từ chối hoặc JSON hỏng tự chuyển QR và lưu 0600
+  ---
+  duration_ms: 2.856331
+  ...
+# Subtest: QR thất bại giữ nguyên phiên cũ
+ok 3 - QR thất bại giữ nguyên phiên cũ
+  ---
+  duration_ms: 1.153503
+  ...
+# Subtest: lần đầu đăng nhập trực tiếp bằng QR
+ok 4 - lần đầu đăng nhập trực tiếp bằng QR
+  ---
+  duration_ms: 0.670741
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 18.624892
+TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.801537
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.283152
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.284176
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.179347
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 8.131698
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.279982
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 26.972156
+TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 2.012519
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.137276
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.488368
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.403825
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.209737
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.456478
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.640641
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.40976
+  ...
+# Subtest: phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+ok 9 - phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+  ---
+  duration_ms: 1.361249
+  ...
+# Subtest: hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+  ---
+  duration_ms: 7.680752
+  ...
+# Subtest: tin ảnh ưu tiên URL HD trong params và giữ chú thích
+ok 11 - tin ảnh ưu tiên URL HD trong params và giữ chú thích
+  ---
+  duration_ms: 0.35531
+  ...
+# Subtest: ảnh trong lịch sử dùng cùng schema với ảnh realtime
+ok 12 - ảnh trong lịch sử dùng cùng schema với ảnh realtime
+  ---
+  duration_ms: 0.464828
+  ...
+# Subtest: ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+ok 13 - ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+  ---
+  duration_ms: 0.20373
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 26.956854
+TAP version 13
+# Subtest: cache F5 60 giây, hết hạn mới gọi lại Zalo
+ok 1 - cache F5 60 giây, hết hạn mới gọi lại Zalo
+  ---
+  duration_ms: 1.73509
+  ...
+# Subtest: 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+ok 2 - 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+  ---
+  duration_ms: 0.514563
+  ...
+# Subtest: nhiều client dùng chung một lượt tải danh sách
+ok 3 - nhiều client dùng chung một lượt tải danh sách
+  ---
+  duration_ms: 0.216551
+  ...
+# Subtest: 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+ok 4 - 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+  ---
+  duration_ms: 0.480697
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 17.327046
+TAP version 13
+# Subtest: SQLite giữ tin sau restart, raw đính kèm và tách tài khoản
+ok 1 - SQLite giữ tin sau restart, raw đính kèm và tách tài khoản
+  ---
+  duration_ms: 8.415978
+  ...
+# Subtest: cursor local không mất tin cùng timestamp hoặc ID không phải số
+ok 2 - cursor local không mất tin cùng timestamp hoặc ID không phải số
+  ---
+  duration_ms: 13.143193
+  ...
+# Subtest: ảnh được tải nền một lần, giữ file sau restart và URL hết hạn
+ok 3 - ảnh được tải nền một lần, giữ file sau restart và URL hết hạn
+  ---
+  duration_ms: 4.162076
+  ...
+# Subtest: job ảnh lỗi được giữ trên đĩa và tiếp tục sau restart
+ok 4 - job ảnh lỗi được giữ trên đĩa và tiếp tục sau restart
+  ---
+  duration_ms: 3.919295
+  ...
+# Subtest: đồng bộ nền lưu lịch sử cả user/group khi không có giao diện
+ok 5 - đồng bộ nền lưu lịch sử cả user/group khi không có giao diện
+  ---
+  duration_ms: 3.254167
+  ...
+# Subtest: tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn
+ok 6 - tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn
+  ---
+  duration_ms: 14.919285
+  ...
+# Subtest: tải ảnh chặn mạng nội bộ và URL không phải HTTP
+ok 7 - tải ảnh chặn mạng nội bộ và URL không phải HTTP
+  ---
+  duration_ms: 1.45131
+  ...
+# Subtest: gửi tin được lưu local và lỗi lưu không báo nhầm là gửi thất bại
+ok 8 - gửi tin được lưu local và lỗi lưu không báo nhầm là gửi thất bại
+  ---
+  duration_ms: 1.87628
+  ...
+# Subtest: ảnh được tự tải khi capture, không cần mở chat hoặc gọi pump
+ok 9 - ảnh được tự tải khi capture, không cần mở chat hoặc gọi pump
+  ---
+  duration_ms: 1007.436277
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1065.574698
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Ảnh chưa lưu được, sẽ thử lại: Mất mạng
+
+### Archive kiểm tra cuối — 2026-11-10T00:34:44.877703+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Xác nhận lưu ảnh tự động, retry bền vững và UI ưu tiên local.
+- Kết quả: Exit 0. Không có output.
+
+### Archive kiểm tra cuối — 2026-11-10T00:34:44.883000+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Xác nhận lưu ảnh tự động, retry bền vững và UI ưu tiên local.
+- Kết quả: Exit 0. Không có output.
+
+### Archive race và offline — 2026-11-10T00:34:49.360469+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
+- Mục đích: Kiểm tra race và xác nhận kho vẫn đọc được sau restart/URL hết hạn.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.021s
+ok  	zalo-cli/internal/ipc	1.015s
+ok  	zalo-cli/internal/media	1.089s
+ok  	zalo-cli/internal/tui	1.177s
+
+### Offline E2E — 2026-11-10T00:34:49.623663
+- Lệnh: `node /tmp/zalo-offline-e2e-0zr4xkwz/seed.mjs`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0. Seed persisted and closed.
+
+### Offline E2E — 2026-11-10T00:34:49.624284
+- Lệnh: `node /tmp/zalo-offline-e2e-0zr4xkwz/offline.mjs --offline --account 1001`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Đã khởi động daemon offline fixture trên cổng ngẫu nhiên.
+
+### Offline E2E — 2026-11-10T00:34:49.884926
+- Lệnh: `node /tmp/zalo-offline-e2e-0zr4xkwz/query.mjs 38743`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0. Offline IPC returns saved messages and local image; sending is disabled.
+
+### Offline E2E — 2026-11-10T00:34:50.298489
+- Lệnh: `go build -overlay /tmp/zalo-offline-e2e-0zr4xkwz/overlay.json -o /tmp/zalo-offline-e2e-0zr4xkwz/zalo ./cmd/zalo-cli`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0.
+
+### Offline E2E — 2026-11-10T00:34:50.298917
+- Lệnh: `/tmp/zalo-offline-e2e-0zr4xkwz/zalo -tui`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Đã mở TUI trong PTY với dữ liệu kho offline fixture.
+
+### Offline E2E — 2026-11-10T00:34:52.334272
+- Lệnh: `offline fixture teardown`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: TUI và daemon thoát 0, SQLite đóng an toàn.
+
+### Archive race và offline — 2026-11-10T00:34:52.343437+07:00
+- Lệnh: `python3 /tmp/zalo-archive-e2e.py`
+- Mục đích: Kiểm tra race và xác nhận kho vẫn đọc được sau restart/URL hết hạn.
+- Kết quả: Exit 0. PASS: archive survives daemon restart; real offline IPC and TUI display saved text and decode a locally archived image with an expired remote URL; no Zalo login or external image download.
+
+### Archive review cuối — 2026-11-10T00:37:20.906674+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Kiểm tra file thay đổi, entrypoint online/offline và nhật ký.
+- Kết quả: Exit 0. Không có output.
+
+### Archive review cuối — 2026-11-10T00:37:20.913357+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra file thay đổi, entrypoint online/offline và nhật ký.
+- Kết quả: Exit 0. Không có output.
+
+### Archive review cuối — 2026-11-10T00:37:20.918466+07:00
+- Lệnh: `git diff --stat`
+- Mục đích: Kiểm tra file thay đổi, entrypoint online/offline và nhật ký.
+- Kết quả: Exit 0. CHANGELOG.md                |  12 +
+ COMMAND_LOG.md              | 835 ++++++++++++++++++++++++++++++++++++++++++++
+ cmd/zalo-cli/main.go        |   3 +
+ cmd/zalo-cli/recipients.go  |   3 +
+ daemon/history.mjs          |   5 +
+ daemon/index.mjs            | 125 +++++--
+ daemon/ipc.mjs              |  31 +-
+ daemon/package-lock.json    | 441 +++++++++++++++++++++++
+ daemon/package.json         |   3 +-
+ internal/ipc/client.go      |   3 +
+ internal/ipc/protocol.go    |  50 ++-
+ internal/media/image.go     |   3 +
+ internal/tui/history.go     |  22 +-
+ internal/tui/images_test.go |  14 +
+ internal/tui/model.go       |  20 +-
+ internal/tui/view.go        |  13 +-
+ plan.md                     |   4 +
+ 17 files changed, 1524 insertions(+), 63 deletions(-)
+
+### Archive review cuối — 2026-11-10T00:37:20.920950+07:00
+- Lệnh: `git status --short`
+- Mục đích: Kiểm tra file thay đổi, entrypoint online/offline và nhật ký.
+- Kết quả: Exit 0. M CHANGELOG.md
+ M COMMAND_LOG.md
+ M cmd/zalo-cli/main.go
+ M cmd/zalo-cli/recipients.go
+ M daemon/history.mjs
+ M daemon/index.mjs
+ M daemon/ipc.mjs
+ M daemon/package-lock.json
+ M daemon/package.json
+ M internal/ipc/client.go
+ M internal/ipc/protocol.go
+ M internal/media/image.go
+ M internal/tui/history.go
+ M internal/tui/images_test.go
+ M internal/tui/model.go
+ M internal/tui/view.go
+ M plan.md
+?? daemon/archive-sync.mjs
+?? daemon/archive.mjs
+?? daemon/archive.test.mjs
+?? daemon/image-store.mjs
+?? internal/media/archive.go
+?? internal/media/archive_test.go
+
+### Offline E2E — 2026-11-10T00:37:24.348427
+- Lệnh: `node /tmp/zalo-offline-e2e-hktlzug0/seed.mjs`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0. Seed persisted and closed.
+
+### Offline E2E — 2026-11-10T00:37:24.349082
+- Lệnh: `node /tmp/zalo-offline-e2e-hktlzug0/offline.mjs --offline --account 1001`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Đã khởi động daemon offline fixture trên cổng ngẫu nhiên.
+
+### Offline E2E — 2026-11-10T00:37:24.622578
+- Lệnh: `node /tmp/zalo-offline-e2e-hktlzug0/query.mjs 45693`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0. Offline IPC returns saved messages and local image; sending is disabled.
+
+### Offline E2E — 2026-11-10T00:37:25.038035
+- Lệnh: `go build -overlay /tmp/zalo-offline-e2e-hktlzug0/overlay.json -o /tmp/zalo-offline-e2e-hktlzug0/zalo ./cmd/zalo-cli`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Exit 0.
+
+### Offline E2E — 2026-11-10T00:37:25.038493
+- Lệnh: `/tmp/zalo-offline-e2e-hktlzug0/zalo -tui`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: Đã mở TUI trong PTY với dữ liệu kho offline fixture.
+
+### Offline E2E — 2026-11-10T00:37:27.062506
+- Lệnh: `offline fixture teardown`
+- Mục đích: Xác nhận kho offline qua entrypoint thật.
+- Kết quả: TUI và daemon thoát 0, SQLite đóng an toàn.
+
+### Archive offline bản cuối — 2026-11-10T00:37:27.070389+07:00
+- Lệnh: `python3 /tmp/zalo-archive-e2e.py`
+- Mục đích: Xác nhận native CLI/TUI đọc kho qua IPC sau khi chặn Origin từ browser.
+- Kết quả: Exit 0. PASS: archive survives daemon restart; real offline IPC and TUI display saved text and decode a locally archived image with an expired remote URL; no Zalo login or external image download.
+
+### Kiểm tra thời điểm đồng bộ — 2026-11-10T00:37:44.610802+07:00
+- Lệnh: `rg -n -C 4 "emit\("connected|cipherKey =|cipher_key" daemon/node_modules/zca-js/dist/apis/listen.js`
+- Mục đích: Xác nhận chỉ yêu cầu lịch sử sau khi listener sẵn sàng giải mã.
+- Kết quả: Exit 2.
+
+### Listener và dependency kiểm tra — 2026-11-10T00:37:57.934106+07:00
+- Lệnh: `rg -n -C 3 "connected|cipher_key|cipherKey" daemon/node_modules/zca-js/dist/apis/listen.js`
+- Mục đích: Xác nhận phiên bản zca-js và event listener dùng khi đồng bộ nền.
+- Kết quả: Exit 0, đọc 5567 ký tự.
+
+### Listener và dependency kiểm tra — 2026-11-10T00:37:58.237401+07:00
+- Lệnh: `npm --prefix daemon ls --depth=0`
+- Mục đích: Xác nhận phiên bản zca-js và event listener dùng khi đồng bộ nền.
+- Kết quả: Exit 0, đọc 140 ký tự.
+
+### Archive kết nối dài hạn — 2026-11-10T00:39:11.429425+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Xác nhận đồng bộ sau khi listener sẵn sàng và dừng/tiếp tục khi mất mạng.
+- Kết quả: Exit 0. Không có output.
+
+### Archive kết nối dài hạn — 2026-11-10T00:39:13.851400+07:00
+- Lệnh: `npm --prefix daemon test`
+- Mục đích: Xác nhận đồng bộ sau khi listener sẵn sàng và dừng/tiếp tục khi mất mạng.
+- Kết quả: Exit 0. > daemon@1.0.0 test
+> node auth.test.mjs && node ipc.test.mjs && node history.test.mjs && node recipients.test.mjs && node archive.test.mjs
+
+🔄 Đang khôi phục phiên đăng nhập cũ...
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+TAP version 13
+# Subtest: phiên hợp lệ được dùng lại, không yêu cầu QR
+ok 1 - phiên hợp lệ được dùng lại, không yêu cầu QR
+  ---
+  duration_ms: 4.154397
+  ...
+# Subtest: phiên bị từ chối hoặc JSON hỏng tự chuyển QR và lưu 0600
+ok 2 - phiên bị từ chối hoặc JSON hỏng tự chuyển QR và lưu 0600
+  ---
+  duration_ms: 4.594754
+  ...
+# Subtest: QR thất bại giữ nguyên phiên cũ
+ok 3 - QR thất bại giữ nguyên phiên cũ
+  ---
+  duration_ms: 1.161456
+  ...
+# Subtest: lần đầu đăng nhập trực tiếp bằng QR
+ok 4 - lần đầu đăng nhập trực tiếp bằng QR
+  ---
+  duration_ms: 0.689271
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21.660478
+TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.852546
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.428412
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.368228
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.215434
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 8.857819
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.250419
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 28.373909
+TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 2.781312
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.217222
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.555008
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.338598
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.429092
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.60215
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.745197
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.555663
+  ...
+# Subtest: phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+ok 9 - phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+  ---
+  duration_ms: 1.858406
+  ...
+# Subtest: hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+  ---
+  duration_ms: 9.963937
+  ...
+# Subtest: tin ảnh ưu tiên URL HD trong params và giữ chú thích
+ok 11 - tin ảnh ưu tiên URL HD trong params và giữ chú thích
+  ---
+  duration_ms: 0.602203
+  ...
+# Subtest: ảnh trong lịch sử dùng cùng schema với ảnh realtime
+ok 12 - ảnh trong lịch sử dùng cùng schema với ảnh realtime
+  ---
+  duration_ms: 0.565978
+  ...
+# Subtest: ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+ok 13 - ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+  ---
+  duration_ms: 0.290769
+  ...
+# Subtest: mất kết nối dừng trang chờ ngay và kết nối lại có thể lấy lịch sử
+ok 14 - mất kết nối dừng trang chờ ngay và kết nối lại có thể lấy lịch sử
+  ---
+  duration_ms: 0.755982
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 32.253599
+TAP version 13
+# Subtest: cache F5 60 giây, hết hạn mới gọi lại Zalo
+ok 1 - cache F5 60 giây, hết hạn mới gọi lại Zalo
+  ---
+  duration_ms: 1.868965
+  ...
+# Subtest: 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+ok 2 - 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+  ---
+  duration_ms: 0.517239
+  ...
+# Subtest: nhiều client dùng chung một lượt tải danh sách
+ok 3 - nhiều client dùng chung một lượt tải danh sách
+  ---
+  duration_ms: 0.233939
+  ...
+# Subtest: 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+ok 4 - 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+  ---
+  duration_ms: 0.445902
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21.700459
+TAP version 13
+# Subtest: SQLite giữ tin sau restart, raw đính kèm và tách tài khoản
+ok 1 - SQLite giữ tin sau restart, raw đính kèm và tách tài khoản
+  ---
+  duration_ms: 10.956627
+  ...
+# Subtest: cursor local không mất tin cùng timestamp hoặc ID không phải số
+ok 2 - cursor local không mất tin cùng timestamp hoặc ID không phải số
+  ---
+  duration_ms: 15.828288
+  ...
+# Subtest: ảnh được tải nền một lần, giữ file sau restart và URL hết hạn
+ok 3 - ảnh được tải nền một lần, giữ file sau restart và URL hết hạn
+  ---
+  duration_ms: 5.786188
+  ...
+# Subtest: job ảnh lỗi được giữ trên đĩa và tiếp tục sau restart
+ok 4 - job ảnh lỗi được giữ trên đĩa và tiếp tục sau restart
+  ---
+  duration_ms: 4.602855
+  ...
+# Subtest: đồng bộ nền lưu lịch sử cả user/group khi không có giao diện
+ok 5 - đồng bộ nền lưu lịch sử cả user/group khi không có giao diện
+  ---
+  duration_ms: 3.80811
+  ...
+# Subtest: tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn
+ok 6 - tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn
+  ---
+  duration_ms: 17.405968
+  ...
+# Subtest: tải ảnh chặn mạng nội bộ và URL không phải HTTP
+ok 7 - tải ảnh chặn mạng nội bộ và URL không phải HTTP
+  ---
+  duration_ms: 1.873004
+  ...
+# Subtest: gửi tin được lưu local và lỗi lưu không báo nhầm là gửi thất bại
+ok 8 - gửi tin được lưu local và lỗi lưu không báo nhầm là gửi thất bại
+  ---
+  duration_ms: 2.266134
+  ...
+# Subtest: ảnh được tự tải khi capture, không cần mở chat hoặc gọi pump
+ok 9 - ảnh được tự tải khi capture, không cần mở chat hoặc gọi pump
+  ---
+  duration_ms: 1004.098052
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1074.619473
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Ảnh chưa lưu được, sẽ thử lại: Mất mạng
+
+### Archive kết nối dài hạn — 2026-11-10T00:39:13.857823+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Xác nhận đồng bộ sau khi listener sẵn sàng và dừng/tiếp tục khi mất mạng.
+- Kết quả: Exit 2. COMMAND_LOG.md:3779: trailing whitespace.
++- Kết quả: Exit 0.
+
+### Archive chốt kiểm tra — 2026-11-10T00:40:54.047420+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Kiểm tra entrypoint và định dạng trước commit.
+- Kết quả: Exit 0. Không có output.
+
+### Archive chốt kiểm tra — 2026-11-10T00:40:54.053530+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra entrypoint và định dạng trước commit.
+- Kết quả: Exit 2. COMMAND_LOG.md:3779: trailing whitespace.
++- Kết quả: Exit 0.
+
+### Lưu kho local — 2026-11-10T00:41:40.220065+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Lưu archive bền vững và chế độ offline đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.

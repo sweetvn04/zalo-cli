@@ -244,3 +244,7 @@ zalo-cli/
 Phase 2 và giao diện cơ bản Phase 3 đã triển khai. Chạy daemon trước, sau đó dùng `go run ./cmd/zalo-cli -tui`. Tab đổi cột, mũi tên chọn người nhận, Enter mở chat/gửi, PgUp/PgDn cuộn, F5 tải danh sách, Esc thoát. Giao diện giữ các tin đã tải trong bộ nhớ, tải theo trang tối đa 100 tin văn bản/ảnh; F6 tải lại, F7 hoặc cuộn tới đầu tải tiếp. Hỗ trợ cuộn chuột, ↑/↓ trong chat, PgUp/PgDn và Ctrl+Home/End. Chưa lưu tin xuống đĩa hoặc tự reconnect. Build, vet, race tests và thử terminal với daemon mẫu đã qua; cần Bảo kiểm chứng giao diện với Zalo thật.
 
 Ảnh (2026-11-09): nhận chat.photo trong realtime và lịch sử, ↑/↓ trong chat chọn tin/ảnh và tự xem preview tại chỗ; Ctrl+O mở ảnh gốc bằng xdg-open, F8 vẫn mở menu ảnh. Ảnh tải theo yêu cầu vào cache máy, Preview inline dùng ô màu truecolor và cuộn cùng chat; chưa dùng giao thức pixel Kitty.
+
+### Kho local — 2026-11-10
+
+Daemon lưu tin nhận/gửi và payload gốc vào SQLite theo tài khoản, tự tải ảnh nền và đồng bộ phần lịch sử Zalo còn cung cấp dù TUI không mở. Kho mặc định tại ~/.local/share/zalo-cli/accounts/<ID>/ gồm messages.sqlite3 và media/. Ảnh đã tải được đọc từ file local; job ảnh lỗi được giữ qua restart và tiếp tục thử với backoff. TUI hiển thị trạng thái lưu ảnh và đọc lịch sử local theo trang. Chạy node index.mjs --offline trong daemon/ để đọc kho không đăng nhập; nếu có nhiều tài khoản thêm --account ID. Dữ liệu chưa từng nhận/tải và đã mất trên máy chủ không thể được tạo lại. Giới hạn ảnh 100 MiB/file, binary của video/tệp khác chưa tải (giữ payload gốc).

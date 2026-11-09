@@ -48,6 +48,11 @@ export function normalizeMessage(message) {
 const snapshots = new WeakMap();
 const unavailableGroupHTTP = new WeakSet();
 
+// Đồng bộ nền dùng cùng hàng đợi WebSocket với các yêu cầu từ giao diện.
+export function archiveHistoryPage(api, type, beforeID = "") {
+  return oldMessageSnapshot(api, type === "group" ? ThreadType.Group : ThreadType.User, beforeID);
+}
+
 // old_messages không có request ID. Chỉ một chuỗi phân trang được chạy trên
 // mỗi loại hội thoại; các client cùng chờ snapshot rồi lọc đúng hội thoại.
 async function oldMessageSnapshot(api, threadType, beforeID = "") {
@@ -89,6 +94,13 @@ async function oldMessageSnapshot(api, threadType, beforeID = "") {
         const cleanup = () => {
           clearTimeout(timer);
           api.listener.off("old_messages", onMessages);
+          api.listener.off("disconnected", onDisconnected);
+          api.listener.off("closed", onDisconnected);
+        };
+        const onDisconnected = () => {
+          cleanup();
+          state.blocked = true;
+          reject(new Error("Kết nối Zalo đã ngắt khi tải lịch sử"));
         };
         const onMessages = (batch, type) => {
           if (type !== threadType) return;
@@ -102,6 +114,8 @@ async function oldMessageSnapshot(api, threadType, beforeID = "") {
           reject(new Error(`Hết thời gian chờ lịch sử ${label} từ Zalo`));
         }, Math.min(5000, remaining));
         api.listener.on("old_messages", onMessages);
+        api.listener.once("disconnected", onDisconnected);
+        api.listener.once("closed", onDisconnected);
         try {
           api.listener.requestOldMessages(threadType, cursor);
         } catch (error) {

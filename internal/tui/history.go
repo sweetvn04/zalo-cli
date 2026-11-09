@@ -9,6 +9,7 @@ import (
 )
 
 type historyState struct {
+	archiveCursor            string
 	cursor                   string
 	more, older              bool
 	id                       string
@@ -27,8 +28,8 @@ func (m *model) loadOlder() tea.Cmd {
 	if state == nil || !state.loaded || state.loading {
 		return nil
 	}
-	if !state.more || state.cursor == "" {
-		m.status = "Đã tới đầu phần lịch sử Zalo cung cấp cho cuộc chat này."
+	if !state.more || (state.cursor == "" && state.archiveCursor == "") {
+		m.status = "Đã tới đầu các tin đã tải. F6 để cập nhật từ kho."
 		return nil
 	}
 	return m.loadHistoryPage(true, true)
@@ -55,13 +56,15 @@ func (m *model) loadHistoryPage(force, older bool) tea.Cmd {
 	attempt := state.attempt
 	m.status = "Đang tải tin nhắn cũ..."
 	beforeID := ""
+	archiveBefore := ""
 	if older {
 		beforeID = state.cursor
+		archiveBefore = state.archiveCursor
 		m.status = "Đang tải thêm tin cũ..."
 	}
 	m.refreshChat(false)
 	request := func() tea.Msg {
-		id, err := m.client.History(r.ThreadID, r.ThreadType, beforeID)
+		id, err := m.client.History(r.ThreadID, r.ThreadType, beforeID, archiveBefore)
 		return requestStarted{kind: "history", thread: k, id: id, err: err, attempt: attempt}
 	}
 	return tea.Batch(request, tea.Tick(30*time.Second, func(time.Time) tea.Msg {
@@ -122,6 +125,7 @@ func (m *model) handleHistory(event ipc.Event) {
 		initial := !state.loaded
 		state.loaded, state.partial, state.error = true, event.Partial, ""
 		state.cursor, state.more = event.Cursor, event.HasMore
+		state.archiveCursor = event.ArchiveCursor
 		oldHeight, oldOffset := m.chat.TotalLineCount(), m.chat.YOffset
 		atBottom := m.chat.AtBottom()
 		m.mergeHistory(k, event.Messages)
@@ -131,6 +135,9 @@ func (m *model) handleHistory(event ipc.Event) {
 				m.status = "Cuộn lên đầu hoặc F7 để tải thêm tin cũ."
 			} else if event.Partial {
 				m.status = "Zalo chưa cung cấp thêm tin cũ. F6 để thử tải lại."
+			}
+			if event.Notice != "" {
+				m.status = event.Notice
 			}
 			m.refreshChat(initial || (!state.older && atBottom))
 			if state.older {
@@ -154,22 +161,23 @@ func (m *model) mergeHistory(k string, messages []ipc.Message) {
 			continue
 		}
 		if existing := seen[message.MsgID]; message.MsgID != "" && existing != nil {
-			if message.Kind == "image" && message.ImageURL != "" {
-				if existing.imageURL != message.ImageURL {
+			if message.Kind == "image" && message.ImageSource() != "" {
+				if existing.imageURL != message.ImageSource() {
 					if m.previewLine == existing {
 						m.stopPreview()
 					}
 					existing.preview, existing.previewError = "", ""
 					existing.previewAttempt++
 				}
-				existing.kind, existing.imageURL = message.Kind, message.ImageURL
+				existing.kind, existing.imageURL = message.Kind, message.ImageSource()
+				existing.mediaState = message.ImageState
 			}
 			continue
 		}
 		line := &chatLine{
 			id: message.MsgID, sender: message.SenderName, text: message.Content,
 			self: message.IsSelf, timestamp: message.Timestamp,
-			kind: message.Kind, imageURL: message.ImageURL,
+			kind: message.Kind, imageURL: message.ImageSource(), mediaState: message.ImageState,
 		}
 		m.history[k] = append(m.history[k], line)
 		if message.MsgID != "" {

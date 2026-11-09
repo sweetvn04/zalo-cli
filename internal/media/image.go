@@ -37,6 +37,9 @@ func OpenImage(ctx context.Context, address string) error {
 }
 
 func cachedImage(ctx context.Context, address string) (string, error) {
+	if strings.HasPrefix(address, "archive:") {
+		return archivedImage(address)
+	}
 	cache, err := os.UserCacheDir()
 	if err != nil {
 		return "", fmt.Errorf("tìm thư mục cache: %w", err)

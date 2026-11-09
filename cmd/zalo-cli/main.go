@@ -105,6 +105,9 @@ func run(ctx context.Context, serverURL, to, kind, text string) error {
 						return fmt.Errorf("gửi thất bại: %s", event.Error)
 					}
 					log.Printf("📤 Zalo đã chấp nhận gửi tin tới %s", to)
+					if event.Notice != "" {
+						log.Print(event.Notice)
+					}
 					return nil
 				}
 			}

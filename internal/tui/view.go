@@ -71,7 +71,16 @@ func (m *model) refreshChat(bottom bool) {
 		parts = append(parts, style.Render(clip(name, m.chat.Width)))
 		if line.kind == "image" {
 			imageNumber++
-			parts = append(parts, bright.Render(clip(fmt.Sprintf("[Ảnh %d] · ↑↓ chọn để xem", imageNumber), m.chat.Width)))
+			label := fmt.Sprintf("[Ảnh %d] · ↑↓ xem", imageNumber)
+			switch line.mediaState {
+			case "ready":
+				label += " · Đã lưu máy"
+			case "pending", "downloading":
+				label += " · Đang lưu máy"
+			case "error":
+				label += " · Chưa lưu được"
+			}
+			parts = append(parts, bright.Render(clip(label, m.chat.Width)))
 			if line == m.selectedLine {
 				switch {
 				case line.previewLoading:
@@ -104,7 +113,7 @@ func (m *model) refreshChat(bottom bool) {
 			} else if state.error != "" {
 				text = state.error
 			} else if state.loaded {
-				text = "Không có tin nhắn trong dữ liệu Zalo trả về."
+				text = "Chưa có tin trong trang này. F6 để cập nhật."
 			}
 		}
 		lines = []string{muted.Render(ansi.Hardwrap(text, m.chat.Width, false)), "", muted.Render("Tin mới sẽ hiện ở đây.")}

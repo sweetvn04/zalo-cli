@@ -206,3 +206,16 @@ test("ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc 
   assert.equal(normalized.kind, "image");
   assert.equal(normalized.image_url, "");
 });
+
+test("mất kết nối dừng trang chờ ngay và kết nối lại có thể lấy lịch sử", async () => {
+  const listener = new EventEmitter();
+  listener.requestOldMessages = () => queueMicrotask(()=>listener.emit("disconnected",1006,"network"));
+  const api = {listener};
+  await assert.rejects(loadHistory(api,"an","user"),/đã ngắt/);
+  assert.equal(listener.listenerCount("old_messages"),0);
+  assert.equal(listener.listenerCount("disconnected"),0);
+  listener.emit("connected");
+  listener.requestOldMessages = type => queueMicrotask(()=>listener.emit("old_messages",[],type));
+  const result = await loadHistory(api,"an","user");
+  assert.equal(result.messages.length,0);
+});

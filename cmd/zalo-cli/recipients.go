@@ -92,6 +92,9 @@ func runList(ctx context.Context, url, text string, input io.Reader, output io.W
 		return fmt.Errorf("gửi thất bại: %s", response.Error)
 	}
 	fmt.Fprintf(output, "Zalo đã chấp nhận gửi tin tới %s.\n", recipient.Name)
+	if response.Notice != "" {
+		fmt.Fprintln(output, response.Notice)
+	}
 	return nil
 }
 
