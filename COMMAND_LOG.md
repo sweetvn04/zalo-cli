@@ -2452,3 +2452,253 @@ ok  	zalo-cli/internal/tui	1.200s
  internal/tui/view.go     |  18 ++-
  plan.md                  |   4 +-
  10 files changed, 542 insertions(+), 41 deletions(-)
+
+### Lưu tính năng ảnh — 2026-11-09T23:27:10.077466+07:00
+- Lệnh: `git add -- daemon/history.mjs daemon/history.test.mjs daemon/index.mjs internal/ipc/protocol.go internal/tui internal/media plan.md CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu nhận ảnh và trình mở ảnh đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu tính năng ảnh — 2026-11-09T23:27:10.083353+07:00
+- Lệnh: `git commit -m feat(images): receive photo messages and open cached images from TUI`
+- Mục đích: Lưu nhận ảnh và trình mở ảnh đã kiểm chứng.
+- Kết quả: Exit 0. [main 50ef2ef] feat(images): receive photo messages and open cached images from TUI
+ 14 files changed, 1009 insertions(+), 41 deletions(-)
+ create mode 100644 internal/media/image.go
+ create mode 100644 internal/media/image_test.go
+ create mode 100644 internal/tui/images.go
+ create mode 100644 internal/tui/images_test.go
+
+### Đăng nhập khảo sát — 2026-11-09T23:40:13.924447+07:00
+- Lệnh: `git status --short`
+- Mục đích: Kiểm tra khôi phục phiên và chuyển QR.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### Đăng nhập khảo sát — 2026-11-09T23:40:13.925908+07:00
+- Lệnh: `cat daemon/index.mjs`
+- Mục đích: Kiểm tra khôi phục phiên và chuyển QR.
+- Kết quả: Exit 0, 3155 ký tự output.
+
+### Đăng nhập khảo sát — 2026-11-09T23:40:13.927690+07:00
+- Lệnh: `cat .gitignore`
+- Mục đích: Kiểm tra khôi phục phiên và chuyển QR.
+- Kết quả: Exit 0, 292 ký tự output.
+
+### Sửa đăng nhập daemon — 2026-11-09
+- Lệnh: Python heredoc nối daemon/index.mjs vào loginWithSession, giữ callback hiển thị QR bằng kitten.
+- Mục đích: Tự fallback QR khi phiên lỗi và ghi session an toàn.
+- Kết quả: Đã cập nhật entrypoint.
+
+### Đăng nhập kiểm chứng — 2026-11-09T23:42:54.692731+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Kiểm tra fallback QR và hồi quy daemon.
+- Kết quả: Exit 0. Không có output.
+
+### Đăng nhập kiểm chứng — 2026-11-09T23:42:54.757449+07:00
+- Lệnh: `node daemon/auth.test.mjs`
+- Mục đích: Kiểm tra fallback QR và hồi quy daemon.
+- Kết quả: Exit 0. 🔄 Đang khôi phục phiên đăng nhập cũ...
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+🔄 Đang khôi phục phiên đăng nhập cũ...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+📱 Đang yêu cầu mã QR chính chủ từ server Zalo...
+💾 Đã lưu phiên đăng nhập mới.
+TAP version 13
+# Subtest: phiên hợp lệ được dùng lại, không yêu cầu QR
+ok 1 - phiên hợp lệ được dùng lại, không yêu cầu QR
+  ---
+  duration_ms: 4.484797
+  ...
+# Subtest: phiên bị từ chối hoặc JSON hỏng tự chuyển QR và lưu 0600
+ok 2 - phiên bị từ chối hoặc JSON hỏng tự chuyển QR và lưu 0600
+  ---
+  duration_ms: 3.463794
+  ...
+# Subtest: QR thất bại giữ nguyên phiên cũ
+ok 3 - QR thất bại giữ nguyên phiên cũ
+  ---
+  duration_ms: 1.36778
+  ...
+# Subtest: lần đầu đăng nhập trực tiếp bằng QR
+ok 4 - lần đầu đăng nhập trực tiếp bằng QR
+  ---
+  duration_ms: 0.708735
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21.78123
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...
+
+### Đăng nhập kiểm chứng — 2026-11-09T23:42:55.012215+07:00
+- Lệnh: `node daemon/ipc.test.mjs`
+- Mục đích: Kiểm tra fallback QR và hồi quy daemon.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.747228
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.300513
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.304628
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.181461
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 9.257085
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.321457
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 27.248694
+
+### Đăng nhập kiểm chứng — 2026-11-09T23:42:55.236987+07:00
+- Lệnh: `node daemon/recipients.test.mjs`
+- Mục đích: Kiểm tra fallback QR và hồi quy daemon.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: cache F5 60 giây, hết hạn mới gọi lại Zalo
+ok 1 - cache F5 60 giây, hết hạn mới gọi lại Zalo
+  ---
+  duration_ms: 1.649003
+  ...
+# Subtest: 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+ok 2 - 429 giữ cache cũ và không gọi mạng trong thời gian chờ
+  ---
+  duration_ms: 0.486133
+  ...
+# Subtest: nhiều client dùng chung một lượt tải danh sách
+ok 3 - nhiều client dùng chung một lượt tải danh sách
+  ---
+  duration_ms: 0.220083
+  ...
+# Subtest: 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+ok 4 - 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và retry_after
+  ---
+  duration_ms: 0.373163
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 17.265633
+
+### Đăng nhập kiểm chứng — 2026-11-09T23:42:55.459836+07:00
+- Lệnh: `node daemon/history.test.mjs`
+- Mục đích: Kiểm tra fallback QR và hồi quy daemon.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 2.112488
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.049939
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.473615
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.334895
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.198097
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.458434
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.62851
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.412355
+  ...
+# Subtest: phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+ok 9 - phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+  ---
+  duration_ms: 1.351264
+  ...
+# Subtest: hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+  ---
+  duration_ms: 8.100785
+  ...
+# Subtest: tin ảnh ưu tiên URL HD trong params và giữ chú thích
+ok 11 - tin ảnh ưu tiên URL HD trong params và giữ chú thích
+  ---
+  duration_ms: 0.411496
+  ...
+# Subtest: ảnh trong lịch sử dùng cùng schema với ảnh realtime
+ok 12 - ảnh trong lịch sử dùng cùng schema với ảnh realtime
+  ---
+  duration_ms: 0.409299
+  ...
+# Subtest: ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+ok 13 - ảnh thiếu URL vẫn có placeholder và không nhận URL file hoặc script
+  ---
+  duration_ms: 0.230286
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 27.140019
+
+### Đăng nhập kiểm chứng — 2026-11-09T23:42:55.465556+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra fallback QR và hồi quy daemon.
+- Kết quả: Exit 0. Không có output.

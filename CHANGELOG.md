@@ -166,3 +166,12 @@
 * **Giới hạn:** Chưa hiển thị ảnh inline trong terminal hoặc gửi ảnh; phụ thuộc URL ảnh còn truy cập được và trình xem ảnh của Linux.
 * **Tests:** Bổ sung daemon/history.test.mjs kiểm tra URL HD/params, ảnh trong lịch sử và URL không hợp lệ; media/image_test.go kiểm tra cache 0600/0700, giới hạn kích thước, MIME sniffing, URL hết hạn/nội bộ; tui/images_test.go kiểm tra chọn ảnh ổn định, giữ draft, menu resize và cập nhật URL ảnh hết hạn.
 * **Files Changed bổ sung:** daemon/history.test.mjs, plan.md. Build, vet, race tests toàn bộ, 23 ca Node và thử terminal mẫu mở/đóng menu F8 đều qua. Kiểm thử tải ảnh dùng HTTP giả lập và mở ảnh dùng hàm giả lập; chưa mở trình xem thật hoặc kiểm chứng URL ảnh từ tài khoản thật.
+
+### Tự chuyển đăng nhập QR khi phiên lưu không khôi phục được
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** fix(auth).
+* **Files Changed:** daemon/auth.mjs, daemon/auth.test.mjs, daemon/index.mjs.
+* **Nguyên nhân:** login(session) ném lỗi làm daemon thoát, buộc người dùng tự đổi tên/xóa session để đăng nhập lại.
+* **Chi tiết:** Tách khôi phục/QR thành loginWithSession. Phiên bị từ chối hoặc JSON hỏng chuyển sang QR, callback Kitty được giữ. Chỉ thay session sau QR thành công, ghi file tạm 0600 rồi rename nguyên tử, giữ phiên cũ nếu đăng nhập mới thất bại. File tạm đuôi .cookie đã được Git ignore. Dùng execFileSync thay shell để hiển thị QR.
+* **Kiểm chứng:** Kiểm tra cú pháp và 27 ca Node đều qua, gồm phiên hợp lệ, phiên bị từ chối, JSON hỏng, QR thất bại giữ phiên cũ và quyền 0600 của phiên mới. Chưa đăng nhập lại tài khoản thật.
