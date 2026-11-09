@@ -921,3 +921,254 @@ ok  	zalo-cli/internal/ipc	1.011s
 - Lệnh: `git diff --check`
 - Mục đích: Lưu tính năng và nhật ký đúng định dạng.
 - Kết quả: Exit 0. Thành công.
+
+### Lưu danh sách sau sửa khoảng trắng — 2026-11-09T18:45:47.197147+07:00
+- Lệnh: `git add -- cmd/zalo-cli internal/ipc daemon/ipc.mjs daemon/ipc.test.mjs CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu tính năng và nhật ký đúng định dạng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu danh sách sau sửa khoảng trắng — 2026-11-09T18:45:47.202796+07:00
+- Lệnh: `git commit -m feat(cli): list friends and groups and select message recipient`
+- Mục đích: Lưu tính năng và nhật ký đúng định dạng.
+- Kết quả: Exit 0. [main e81fdd3] feat(cli): list friends and groups and select message recipient
+ 9 files changed, 521 insertions(+), 24 deletions(-)
+ create mode 100644 cmd/zalo-cli/recipients.go
+ create mode 100644 cmd/zalo-cli/recipients_test.go
+
+### TUI khảo sát — 2026-11-09T20:07:51.796443+07:00
+- Lệnh: `git status --short`
+- Mục đích: Đọc entrypoint và IPC trước khi dựng giao diện.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### TUI khảo sát — 2026-11-09T20:07:51.798121+07:00
+- Lệnh: `cat go.mod cmd/zalo-cli/main.go internal/ipc/protocol.go`
+- Mục đích: Đọc entrypoint và IPC trước khi dựng giao diện.
+- Kết quả: Exit 0, 4111 ký tự output.
+
+### TUI khảo sát — 2026-11-09T20:07:51.800119+07:00
+- Lệnh: `cat internal/ipc/client.go`
+- Mục đích: Đọc entrypoint và IPC trước khi dựng giao diện.
+- Kết quả: Exit 0, 3164 ký tự output.
+
+### TUI khảo sát — 2026-11-09T20:07:51.822495+07:00
+- Lệnh: `cat AGENTS.md`
+- Mục đích: Đọc entrypoint và IPC trước khi dựng giao diện.
+- Kết quả: Exit 0, 3236 ký tự output.
+
+### TUI dependencies — 2026-11-09T20:08:15.837822+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go get github.com/charmbracelet/bubbletea@v1.3.10 github.com/charmbracelet/bubbles@v0.21.0 github.com/charmbracelet/lipgloss@v1.1.0`
+- Mục đích: Cài Charm cho giao diện terminal.
+- Kết quả: Exit 1. go: github.com/gorilla/websocket@v1.5.3: Get "https://proxy.golang.org/github.com/gorilla/websocket/@v/v1.5.3.mod": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+
+### TUI tải dependencies — 2026-11-09T20:09:25.958544+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go get github.com/charmbracelet/bubbletea@v1.3.10 github.com/charmbracelet/bubbles@v0.21.0 github.com/charmbracelet/lipgloss@v1.1.0`
+- Mục đích: Tải các thư viện Charm đã chọn.
+- Kết quả: Exit 0. go: downloading github.com/charmbracelet/bubbletea v1.3.10
+go: downloading github.com/charmbracelet/bubbles v0.21.0
+go: downloading github.com/charmbracelet/lipgloss v1.1.0
+go: downloading github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd
+go: downloading github.com/rivo/uniseg v0.4.7
+go: downloading github.com/muesli/termenv v0.16.0
+go: downloading github.com/charmbracelet/x/ansi v0.10.1
+go: downloading github.com/charmbracelet/x/term v0.2.1
+go: downloading github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f
+go: downloading github.com/mattn/go-localereader v0.0.1
+go: downloading github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
+go: downloading github.com/muesli/cancelreader v0.2.2
+go: downloading golang.org/x/sys v0.36.0
+go: downloading github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc
+go: downloading github.com/mattn/go-runewidth v0.0.16
+go: downloading golang.org/x/text v0.3.8
+go: downloading github.com/lucasb-eyer/go-colorful v1.2.0
+go: downloading github.com/aymanbagabas/go-osc52/v2 v2.0.1
+go: downloading github.com/mattn/go-isatty v0.0.20
+go: downloading github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
+go: added github.com/aymanbagabas/go-osc52/v2 v2.0.1
+go: added github.com/charmbracelet/bubbles v0.21.0
+go: added github.com/charmbracelet/bubbletea v1.3.10
+go: added github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc
+go: added github.com/charmbracelet/lipgloss v1.1.0
+go: added github.com/charmbracelet/x/ansi v0.10.1
+go: added github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd
+go: added github.com/charmbracelet/x/term v0.2.1
+go: added github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f
+go: added github.com/lucasb-eyer/go-colorful v1.2.0
+go: added github.com/mattn/go-isatty v0.0.20
+go: added github.com/mattn/go-localereader v0.0.1
+go: added github.com/mattn/go-runewidth v0.0.16
+go: added github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
+go: added github.com/muesli/cancelreader v0.2.2
+go: added github.com/muesli/termenv v0.16.0
+go: added github.com/rivo/uniseg v0.4.7
+go: added github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
+go: added golang.org/x/sys v0.36.0
+go: added golang.org/x/text v0.3.8
+
+### TUI triển khai — 2026-11-09T20:12:20.241727+07:00
+- Lệnh: `gofmt -w internal/tui cmd/zalo-cli/main.go`
+- Mục đích: Định dạng và build giao diện mới.
+- Kết quả: Exit 0. Không có output.
+
+### TUI triển khai — 2026-11-09T20:12:20.327884+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Định dạng và build giao diện mới.
+- Kết quả: Exit 1. go: downloading github.com/gorilla/websocket v1.5.3
+internal/ipc/client.go:12:2: github.com/gorilla/websocket@v1.5.3: Get "https://proxy.golang.org/github.com/gorilla/websocket/@v/v1.5.3.zip": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+/tmp/zalo-ui-modcache/github.com/charmbracelet/bubbles@v0.21.0/textinput/textinput.go:11:2: missing go.sum entry for module providing package github.com/atotto/clipboard (imported by github.com/charmbracelet/bubbles/textinput); to add:
+	go get github.com/charmbracelet/bubbles/textinput@v0.21.0
+
+### TUI hoàn thiện dependencies — 2026-11-09T20:12:33.580089+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go mod tidy`
+- Mục đích: Hoàn thiện dependencies textinput và build.
+- Kết quả: Exit 0. go: downloading github.com/gorilla/websocket v1.5.3
+go: downloading github.com/atotto/clipboard v0.1.4
+go: downloading golang.org/x/exp v0.0.0-20220909182711-5c715a9e8561
+
+### TUI hoàn thiện dependencies — 2026-11-09T20:12:36.315261+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Hoàn thiện dependencies textinput và build.
+- Kết quả: Exit 0. Không có output.
+
+### TUI kiểm thử — 2026-11-09T20:13:53.139082+07:00
+- Lệnh: `gofmt -w internal/tui`
+- Mục đích: Kiểm tra trạng thái chat và kích thước terminal.
+- Kết quả: Exit 0. Không có output.
+
+### TUI kiểm thử — 2026-11-09T20:13:55.331042+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
+- Mục đích: Kiểm tra trạng thái chat và kích thước terminal.
+- Kết quả: Exit 1. --- FAIL: TestViewFitsResizedTerminalAndUnicode (0.00s)
+    model_test.go:119: view 68x25 exceeds terminal 68x18
+FAIL
+FAIL	zalo-cli/internal/tui	0.016s
+FAIL
+
+### TUI sửa layout — 2026-11-09T20:14:15.872159+07:00
+- Lệnh: `gofmt -w internal/tui`
+- Mục đích: Kiểm tra chiều rộng nội dung có padding.
+- Kết quả: Exit 0. Không có output.
+
+### TUI sửa layout — 2026-11-09T20:14:16.292610+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
+- Mục đích: Kiểm tra chiều rộng nội dung có padding.
+- Kết quả: Exit 1. --- FAIL: TestViewFitsResizedTerminalAndUnicode (0.00s)
+    model_test.go:119: view 68x19 exceeds terminal 68x18
+FAIL
+FAIL	zalo-cli/internal/tui	0.018s
+FAIL
+
+### TUI đọc layout test — 2026-11-09T20:14:30.747815+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui -run TestViewFits -v`
+- Mục đích: Đọc bản render để tìm dòng tràn.
+- Kết quả: Exit 1.
+
+### TUI giới hạn ô nhập — 2026-11-09T20:14:45.377662+07:00
+- Lệnh: `gofmt -w internal/tui`
+- Mục đích: Đảm bảo prompt và cursor không làm tràn cột.
+- Kết quả: Exit 0. Không có output.
+
+### TUI giới hạn ô nhập — 2026-11-09T20:14:45.781841+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
+- Mục đích: Đảm bảo prompt và cursor không làm tràn cột.
+- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.018s
+
+### TUI kiểm tra toàn bộ — 2026-11-09T20:15:30.753870+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build -o /tmp/zalo-tui-check ./cmd/zalo-cli`
+- Mục đích: Build entrypoint giao diện và kiểm tra mã.
+- Kết quả: Exit 0. Không có output.
+
+### TUI kiểm tra toàn bộ — 2026-11-09T20:15:31.200545+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Build entrypoint giao diện và kiểm tra mã.
+- Kết quả: Exit 0. Không có output.
+
+### TUI kiểm tra toàn bộ — 2026-11-09T20:15:31.203730+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Build entrypoint giao diện và kiểm tra mã.
+- Kết quả: Exit 0. Không có output.
+
+### TUI chuẩn bị smoke test — 2026-11-09
+- Lệnh: Python heredoc tạo /tmp/zalo-tui-fixture.mjs và /tmp/zalo-tui-pty.py.
+- Mục đích: Thử entrypoint -tui với terminal và dữ liệu giả lập, không gọi Zalo.
+- Kết quả: Đã ghi fixture và harness tạm.
+
+### TUI race và terminal — 2026-11-09T20:16:11.176847+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
+- Mục đích: Kiểm thử đầy đủ và chạy giao diện qua terminal với WebSocket mẫu.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.018s
+ok  	zalo-cli/internal/ipc	1.015s
+ok  	zalo-cli/internal/tui	1.056s
+
+### TUI race và terminal — 2026-11-09T20:16:11.244320+07:00
+- Lệnh: `python3 /tmp/zalo-tui-pty.py`
+- Mục đích: Kiểm thử đầy đủ và chạy giao diện qua terminal với WebSocket mẫu.
+- Kết quả: Exit 1. File "/tmp/zalo-tui-pty.py", line 26
+    os.write(master,b"
+                    ^
+SyntaxError: unterminated string literal (detected at line 26)
+
+### Sửa harness terminal — 2026-11-09
+- Lệnh: Python heredoc thay ký tự điều khiển bằng bytes([13])/bytes([27]) trong /tmp/zalo-tui-pty.py.
+- Mục đích: Sửa escape của script kiểm thử terminal, xóa kết quả fixture cũ trước mỗi lần chạy.
+- Kết quả: Đã cập nhật harness tạm.
+
+### TUI smoke test terminal — 2026-11-09T20:16:35.710987+07:00
+- Lệnh: `python3 /tmp/zalo-tui-pty.py`
+- Mục đích: Thử nhập tiếng Việt, gửi và thoát qua entrypoint thật.
+- Kết quả: Exit 1. Traceback (most recent call last):
+  File "/tmp/zalo-tui-pty.py", line 11, in <module>
+    raise RuntimeError("Fixture could not start: " + ready)
+RuntimeError: Fixture could not start: BUSY EADDRINUSE
+
+### TUI fixture cổng ngẫu nhiên — 2026-11-09
+- Lệnh: Python heredoc sửa fixture dùng port 0 và build overlay chỉ thay endpoint trong binary kiểm thử.
+- Mục đích: Tránh cổng 8989 đang được daemon người dùng sử dụng.
+- Kết quả: Đã cập nhật harness; mã sản phẩm giữ nguyên endpoint.
+
+### TUI build fixture — 2026-11-09T20:17:08.769271
+- Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
+- Mục đích: Đổi endpoint trong binary kiểm thử sang cổng giả lập ngẫu nhiên.
+- Kết quả: Exit 0. Thành công.
+
+### TUI terminal cổng ngẫu nhiên — 2026-11-09T20:17:11.396801+07:00
+- Lệnh: `python3 /tmp/zalo-tui-pty.py`
+- Mục đích: Thử UI qua terminal với daemon mẫu trên cổng ngẫu nhiên.
+- Kết quả: Exit 0. PASS: CLI -tui opened, selected recipient, typed Vietnamese, received send acknowledgement and quit with Esc.
+
+### TUI hoàn thiện — 2026-11-09T20:17:56.793268+07:00
+- Lệnh: `gofmt -w internal/tui`
+- Mục đích: Kiểm tra thay đổi cuối và cập nhật tiến độ.
+- Kết quả: Exit 0. Không có output.
+
+### TUI hoàn thiện — 2026-11-09T20:17:57.337696+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Kiểm tra thay đổi cuối và cập nhật tiến độ.
+- Kết quả: Exit 0. Không có output.
+
+### TUI hoàn thiện — 2026-11-09T20:17:57.480786+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Kiểm tra thay đổi cuối và cập nhật tiến độ.
+- Kết quả: Exit 0. Không có output.
+
+### TUI hoàn thiện — 2026-11-09T20:17:57.485097+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra thay đổi cuối và cập nhật tiến độ.
+- Kết quả: Exit 0. Không có output.
+
+### TUI hoàn thiện — 2026-11-09T20:17:57.489367+07:00
+- Lệnh: `git diff --stat`
+- Mục đích: Kiểm tra thay đổi cuối và cập nhật tiến độ.
+- Kết quả: Exit 0. CHANGELOG.md         |  11 +++
+ COMMAND_LOG.md       | 233 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ cmd/zalo-cli/main.go |  10 ++-
+ go.mod               |  28 ++++++-
+ go.sum               |  47 +++++++++++
+ plan.md              |  16 ++--
+ 6 files changed, 337 insertions(+), 8 deletions(-)
+
+### TUI lưu bước — 2026-11-09T20:18:13.087964+07:00
+- Lệnh: `go test -race ./...` (GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache).
+- Mục đích: Xác nhận kiểm thử và lưu giao diện đã hoàn thiện.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
+ok  	zalo-cli/internal/ipc	(cached)
+ok  	zalo-cli/internal/tui	1.067s

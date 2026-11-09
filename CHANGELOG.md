@@ -105,3 +105,14 @@
 * **Giới hạn:** Đây là danh sách bạn bè/nhóm, chưa gồm lịch sử hoặc thứ tự hội thoại gần đây. Thao tác lấy danh sách lỗi sẽ báo thất bại toàn bộ, không hiển thị danh sách thiếu mà không báo.
 * **Tests:** daemon/ipc.test.mjs kiểm tra phân trang, nhóm đã rời, danh sách lỗi; cmd/zalo-cli/recipients_test.go kiểm tra chọn đúng nhóm, hủy và lựa chọn ngoài phạm vi không gửi tin.
 * **Kiểm chứng:** Build và vet Go, go test -race ./..., sáu ca Node chạy trực tiếp bằng node daemon/ipc.test.mjs đều qua. Chưa gọi API danh sách trên tài khoản thật.
+
+### Giao diện chat Bubble Tea
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** feat(tui).
+* **Files Changed:** internal/tui/model.go, internal/tui/view.go, cmd/zalo-cli/main.go, go.mod, go.sum.
+* **Chi tiết:** Thêm -tui với màn hình hai cột, tìm người nhận, chọn chat, lưu draft theo hội thoại, thông báo chưa đọc, cuộn chat và nhập tiếng Việt. UI đọc IPC bất đồng bộ qua tea.Cmd, gửi tin có trạng thái chờ/thành công/lỗi và timeout. Ghép phản hồi theo request ID kể cả phản hồi đến trước kết quả command, bỏ qua command/timeout cũ. Xử lý ngắt kết nối và hủy khi thoát. Giới hạn 500 tin mỗi hội thoại trong phiên, lọc ANSI/control từ dữ liệu mạng.
+* **Giới hạn:** Hiển thị tin từ lúc mở UI, chưa tải lịch sử cũ hoặc tự reconnect.
+* **Tests:** internal/tui/model_test.go kiểm tra phản hồi đến sớm, đổi chat khi gửi, draft riêng, routing/dedup/unread, disconnect, timeout cũ, Unicode/resize và event loop Bubble Tea thật với transport giả lập.
+* **Files Changed bổ sung:** internal/tui/model_test.go, plan.md. Cập nhật các mốc Phase 2/3 theo thực tế. Khi cửa sổ quá nhỏ chỉ nhận phím thoát để tránh gửi tin ngoài ý muốn.
+* **Kiểm chứng:** Build và vet qua; race tests toàn bộ qua; entrypoint -tui đã thử trong PTY với daemon mẫu, chọn người nhận, nhập tiếng Việt, gửi/nhận xác nhận và Esc. Chưa thử UI bằng tài khoản Zalo thật.

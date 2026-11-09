@@ -168,11 +168,11 @@ zalo-cli/
 * **Mục tiêu:** Viết module Golang kết nối vào Local WebSocket của Daemon, dùng Goroutine + Channel để hứng sự kiện tin nhắn liên tục mà không làm treo app.
 * **Kiến thức cần nắm:** Go Channels (buffered vs unbuffered), Worker Goroutines, cơ chế xử lý JSON dynamic/typed trong Go.
 
-- [ ] **Step 2.1 (15m):** Cài đặt package WebSocket cho Go (`github.com/gorilla/websocket`). Định nghĩa các Go Structs trong `internal/ipc/protocol.go` để serialize/deserialize JSON.
-- [ ] **Step 2.2 (20m):** Viết `internal/ipc/client.go`:
+- [x] **Step 2.1 (15m):** Cài đặt package WebSocket cho Go (`github.com/gorilla/websocket`). Định nghĩa các Go Structs trong `internal/ipc/protocol.go` để serialize/deserialize JSON.
+- [x] **Step 2.2 (20m):** Viết `internal/ipc/client.go`:
   - Goroutine đọc (`readPump`): Đọc liên tục các message từ WebSocket và bắn vào một Go Channel `chan ipc.Event`.
   - Hàm `SendMessage(threadID, text string) error` gửi payload qua socket.
-- [ ] **Step 2.3 (10m):** Viết file `cmd/zalo-cli/main.go` thử nghiệm: Chạy Go CLI, in tin nhắn nhận được ra terminal dạng log text thô để kiểm chứng 100% đường truyền hoạt động.
+- [x] **Step 2.3 (10m):** Viết file `cmd/zalo-cli/main.go` thử nghiệm: Chạy Go CLI, in tin nhắn nhận được ra terminal dạng log text thô để kiểm chứng 100% đường truyền hoạt động.
 
 ---
 
@@ -181,13 +181,13 @@ zalo-cli/
 * **Mục tiêu:** Tạo giao diện Terminal hiện đại, chia 2 cột: Cột trái danh sách hội thoại, cột phải hiển thị lịch sử chat và ô soạn thảo tin nhắn.
 * **Kiến thức cần nắm:** The Elm Architecture (`Init`, `Update`, `View`), cách sử dụng `lipgloss` để căn lề (padding, margin, border, color), và cách tích hợp `tea.Cmd` để lắng nghe Go Channel bất đồng bộ.
 
-- [ ] **Step 3.1 (25m): Dựng Layout Cơ bản & Phối màu Lip Gloss**
+- [x] **Step 3.1 (25m): Dựng Layout Cơ bản & Phối màu Lip Gloss**
   - Khởi tạo Bubble Tea model chính trong `internal/tui/model.go`.
   - Phân vùng màn hình: Title bar trên cùng, 2 cột chính ở giữa, Status bar dưới cùng hiển thị phím tắt (`Tab: đổi cột`, `Esc: thoát`, `Enter: gửi`).
-- [ ] **Step 3.2 (25m): Tích hợp Input & Viewport cuộn tin nhắn**
+- [x] **Step 3.2 (25m): Tích hợp Input & Viewport cuộn tin nhắn**
   - Dùng `bubbles/textinput` cho hộp soạn tin nhắn ở góc dưới bên phải.
   - Dùng `bubbles/viewport` để render danh sách tin nhắn chat, hỗ trợ cuộn lên xuống xem tin nhắn cũ.
-- [ ] **Step 3.3 (25m): Kết nối Realtime IPC vào Bubble Tea Event Loop**
+- [x] **Step 3.3 (25m): Kết nối Realtime IPC vào Bubble Tea Event Loop**
   - Tạo `tea.Cmd` lắng nghe Go Channel từ Phase 2. Mỗi khi có tin nhắn mới tới, đẩy vào `tea.Msg`.
   - Hàm `Update` nhận `newMsg` -> append vào viewport -> tự động cuộn xuống dưới cùng.
   - Khi người dùng gõ phím `Enter` -> kích hoạt `ipcClient.SendMessage` -> tin nhắn hiển thị ngay lập tức.
@@ -238,3 +238,7 @@ zalo-cli/
 1. **Không nhảy cóc:** Hoàn thành dứt điểm từng micro-step rồi mới sang bước tiếp theo.
 2. **Kỷ luật Git:** Mỗi step hoàn thành đều được commit ngay với Conventional Commits (`feat:`, `fix:`, `docs:`, v.v.).
 3. **Theo dõi minh bạch:** Mọi lệnh terminal chạy đều ghi vào [`COMMAND_LOG.md`](./COMMAND_LOG.md), mọi file thay đổi đều ghi vào [`CHANGELOG.md`](./CHANGELOG.md).
+
+### Cập nhật triển khai — 2026-11-09
+
+Phase 2 và giao diện cơ bản Phase 3 đã triển khai. Chạy daemon trước, sau đó dùng `go run ./cmd/zalo-cli -tui`. Tab đổi cột, mũi tên chọn người nhận, Enter mở chat/gửi, PgUp/PgDn cuộn, F5 tải danh sách, Esc thoát. Giao diện giữ tối đa 500 tin mỗi hội thoại trong lần mở ứng dụng; chưa tải lịch sử cũ hoặc tự reconnect. Build, vet, race tests và thử terminal với daemon mẫu đã qua; cần Bảo kiểm chứng giao diện với Zalo thật.

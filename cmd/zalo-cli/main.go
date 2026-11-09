@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"zalo-cli/internal/ipc"
+	"zalo-cli/internal/tui"
 )
 
 func main() {
+	ui := flag.Bool("tui", false, "Mở giao diện chat tương tác")
 	to := flag.String("to", "", "ID hội thoại Zalo cần gửi")
 	kind := flag.String("type", "user", "Loại hội thoại: user hoặc group")
 	list := flag.Bool("list", false, "Liệt kê bạn bè/nhóm; thêm -text để chọn người nhận và gửi")
@@ -22,7 +24,13 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	var err error
-	if *list {
+	if *ui {
+		if *list || *to != "" || *text != "" {
+			err = fmt.Errorf("dùng -tui riêng để mở giao diện chat")
+		} else {
+			err = tui.Run(ctx, "ws://127.0.0.1:8989")
+		}
+	} else if *list {
 		if *to != "" {
 			err = fmt.Errorf("dùng -list để chọn hoặc -to để chỉ định người nhận")
 		} else {
