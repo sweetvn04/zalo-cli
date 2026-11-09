@@ -1490,3 +1490,151 @@ ok  	zalo-cli/internal/tui	1.077s
  internal/tui/view.go       |  23 +++-
  plan.md                    |   2 +-
  10 files changed, 416 insertions(+), 26 deletions(-)
+
+### Lưu tính năng lịch sử — 2026-11-09T20:43:03.652598+07:00
+- Lệnh: `git add -- daemon/history.mjs daemon/history.test.mjs daemon/index.mjs daemon/ipc.mjs internal/ipc/client.go internal/ipc/protocol.go internal/tui plan.md CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu chức năng tải lịch sử đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu tính năng lịch sử — 2026-11-09T20:43:03.660832+07:00
+- Lệnh: `git commit -m feat(history): load recent Zalo messages when opening chats`
+- Mục đích: Lưu chức năng tải lịch sử đã kiểm chứng.
+- Kết quả: Exit 0. [main d28fe03] feat(history): load recent Zalo messages when opening chats
+ 14 files changed, 834 insertions(+), 26 deletions(-)
+ create mode 100644 daemon/history.mjs
+ create mode 100644 daemon/history.test.mjs
+ create mode 100644 internal/tui/history.go
+ create mode 100644 internal/tui/history_test.go
+
+### Lịch sử 404 khảo sát — 2026-11-09T21:05:03.083484+07:00
+- Lệnh: `git status --short`
+- Mục đích: Xác định fallback lịch sử nhóm khi HTTP 404.
+- Kết quả: Exit 0. Đọc 35 ký tự.
+
+### Lịch sử 404 khảo sát — 2026-11-09T21:05:03.085438+07:00
+- Lệnh: `cat daemon/history.mjs`
+- Mục đích: Xác định fallback lịch sử nhóm khi HTTP 404.
+- Kết quả: Exit 0. Đọc 4116 ký tự.
+
+### Lịch sử 404 khảo sát — 2026-11-09T21:05:03.088559+07:00
+- Lệnh: `rg -n "Request failed with status|statusCode|response.status" daemon/node_modules/zca-js/dist/utils.js`
+- Mục đích: Xác định fallback lịch sử nhóm khi HTTP 404.
+- Kết quả: Exit 0. Đọc 79 ký tự.
+
+### Lịch sử 404 khảo sát — 2026-11-09T21:05:03.090421+07:00
+- Lệnh: `cat daemon/history.test.mjs`
+- Mục đích: Xác định fallback lịch sử nhóm khi HTTP 404.
+- Kết quả: Exit 0. Đọc 4012 ký tự.
+
+### Kiểu lỗi HTTP — 2026-11-09T21:05:11.080942+07:00
+- Lệnh: `sed -n "565,590p" daemon/node_modules/zca-js/dist/utils.js`
+- Mục đích: Đọc mã trạng thái lỗi của thư viện.
+- Kết quả: Exit 0.
+
+### Lịch sử fallback kiểm chứng — 2026-11-09T21:06:01.914874+07:00
+- Lệnh: `node --check daemon/history.mjs`
+- Mục đích: Tái hiện 404 và kiểm tra lịch sử WebSocket nhóm.
+- Kết quả: Exit 0. Không có output.
+
+### Lịch sử fallback kiểm chứng — 2026-11-09T21:06:02.151093+07:00
+- Lệnh: `node daemon/history.test.mjs`
+- Mục đích: Tái hiện 404 và kiểm tra lịch sử WebSocket nhóm.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 1.988425
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.076508
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.499211
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.437234
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.276889
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.57572
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.635215
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.41172
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21.957247
+
+### Lịch sử fallback kiểm chứng — 2026-11-09T21:06:02.394976+07:00
+- Lệnh: `node daemon/ipc.test.mjs`
+- Mục đích: Tái hiện 404 và kiểm tra lịch sử WebSocket nhóm.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.769122
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.281894
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.28422
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.228892
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 7.736365
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.192927
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24.539805
+
+### Lịch sử fallback kiểm chứng — 2026-11-09T21:06:02.398501+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Tái hiện 404 và kiểm tra lịch sử WebSocket nhóm.
+- Kết quả: Exit 0. Không có output.

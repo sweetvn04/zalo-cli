@@ -17,14 +17,20 @@ export function normalizeMessage(message) {
 }
 
 const snapshots = new WeakMap();
+const unavailableGroupHTTP = new WeakSet();
 
 // old_messages không có request ID. Chỉ một chuỗi phân trang được chạy trên
-// mỗi listener; các client cùng chờ một snapshot và tự lọc theo hội thoại.
-async function userSnapshot(api) {
-  let state = snapshots.get(api);
+// mỗi loại hội thoại; các client cùng chờ snapshot rồi lọc đúng hội thoại.
+async function oldMessageSnapshot(api, threadType) {
+  let states = snapshots.get(api);
+  if (!states) {
+    states = new Map();
+    snapshots.set(api, states);
+  }
+  let state = states.get(threadType);
   if (!state) {
     state = { blocked: false, time: 0, result: null, pending: null };
-    snapshots.set(api, state);
+    states.set(threadType, state);
     api.listener.on("connected", () => {
       state.blocked = false;
       state.time = 0;
@@ -32,7 +38,8 @@ async function userSnapshot(api) {
   }
   if (state.pending) return state.pending;
   if (state.result && Date.now() - state.time < 30000) return state.result;
-  if (state.blocked) throw new Error("Lịch sử cá nhân chưa phản hồi; cần kết nối lại daemon trước khi thử lại");
+  const label = threadType === ThreadType.Group ? "nhóm" : "cá nhân";
+  if (state.blocked) throw new Error(`Lịch sử ${label} chưa phản hồi; cần kết nối lại daemon trước khi thử lại`);
   state.pending = (async () => {
     const all = [];
     const seen = new Set();
@@ -48,7 +55,7 @@ async function userSnapshot(api) {
           api.listener.off("old_messages", onMessages);
         };
         const onMessages = (batch, type) => {
-          if (type !== ThreadType.User) return;
+          if (type !== threadType) return;
           cleanup();
           resolve(batch);
         };
@@ -56,11 +63,11 @@ async function userSnapshot(api) {
           cleanup();
           // Không cho request mới nhầm phản hồi đến muộn của trang đã timeout.
           state.blocked = true;
-          reject(new Error("Hết thời gian chờ lịch sử cá nhân từ Zalo"));
+          reject(new Error(`Hết thời gian chờ lịch sử ${label} từ Zalo`));
         }, Math.min(5000, remaining));
         api.listener.on("old_messages", onMessages);
         try {
-          api.listener.requestOldMessages(ThreadType.User, cursor);
+          api.listener.requestOldMessages(threadType, cursor);
         } catch (error) {
           cleanup();
           reject(error);
@@ -104,11 +111,24 @@ export async function loadHistory(api, threadID, threadType) {
   let raw;
   let partial;
   if (threadType === "group") {
-    const response = await api.getGroupChatHistory(threadID, 100);
-    raw = response.groupMsgs;
-    partial = Number(response.more) > 0;
+    if (!unavailableGroupHTTP.has(api)) {
+      try {
+        const response = await api.getGroupChatHistory(threadID, 100);
+        raw = response.groupMsgs;
+        partial = Number(response.more) > 0;
+      } catch (error) {
+        // zca-js chỉ giữ message HTTP, không đưa status vào ZaloApiError.
+        if (error.message !== "Request failed with status code 404") throw error;
+        unavailableGroupHTTP.add(api);
+      }
+    }
+    if (!raw) {
+      const response = await oldMessageSnapshot(api, ThreadType.Group);
+      raw = response.messages;
+      partial = response.partial;
+    }
   } else {
-    const response = await userSnapshot(api);
+    const response = await oldMessageSnapshot(api, ThreadType.User);
     raw = response.messages;
     partial = response.partial;
   }

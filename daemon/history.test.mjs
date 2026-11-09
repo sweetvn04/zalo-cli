@@ -82,3 +82,53 @@ test("phản hồi gửi trả ID Zalo để ghép với lịch sử", async () 
   assert.equal(response.msg_id, "12345");
   assert.equal(normalizeMessage(message("1", "an", "invalid", "Chào")).timestamp, 0);
 });
+
+test("HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm", async () => {
+  const listener = new EventEmitter();
+  const calls = [];
+  let httpCalls = 0;
+  listener.requestOldMessages = (type, cursor) => {
+    calls.push([type, cursor]);
+    const batch = cursor === null ? [
+      message("300", "group-1", 3000, "Lịch sử nhóm", ThreadType.Group),
+      message("200", "group-2", 2000, "Nhóm khác", ThreadType.Group),
+    ] : [];
+    queueMicrotask(() => listener.emit("old_messages", batch, type));
+  };
+  const api = { listener, async getGroupChatHistory() {
+    httpCalls++;
+    throw new Error("Request failed with status code 404");
+  } };
+  const first = await handleCommand(JSON.stringify({id: "fallback", action: "get_history",
+    payload: {thread_id: "group-1", thread_type: "group"}}), api);
+  assert.equal(first.ok, true);
+  assert.equal(first.id, "fallback");
+  assert.deepEqual(first.messages.map(m => m.content), ["Lịch sử nhóm"]);
+  const second = await loadHistory(api, "group-2", "group");
+  assert.deepEqual(second.messages.map(m => m.content), ["Nhóm khác"]);
+  assert.equal(httpCalls, 1);
+  assert.deepEqual(calls, [[ThreadType.Group, null], [ThreadType.Group, "200"]]);
+  assert.equal(listener.listenerCount("old_messages"), 0);
+});
+
+test("snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu", async () => {
+  const listener = new EventEmitter();
+  listener.requestOldMessages = (type, cursor) => {
+    const batch = cursor === null ? [message("100", type === ThreadType.User ? "an" : "group-1",
+      1000, type === ThreadType.User ? "Cá nhân" : "Nhóm", type)] : [];
+    queueMicrotask(() => listener.emit("old_messages", batch, type));
+  };
+  const api = { listener, async getGroupChatHistory() {
+    throw new Error("Request failed with status code 404");
+  } };
+  const [user, group] = await Promise.all([
+    loadHistory(api, "an", "user"), loadHistory(api, "group-1", "group"),
+  ]);
+  assert.deepEqual(user.messages.map(m => m.content), ["Cá nhân"]);
+  assert.deepEqual(group.messages.map(m => m.content), ["Nhóm"]);
+});
+
+test("lỗi quyền truy cập nhóm không bị coi là endpoint 404", async () => {
+  const api = { async getGroupChatHistory() { throw new Error("Request failed with status code 403"); } };
+  await assert.rejects(loadHistory(api, "group-1", "group"), /403/);
+});

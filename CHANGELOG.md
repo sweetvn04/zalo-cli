@@ -126,3 +126,13 @@
 * **Giới hạn:** Tin văn bản gần đây do Zalo cung cấp, có cờ lịch sử một phần; chưa lưu tin xuống đĩa hay tải toàn bộ lịch sử.
 * **Tests:** daemon/history.test.mjs và internal/tui/history_test.go kiểm tra phân trang/single-flight, lọc đúng hội thoại, loại trùng realtime và tin của chính mình, lỗi giữ tin đã có, timeout cũ và phản hồi đến sớm.
 * **Files Changed bổ sung:** plan.md. Build, vet, race tests, 11 ca Node và thử terminal mẫu tải tin cũ rồi gửi tiếng Việt đều qua. Chưa kiểm chứng lịch sử trên tài khoản Zalo thật.
+
+### Sửa tải lịch sử nhóm khi API HTTP trả 404
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** fix(history).
+* **Files Changed:** daemon/history.mjs, daemon/history.test.mjs.
+* **Nguyên nhân:** API getGroupChatHistory có trong zca-js nhưng endpoint Zalo trả HTTP 404 trên tài khoản thực tế; kiểm thử trước chỉ mô phỏng API thành công.
+* **Chi tiết:** Chuyển sang requestOldMessages(ThreadType.Group) khi HTTP 404 và bỏ qua HTTP này trong các lần gọi sau của phiên. Tách snapshot, cursor, cache và single-flight theo user/group để tránh trộn lịch sử. Giữ lỗi HTTP khác để không che lỗi quyền truy cập.
+* **Tests:** Tái hiện đúng chuỗi lỗi 404, lọc từng nhóm, cache sau fallback, user/group đồng thời và bảo toàn lỗi 403.
+* **Kết quả:** Kiểm tra cú pháp và 14 ca Node đều qua. Chưa xác nhận fallback với tài khoản Zalo thật.
