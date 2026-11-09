@@ -377,3 +377,211 @@ COMMAND_LOG.
 - Lệnh: `git branch -vv`
 - Mục đích: Kiểm tra commit, staging và thay đổi so với main.
 - Kết quả: Exit 0. * main 1d56e44 feat(cli): add initial Go client and fix binary ignore rule
+
+### Kiểm tra skill trong repo — 2026-11-06T12:04:23+07:00
+- Lệnh: `rg --files --hidden --no-ignore -g SKILL.md -g '!.git' -g '!node_modules' -g '!vendor' .`
+- Mục đích: Tìm các file định nghĩa skill trong dự án.
+- Kết quả: Exit 1. Không tìm thấy SKILL.md.
+
+### Chẩn đoán 1 — 2026-11-06T12:55:28+07:00
+- Lệnh: `git status --short --branch`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 0. ## main
+ M COMMAND_LOG.md
+
+### Chẩn đoán 2 — 2026-11-06T12:55:28+07:00
+- Lệnh: `git log -3 --oneline`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 0. aba8fc5 docs: update project changelog and command log
+1d56e44 feat(cli): add initial Go client and fix binary ignore rule
+9dfa9eb docs: finalize command 37 in COMMAND_LOG.md
+
+### Chẩn đoán 3 — 2026-11-06T12:55:28+07:00
+- Lệnh: `rg --files --hidden -g "!.git" -g "!node_modules" -g "!session.json" -g "!.env*"`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 0. cmd/zalo-cli/main.go
+go.sum
+go.mod
+CONCEPTS.md
+daemon/index.mjs
+daemon/package-lock.json
+daemon/package.json
+.gitignore
+plan.md
+CHANGELOG.md
+COMMAND_LOG.md
+AGENTS.md
+
+### Chẩn đoán 4 — 2026-11-06T12:55:28+07:00
+- Lệnh: `go build -o /tmp/zalo-progress ./cmd/zalo-cli`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 0. Không có output.
+
+### Chẩn đoán 5 — 2026-11-06T12:55:28+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 0. Không có output.
+
+### Chẩn đoán 6 — 2026-11-06T12:55:28+07:00
+- Lệnh: `npm --prefix daemon ls --depth=0`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 0. daemon@1.0.0 /home/sweetvn/MyProjects/zalo-cli/daemon
+├── qrcode-terminal@0.12.0
+├── ws@8.22.0
+└── zca-js@2.2.0
+
+### Chẩn đoán 7 — 2026-11-06T12:55:28+07:00
+- Lệnh: `node --version`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 0. v20.20.2
+
+### Chẩn đoán 8 — 2026-11-06T12:55:28+07:00
+- Lệnh: `rg -n "SESSION_FILE|WebSocketServer|login|timestamp" daemon/index.mjs`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 0. 4:import WebSocket, { WebSocketServer } from "ws";
+7:const SESSION_FILE = "session.json";
+13:const wss = new WebSocketServer({port: PORT})
+53:if (fs.existsSync(SESSION_FILE)) {
+55:  const session = JSON.parse(fs.readFileSync(SESSION_FILE, "utf-8"));
+56:  api = await zalo.login(session);
+60:  api = await zalo.loginQR({ qrPath: QR_FILE }, async (event) => {
+84:  fs.writeFileSync(SESSION_FILE, JSON.stringify(sessionData, null, 2));
+105:    timestamp: message.data.ts,
+
+### Chẩn đoán 9 — 2026-11-06T12:55:28+07:00
+- Lệnh: `timeout 3s /tmp/zalo-progress`
+- Mục đích: Xác định tiến độ và lỗi chạy cục bộ.
+- Kết quả: Exit 1. 2026/11/06 12:55:28 Connecting to daemon at ws://127.0.0.1:8989
+2026/11/06 12:55:28 Can not connect to daemon!
+
+### Chẩn đoán 10 — 2026-11-06T12:55:38+07:00
+- Lệnh: `ss -ltn 'sport = :8989'` (thư mục: repo).
+- Mục đích: Kiểm tra cổng và khả năng nạp thư viện daemon.
+- Kết quả: Exit 0. State Recv-Q Send-Q Local Address:Port Peer Address:Port
+Cannot open netlink socket: Operation not permitted
+
+### Chẩn đoán 11 — 2026-11-06T12:55:38+07:00
+- Lệnh: `node --input-type=module -e 'import { Zalo, ThreadType } from "zca-js"; import { WebSocketServer } from "ws"; console.log(typeof Zalo, typeof ThreadType, typeof WebSocketServer)'` (thư mục: daemon).
+- Mục đích: Kiểm tra cổng và khả năng nạp thư viện daemon.
+- Kết quả: Exit 0. function object function
+
+### Sửa timestamp 1 — 2026-11-06T13:01:01+07:00
+- Lệnh: `node --check daemon/index.mjs`
+- Mục đích: Kiểm tra bản sửa định dạng timestamp IPC.
+- Kết quả: Exit 0. Không có output.
+
+### Sửa timestamp 2 — 2026-11-06T13:01:01+07:00
+- Lệnh: `go build ./...`
+- Mục đích: Kiểm tra bản sửa định dạng timestamp IPC.
+- Kết quả: Exit 0. Không có output.
+
+### Sửa timestamp 3 — 2026-11-06T13:01:01+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra bản sửa định dạng timestamp IPC.
+- Kết quả: Exit 0. Không có output.
+
+### IPC khảo sát 1 — 2026-11-09T18:17:13.703116+07:00
+- Lệnh: `git status --short --branch`
+- Mục đích: Kiểm tra trạng thái trước khi hoàn thiện IPC.
+- Kết quả: Exit 0, 79 ký tự output.
+
+### IPC khảo sát 2 — 2026-11-09T18:17:13.704984+07:00
+- Lệnh: `cat cmd/zalo-cli/main.go go.mod`
+- Mục đích: Kiểm tra trạng thái trước khi hoàn thiện IPC.
+- Kết quả: Exit 0, 1983 ký tự output.
+
+### IPC khảo sát 3 — 2026-11-09T18:17:13.706604+07:00
+- Lệnh: `cat daemon/index.mjs`
+- Mục đích: Kiểm tra trạng thái trước khi hoàn thiện IPC.
+- Kết quả: Exit 0, 3765 ký tự output.
+
+### IPC khảo sát 4 — 2026-11-09T18:17:13.709019+07:00
+- Lệnh: `tail -35 CHANGELOG.md`
+- Mục đích: Kiểm tra trạng thái trước khi hoàn thiện IPC.
+- Kết quả: Exit 0, 2420 ký tự output.
+
+### IPC khảo sát 5 — 2026-11-09T18:17:13.713537+07:00
+- Lệnh: `rg --files --hidden -g AGENTS.md -g "!.git" -g "!node_modules"`
+- Mục đích: Kiểm tra trạng thái trước khi hoàn thiện IPC.
+- Kết quả: Exit 0, 10 ký tự output.
+
+### IPC tạo mã — 2026-11-09T18:17:45.812406+07:00
+- Lệnh: Python heredoc tạo internal/ipc/protocol.go, internal/ipc/client.go và cập nhật cmd/zalo-cli/main.go, CHANGELOG.md.
+- Mục đích: Tách luồng đọc IPC qua channel và quản lý hủy kết nối.
+- Kết quả: Đã ghi các file.
+
+### IPC kiểm chứng 1 — 2026-11-09T18:18:03.531218+07:00
+- Lệnh: `gofmt -w internal/ipc cmd/zalo-cli/main.go`
+- Mục đích: Định dạng, build và kiểm tra luồng nhận/hủy IPC.
+- Kết quả: Exit 0. Không có output.
+
+### IPC kiểm chứng 2 — 2026-11-09T18:18:04.352607+07:00
+- Lệnh: `go build ./...`
+- Mục đích: Định dạng, build và kiểm tra luồng nhận/hủy IPC.
+- Kết quả: Exit 0. Không có output.
+
+### IPC kiểm chứng 3 — 2026-11-09T18:18:23.712242+07:00
+- Lệnh: `go test -race ./...`
+- Mục đích: Định dạng, build và kiểm tra luồng nhận/hủy IPC.
+- Kết quả: Exit 1. FAIL	zalo-cli/cmd/zalo-cli [setup failed]
+FAIL	zalo-cli/internal/ipc [build failed]
+FAIL
+# zalo-cli/cmd/zalo-cli
+package zalo-cli/cmd/zalo-cli: cannot find package
+testing/internal/testdeps: package testmain: cannot find package
+runtime/race: package zalo-cli/cmd/zalo-cli: cannot find package
+
+### IPC kiểm chứng 4 — 2026-11-09T18:18:23.740250+07:00
+- Lệnh: `go vet ./...`
+- Mục đích: Định dạng, build và kiểm tra luồng nhận/hủy IPC.
+- Kết quả: Exit 1. pattern ./...: open /home/sweetvn/.cache/go-build/61/617053a861719b0dbab7eea556f9b0a0c593e96c7f269b5c444070f426731a32-d: read-only file system
+
+### IPC kiểm chứng 5 — 2026-11-09T18:18:23.746144+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Định dạng, build và kiểm tra luồng nhận/hủy IPC.
+- Kết quả: Exit 0. Không có output.
+
+### IPC kiểm tra cache tạm — 2026-11-09T18:18:55.397742+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go test -race ./...`
+- Mục đích: Dùng cache ghi được để chạy kiểm tra.
+- Kết quả: Exit 1. ?   	zalo-cli/cmd/zalo-cli	[no test files]
+--- FAIL: TestReceiveAfterMalformedJSONAndDisconnect (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: socket: operation not permitted [recovered, repanicked]
+
+goroutine 8 [running]:
+testing.tRunner.func1.2({0xdccd48, 0xc000040520})
+	/usr/lib/go/src/testing/testing.go:2125 +0x419
+testing.tRunner.func1()
+	/usr/lib/go/src/testing/testing.go:2128 +0x65f
+panic({0xdccd48?, 0xc000040520?})
+	/usr/lib/go/src/runtime/panic.go:859 +0x125
+net/http/httptest.newLocalListener()
+	/usr/lib/go/src/net/http/httptest/server.go:226 +0x165
+net/http/httptest.NewUnstartedServer(...)
+	/usr/lib/go/src/net/http/httptest/server.go:284
+net/http/httptest.NewServer({0xe22540, 0xe26a10})
+	/usr/lib/go/src/net/http/httptest/server.go:267 +0x2c
+zalo-cli/internal/ipc.TestReceiveAfterMalformedJSONAndDisconnect(0xc0000d8488)
+	/home/sweetvn/MyProjects/zalo-cli/internal/ipc/client_test.go:15 +0x45
+testing.tRunner(0xc0000d8488, 0xe26958)
+	/usr/lib/go/src/testing/testing.go:2195 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/lib/go/src/testing/testing.go:2260 +0xb13
+FAIL	zalo-cli/internal/ipc	0.014s
+FAIL
+
+### IPC kiểm tra cache tạm — 2026-11-09T18:19:09.426690+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go vet ./...`
+- Mục đích: Dùng cache ghi được để chạy kiểm tra.
+- Kết quả: Exit 0. Không có output.
+
+### IPC kiểm tra WebSocket cục bộ — 2026-11-09T18:19:18.697506+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go test -race ./...`
+- Mục đích: Kiểm tra race và đóng kết nối với quyền mở cổng localhost.
+- Kết quả: Exit 0. ?   	zalo-cli/cmd/zalo-cli	[no test files]
+ok  	zalo-cli/internal/ipc	1.016s
+
+### IPC lưu bước — 2026-11-09T18:19:31.983950+07:00
+- Lệnh: `git add -- cmd/zalo-cli/main.go internal/ipc daemon/index.mjs CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu bước IPC và bản sửa timestamp đã có.
+- Kết quả: Exit 128. fatal: Unable to create '/home/sweetvn/MyProjects/zalo-cli/.git/index.lock': Read-only file system

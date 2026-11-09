@@ -102,7 +102,7 @@ api.listener.on("message", (message) => {
     sender_id: message.data.uidFrom,
     sender_name: message.data.dName || "Người lạ",
     content: message.data.content,
-    timestamp: message.data.ts,
+    timestamp: Number(message.data.ts),
     is_self: !!message.isSelf,
   };
 

@@ -67,3 +67,20 @@
   - Output Bảo gửi xác nhận Git đã nhìn thấy `cmd/zalo-cli/main.go`, `go.mod`, `go.sum`.
   - Bảo báo `go build ./...` và `git diff --check` không in output hoặc báo lỗi; agent chưa chạy lại các lệnh này.
   - Chưa kiểm chứng kết nối Zalo thực tế trong lượt này.
+
+### Sửa kiểu timestamp trong sự kiện IPC
+* **Thời gian:** 2026-11-06 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** `fix(daemon)`.
+* **Files Changed:** `daemon/index.mjs`.
+* **Chi tiết:** Chuẩn hóa `message.data.ts` thành số trước khi phát `new_message`. Zalo có thể trả timestamp dưới dạng chuỗi, khiến Go không giải mã được trường `int64` và bỏ qua cả tin nhắn.
+
+### Hoàn thiện luồng nhận IPC qua channel
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** refactor(ipc).
+* **Files Changed:** internal/ipc/protocol.go, internal/ipc/client.go, cmd/zalo-cli/main.go.
+* **Chi tiết:** Tách struct JSON và WebSocket client khỏi entrypoint. Goroutine chuyển sự kiện/lỗi qua channel có buffer. Hủy context đóng socket để giải phóng ReadMessage. Close chờ goroutine dừng. JSON lỗi được báo rồi tiếp tục đọc, mất kết nối kết thúc stream và CLI.
+* **Nguyên nhân:** Chuẩn bị đưa dữ liệu vào TUI và khắc phục CLI chờ Ctrl+C vô hạn sau khi daemon ngắt.
+* **Kiểm thử bổ sung:** internal/ipc/client_test.go dùng WebSocket cục bộ kiểm tra JSON lỗi rồi tin hợp lệ, ngắt kết nối và hủy goroutine đang chờ đọc.
+* **Kết quả:** go build ./..., go vet ./..., go test -race ./... đều qua khi dùng cache tạm và cho phép cổng localhost. Chưa kiểm chứng lại với phiên Zalo thật.
