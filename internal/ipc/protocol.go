@@ -2,6 +2,8 @@ package ipc
 
 // Event là sự kiện JSON mà daemon phát qua WebSocket.
 type Event struct {
+	Cursor     string      `json:"cursor,omitempty"`
+	HasMore    bool        `json:"has_more,omitempty"`
 	Messages   []Message   `json:"messages,omitempty"`
 	ThreadID   string      `json:"thread_id,omitempty"`
 	ThreadType string      `json:"thread_type,omitempty"`
@@ -40,6 +42,7 @@ type SendRequest struct {
 }
 
 type SendPayload struct {
+	BeforeID   string `json:"before_id,omitempty"`
 	ThreadID   string `json:"thread_id"`
 	ThreadType string `json:"thread_type"`
 	Text       string `json:"text"`

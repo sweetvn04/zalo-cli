@@ -1,11 +1,61 @@
 package tui
 
 import (
+	"fmt"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"zalo-cli/internal/ipc"
 )
+
+func TestScrollKeysAndMouseMoveChat(t *testing.T) {
+	m := fixture()
+	for i := 0; i < 80; i++ {
+		m.appendLine("user:an", &chatLine{text: fmt.Sprintf("Dòng %d", i)})
+	}
+	m.refreshChat(true)
+	bottom := m.chat.YOffset
+	m = update(m, tea.MouseMsg{X: 60, Y: 10, Button: tea.MouseButtonWheelUp, Action: tea.MouseActionPress})
+	if m.chat.YOffset >= bottom {
+		t.Fatal("mouse wheel did not scroll chat")
+	}
+	offset := m.chat.YOffset
+	m = update(m, tea.KeyMsg{Type: tea.KeyUp})
+	if m.chat.YOffset >= offset {
+		t.Fatal("up arrow did not scroll while composing")
+	}
+	m = update(m, tea.KeyMsg{Type: tea.KeyPgUp})
+	if m.chat.YOffset >= offset {
+		t.Fatal("PageUp did not scroll")
+	}
+}
+
+func TestOlderHistoryKeepsViewportAnchorAndDoesNotDropLoadedMessages(t *testing.T) {
+	m := fixture()
+	state := m.historyStates["user:an"]
+	state.loading, state.loaded, state.more, state.cursor = false, true, true, "1000"
+	for i := 1000; i < 1600; i++ {
+		m.appendLine("user:an", &chatLine{id: fmt.Sprint(i), text: fmt.Sprintf("Tin %d", i), timestamp: int64(i)})
+	}
+	m.refreshChat(false)
+	m.chat.SetYOffset(9)
+	anchor := m.chat.View()
+	if m.loadOlder() == nil || !state.older {
+		t.Fatal("expected older history request")
+	}
+	m = update(m, requestStarted{kind: "history", thread: "user:an", id: "older-1", attempt: state.attempt})
+	m.handleEvent(ipc.Event{Event: "history_result", ID: "older-1", OK: true, ThreadID: "an", ThreadType: "user",
+		Cursor: "999", HasMore: true, Messages: []ipc.Message{{MsgID: "999", ThreadID: "an", ThreadType: "user", Timestamp: 999, Content: "Cũ hơn"}}})
+	if len(m.history["user:an"]) != 601 {
+		t.Fatal("loaded messages were truncated")
+	}
+	if m.chat.View() != anchor {
+		t.Fatal("loading older history moved the reading position")
+	}
+	if state.cursor != "999" || !state.more {
+		t.Fatal("cursor did not advance")
+	}
+}
 
 func TestHistoryMergesRealtimeWithoutCrossingConversations(t *testing.T) {
 	m := fixture()

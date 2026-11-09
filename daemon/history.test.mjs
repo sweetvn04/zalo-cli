@@ -132,3 +132,48 @@ test("lỗi quyền truy cập nhóm không bị coi là endpoint 404", async ()
   const api = { async getGroupChatHistory() { throw new Error("Request failed with status code 403"); } };
   await assert.rejects(loadHistory(api, "group-1", "group"), /403/);
 });
+
+test("phân trang giữ đủ hơn 100 tin và dùng con trỏ mới", async () => {
+  const listener = new EventEmitter();
+  const cursors = [];
+  listener.requestOldMessages = (type, cursor) => {
+    cursors.push(cursor);
+    const ceiling = cursor === null ? 251 : Number(cursor);
+    const batch = Array.from({ length: Math.min(250, ceiling-1) }, (_, i) => {
+      const id = ceiling-i-1;
+      return message(String(id), "an", id, "Tin " + id);
+    });
+    queueMicrotask(() => listener.emit("old_messages", batch, type));
+  };
+  const api = { listener };
+  let before = "";
+  const loaded = [];
+  for (let page = 0; page < 5; page++) {
+    const response = await loadHistory(api, "an", "user", before);
+    loaded.push(...response.messages.map(m => m.msg_id));
+    if (!response.has_more) break;
+    assert.ok(BigInt(response.cursor) < BigInt(before || "9999"));
+    before = response.cursor;
+  }
+  assert.equal(new Set(loaded).size, 250);
+  assert.equal(loaded.length, 250);
+  assert.ok(cursors.includes("151"));
+  assert.ok(cursors.includes("51"));
+});
+
+test("hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa", async () => {
+  const listener = new EventEmitter();
+  let requestsInFlight = 0;
+  listener.requestOldMessages = (type, cursor) => {
+    assert.equal(requestsInFlight++, 0);
+    const messages = cursor === null ? [message("200", "an", 200, "Mới")]
+      : cursor === "150" ? [message("100", "an", 100, "Cũ")] : [];
+    setImmediate(() => { requestsInFlight--; listener.emit("old_messages", messages, type); });
+  };
+  const api = { listener };
+  const [first, older] = await Promise.all([
+    loadHistory(api, "an", "user"), loadHistory(api, "an", "user", "150"),
+  ]);
+  assert.deepEqual(first.messages.map(m => m.msg_id), ["200"]);
+  assert.deepEqual(older.messages.map(m => m.msg_id), ["100"]);
+});

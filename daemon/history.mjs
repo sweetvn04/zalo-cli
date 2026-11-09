@@ -21,7 +21,7 @@ const unavailableGroupHTTP = new WeakSet();
 
 // old_messages không có request ID. Chỉ một chuỗi phân trang được chạy trên
 // mỗi loại hội thoại; các client cùng chờ snapshot rồi lọc đúng hội thoại.
-async function oldMessageSnapshot(api, threadType) {
+async function oldMessageSnapshot(api, threadType, beforeID = "") {
   let states = snapshots.get(api);
   if (!states) {
     states = new Map();
@@ -36,15 +36,22 @@ async function oldMessageSnapshot(api, threadType) {
       state.time = 0;
     });
   }
-  if (state.pending) return state.pending;
-  if (state.result && Date.now() - state.time < 30000) return state.result;
+  if (state.pending) {
+    const requestedCursor = state.requestedCursor;
+    const result = await state.pending;
+    if (requestedCursor === beforeID) return result;
+    return oldMessageSnapshot(api, threadType, beforeID);
+  }
+  if (state.result && state.requestedCursor === beforeID && Date.now() - state.time < 30000) return state.result;
   const label = threadType === ThreadType.Group ? "nhóm" : "cá nhân";
   if (state.blocked) throw new Error(`Lịch sử ${label} chưa phản hồi; cần kết nối lại daemon trước khi thử lại`);
+  state.requestedCursor = beforeID;
   state.pending = (async () => {
     const all = [];
     const seen = new Set();
-    let cursor = null;
+    let cursor = beforeID || null;
     let partial = true;
+    let more = true;
     const deadline = Date.now() + 15000;
     for (let page = 0; page < 10; page++) {
       const remaining = deadline - Date.now();
@@ -76,9 +83,10 @@ async function oldMessageSnapshot(api, threadType) {
         if (all.length) return null;
         throw error;
       });
-      if (messages === null) break;
+      if (messages === null) { more = false; break; }
       if (!messages.length) {
         partial = false;
+        more = false;
         break;
       }
       let oldest = null;
@@ -93,10 +101,13 @@ async function oldMessageSnapshot(api, threadType) {
         }
         if (/^\d+$/.test(id) && (oldest === null || BigInt(id) < BigInt(oldest))) oldest = id;
       }
-      if (!added || oldest === null || oldest === cursor) break;
+      if (!added || oldest === null || (cursor !== null && BigInt(oldest) >= BigInt(cursor))) {
+        more = false;
+        break;
+      }
       cursor = oldest;
     }
-    return { messages: all, partial };
+    return { messages: all, partial, cursor: cursor ?? "", more };
   })();
   try {
     state.result = await state.pending;
@@ -107,15 +118,22 @@ async function oldMessageSnapshot(api, threadType) {
   }
 }
 
-export async function loadHistory(api, threadID, threadType) {
+export async function loadHistory(api, threadID, threadType, beforeID = "") {
   let raw;
   let partial;
+  let cursor = "";
+  let more = false;
   if (threadType === "group") {
-    if (!unavailableGroupHTTP.has(api)) {
+    if (!beforeID && !unavailableGroupHTTP.has(api)) {
       try {
         const response = await api.getGroupChatHistory(threadID, 100);
         raw = response.groupMsgs;
         partial = Number(response.more) > 0;
+        more = partial;
+        for (const message of raw) {
+          const id = String(message.data?.msgId ?? "");
+          if (/^\d+$/.test(id) && (!cursor || BigInt(id) < BigInt(cursor))) cursor = id;
+        }
       } catch (error) {
         // zca-js chỉ giữ message HTTP, không đưa status vào ZaloApiError.
         if (error.message !== "Request failed with status code 404") throw error;
@@ -123,17 +141,33 @@ export async function loadHistory(api, threadID, threadType) {
       }
     }
     if (!raw) {
-      const response = await oldMessageSnapshot(api, ThreadType.Group);
+      const response = await oldMessageSnapshot(api, ThreadType.Group, beforeID);
       raw = response.messages;
       partial = response.partial;
+      cursor = response.cursor;
+      more = response.more;
     }
   } else {
-    const response = await oldMessageSnapshot(api, ThreadType.User);
+    const response = await oldMessageSnapshot(api, ThreadType.User, beforeID);
     raw = response.messages;
     partial = response.partial;
+    cursor = response.cursor;
+    more = response.more;
   }
   const messages = raw.map(normalizeMessage).filter(message => message &&
-    message.thread_id === threadID && message.thread_type === threadType);
+    message.thread_id === threadID && message.thread_type === threadType &&
+    (!beforeID || (/^\d+$/.test(message.msg_id) && BigInt(message.msg_id) < BigInt(beforeID))));
   messages.sort((a, b) => a.timestamp - b.timestamp);
-  return { messages: messages.slice(-100), partial: partial || messages.length > 100 };
+  const selected = messages.slice(-100);
+  // Nếu đã lấy nhiều hơn 100 tin của chat này, trang kế tiếp phải bắt đầu
+  // từ tin cũ nhất vừa hiển thị, tránh bỏ qua phần bị cắt trong snapshot.
+  if (messages.length > 100 || (!cursor && selected.length)) {
+    cursor = selected.reduce((oldest, message) => {
+      if (!/^\d+$/.test(message.msg_id)) return oldest;
+      return !oldest || BigInt(message.msg_id) < BigInt(oldest) ? message.msg_id : oldest;
+    }, "");
+  }
+  more = more || messages.length > 100;
+  if (!cursor || (beforeID && BigInt(cursor) >= BigInt(beforeID))) more = false;
+  return { messages: selected, partial: partial || messages.length > 100, cursor, has_more: more };
 }

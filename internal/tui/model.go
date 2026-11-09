@@ -17,7 +17,7 @@ type transport interface {
 	Results() <-chan ipc.Result
 	ListRecipients() (string, error)
 	SendMessage(string, string, string) (string, error)
-	History(string, string) (string, error)
+	History(string, string, ...string) (string, error)
 }
 
 type packet struct {
@@ -83,7 +83,7 @@ func Run(ctx context.Context, url string) error {
 		return err
 	}
 	defer client.Close()
-	_, err = tea.NewProgram(newModel(client), tea.WithAltScreen(), tea.WithContext(ctx)).Run()
+	_, err = tea.NewProgram(newModel(client), tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithContext(ctx)).Run()
 	if ctx.Err() != nil {
 		return nil
 	}
@@ -279,15 +279,36 @@ func (m *model) handleEvent(event ipc.Event) {
 
 func (m *model) appendLine(k string, line *chatLine) {
 	m.history[k] = append(m.history[k], line)
-	if len(m.history[k]) > 500 {
-		m.history[k] = m.history[k][len(m.history[k])-500:]
-	}
 }
 
 func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := message.(type) {
 	case tea.WindowSizeMsg:
 		m.resize(msg.Width, msg.Height)
+		return m, nil
+	case tea.MouseMsg:
+		if m.width < 68 || m.height < 18 {
+			return m, nil
+		}
+		if msg.Button != tea.MouseButtonWheelUp && msg.Button != tea.MouseButtonWheelDown {
+			return m, nil
+		}
+		if msg.X < m.sidebarWidth() {
+			if msg.Button == tea.MouseButtonWheelUp {
+				m.cursor = max(0, m.cursor-1)
+			} else {
+				m.cursor = min(max(0, len(m.visible())-1), m.cursor+1)
+			}
+			return m, nil
+		}
+		if msg.Button == tea.MouseButtonWheelUp {
+			m.chat.LineUp(3)
+			if m.chat.AtTop() {
+				return m, m.loadOlder()
+			}
+		} else {
+			m.chat.LineDown(3)
+		}
 		return m, nil
 	case packet:
 		if !msg.open {
@@ -360,6 +381,14 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		switch msg.String() {
+		case "f7":
+			return m, m.loadOlder()
+		case "ctrl+home":
+			m.chat.GotoTop()
+			return m, m.loadOlder()
+		case "ctrl+end":
+			m.chat.GotoBottom()
+			return m, nil
 		case "f6":
 			return m, m.loadHistory(true)
 		case "tab", "shift+tab":
@@ -381,6 +410,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "pgup", "pgdown", "ctrl+u", "ctrl+d":
 			if msg.String() == "pgup" || msg.String() == "ctrl+u" {
 				m.chat.HalfViewUp()
+				if m.chat.AtTop() {
+					return m, m.loadOlder()
+				}
 			} else {
 				m.chat.HalfViewDown()
 			}
@@ -390,11 +422,18 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = max(0, m.cursor-1)
 				return m, nil
 			}
+			m.chat.LineUp(1)
+			if m.chat.AtTop() {
+				return m, m.loadOlder()
+			}
+			return m, nil
 		case "down":
 			if !m.editing {
 				m.cursor = min(max(0, len(m.visible())-1), m.cursor+1)
 				return m, nil
 			}
+			m.chat.LineDown(1)
+			return m, nil
 		case "enter":
 			if !m.editing {
 				return m, m.openSelected()

@@ -9,6 +9,8 @@ import (
 )
 
 type historyState struct {
+	cursor                   string
+	more, older              bool
 	id                       string
 	attempt                  int
 	loading, loaded, partial bool
@@ -17,6 +19,22 @@ type historyState struct {
 }
 
 func (m *model) loadHistory(force bool) tea.Cmd {
+	return m.loadHistoryPage(force, false)
+}
+
+func (m *model) loadOlder() tea.Cmd {
+	state := m.historyStates[m.active]
+	if state == nil || !state.loaded || state.loading {
+		return nil
+	}
+	if !state.more || state.cursor == "" {
+		m.status = "Đã tới đầu phần lịch sử Zalo cung cấp cho cuộc chat này."
+		return nil
+	}
+	return m.loadHistoryPage(true, true)
+}
+
+func (m *model) loadHistoryPage(force, older bool) tea.Cmd {
 	r, ok := m.recipient()
 	if !ok || !m.connected {
 		return nil
@@ -31,13 +49,19 @@ func (m *model) loadHistory(force bool) tea.Cmd {
 		return nil
 	}
 	state.loading, state.id, state.error = true, "", ""
+	state.older = older
 	state.attempt++
 	state.early = make(map[string]ipc.Event)
 	attempt := state.attempt
 	m.status = "Đang tải tin nhắn cũ..."
+	beforeID := ""
+	if older {
+		beforeID = state.cursor
+		m.status = "Đang tải thêm tin cũ..."
+	}
 	m.refreshChat(false)
 	request := func() tea.Msg {
-		id, err := m.client.History(r.ThreadID, r.ThreadType)
+		id, err := m.client.History(r.ThreadID, r.ThreadType, beforeID)
 		return requestStarted{kind: "history", thread: k, id: id, err: err, attempt: attempt}
 	}
 	return tea.Batch(request, tea.Tick(30*time.Second, func(time.Time) tea.Msg {
@@ -95,14 +119,24 @@ func (m *model) handleHistory(event ipc.Event) {
 			m.refreshChat(false)
 			return
 		}
+		initial := !state.loaded
 		state.loaded, state.partial, state.error = true, event.Partial, ""
+		state.cursor, state.more = event.Cursor, event.HasMore
+		oldHeight, oldOffset := m.chat.TotalLineCount(), m.chat.YOffset
+		atBottom := m.chat.AtBottom()
 		m.mergeHistory(k, event.Messages)
 		if m.active == k {
-			m.status = "Đã tải tin văn bản gần đây. F6 để tải lại."
-			if event.Partial {
-				m.status = "Đã tải một phần tin gần đây Zalo cung cấp. F6 để tải lại."
+			m.status = "Đã tải tin cũ. Cuộn chuột hoặc PgUp/PgDn để đọc."
+			if state.more {
+				m.status = "Cuộn lên đầu hoặc F7 để tải thêm tin cũ."
+			} else if event.Partial {
+				m.status = "Zalo chưa cung cấp thêm tin cũ. F6 để thử tải lại."
 			}
-			m.refreshChat(true)
+			m.refreshChat(initial || (!state.older && atBottom))
+			if state.older {
+				// Tin được thêm phía trên: giữ nguyên đoạn người dùng đang đọc.
+				m.chat.SetYOffset(oldOffset + max(0, m.chat.TotalLineCount()-oldHeight))
+			}
 		}
 		return
 	}
@@ -133,7 +167,4 @@ func (m *model) mergeHistory(k string, messages []ipc.Message) {
 	sort.SliceStable(m.history[k], func(i, j int) bool {
 		return m.history[k][i].timestamp < m.history[k][j].timestamp
 	})
-	if len(m.history[k]) > 500 {
-		m.history[k] = m.history[k][len(m.history[k])-500:]
-	}
 }

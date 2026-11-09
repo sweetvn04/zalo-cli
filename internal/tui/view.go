@@ -151,7 +151,7 @@ func (m model) View() string {
 		if r.ThreadType == "group" {
 			subtitle = "Nhóm"
 		}
-		subtitle += " · Tin văn bản gần đây · F6 tải lại"
+		subtitle += fmt.Sprintf(" · %d tin · %.0f%% · F7 thêm", len(m.history[m.active]), m.chat.ScrollPercent()*100)
 		if state := m.historyStates[m.active]; state != nil {
 			if state.loading {
 				subtitle = "Đang tải tin nhắn cũ..."
@@ -172,6 +172,6 @@ func (m model) View() string {
 	}, "\n")
 	right := panel.BorderForeground(rightColor).Width(rightWidth + 2).Height(innerHeight).Render(chat)
 	footer := clip(" "+oneLine(m.status), m.width)
-	help := muted.Render(clip(" Tab đổi cột · ↑↓ chọn · Enter mở/gửi · PgUp/PgDn cuộn · F5 danh sách · F6 tin cũ · Esc thoát", m.width))
+	help := muted.Render(clip(" Chuột/↑↓/PgUp cuộn · F7 thêm tin cũ · Tab đổi cột · Enter gửi · F6 tải lại · Esc thoát", m.width))
 	return header + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, left, right) + "\n" + footer + "\n" + help
 }

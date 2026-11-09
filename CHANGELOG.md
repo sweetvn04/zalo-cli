@@ -136,3 +136,13 @@
 * **Chi tiết:** Chuyển sang requestOldMessages(ThreadType.Group) khi HTTP 404 và bỏ qua HTTP này trong các lần gọi sau của phiên. Tách snapshot, cursor, cache và single-flight theo user/group để tránh trộn lịch sử. Giữ lỗi HTTP khác để không che lỗi quyền truy cập.
 * **Tests:** Tái hiện đúng chuỗi lỗi 404, lọc từng nhóm, cache sau fallback, user/group đồng thời và bảo toàn lỗi 403.
 * **Kết quả:** Kiểm tra cú pháp và 14 ca Node đều qua. Chưa xác nhận fallback với tài khoản Zalo thật.
+
+### Cuộn chat và tải tiếp lịch sử theo con trỏ
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** fix(history), feat(tui).
+* **Files Changed:** daemon/history.mjs, daemon/history.test.mjs, daemon/ipc.mjs, internal/ipc/client.go, internal/ipc/protocol.go, internal/tui/model.go, internal/tui/history.go, internal/tui/history_test.go, internal/tui/model_test.go, internal/tui/view.go.
+* **Nguyên nhân:** Chưa bật hoặc xử lý mouse wheel, mũi tên khi nhập không cuộn chat; mỗi phản hồi chỉ trả 100 tin, UI cắt còn 500 tin, F6 lặp lại trang gần nhất.
+* **Chi tiết:** Bật mouse cell motion, xử lý wheel theo cột, mũi tên khi soạn và PgUp/PgDn cuộn chat; Ctrl+Home/End đầu/cuối. before_id/cursor/has_more cho phép tải tiếp với F7 hoặc khi cuộn tới đầu. Cache riêng từng con trỏ, tuần tự hóa các request cùng loại để không nhầm phản hồi WebSocket. Không cắt 500 tin đã tải; giữ vị trí đọc khi thêm tin cũ phía trên. Hiển thị số tin và phần trăm cuộn.
+* **Giới hạn:** Chỉ tải tiếp khi Zalo trả con trỏ tiến được; không bảo đảm toàn bộ lịch sử máy chủ còn lưu hoặc cho phép truy cập.
+* **Files Changed bổ sung:** plan.md. Build, vet, race tests toàn bộ, 16 ca Node và terminal mẫu với F7/mouse wheel đã qua. Kiểm thử xác nhận đủ 250 tin qua nhiều trang, giữ trên 500 tin và giữ nguyên viewport khi thêm tin phía trước. Chưa xác nhận phân trang mới trên tài khoản thật.

@@ -10,13 +10,16 @@ export async function handleCommand(raw, api) {
     id = command?.id;
     if (command?.action === "get_history") {
       event = "history_result";
-      const { thread_id, thread_type } = command.payload ?? {};
+      const { thread_id, thread_type, before_id = "" } = command.payload ?? {};
       if (typeof thread_id !== "string" || !thread_id.trim() ||
           !["user", "group"].includes(thread_type)) {
         throw new Error("Hội thoại không hợp lệ");
       }
       if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
-      const history = await loadHistory(api, thread_id, thread_type);
+      if (typeof before_id !== "string" || (before_id && !/^\d+$/.test(before_id))) {
+        throw new Error("Con trỏ lịch sử không hợp lệ");
+      }
+      const history = await loadHistory(api, thread_id, thread_type, before_id);
       return { event, id, ok: true, thread_id, thread_type, ...history };
     }
     if (command?.action === "list_recipients") {

@@ -100,11 +100,15 @@ func (c *Client) ListRecipients() (string, error) {
 	return c.request("list_recipients", nil)
 }
 
-func (c *Client) History(threadID, threadType string) (string, error) {
+func (c *Client) History(threadID, threadType string, beforeID ...string) (string, error) {
 	if strings.TrimSpace(threadID) == "" || (threadType != "user" && threadType != "group") {
 		return "", fmt.Errorf("hội thoại không hợp lệ")
 	}
-	return c.request("get_history", &SendPayload{ThreadID: threadID, ThreadType: threadType})
+	payload := &SendPayload{ThreadID: threadID, ThreadType: threadType}
+	if len(beforeID) > 0 {
+		payload.BeforeID = beforeID[0]
+	}
+	return c.request("get_history", payload)
 }
 
 func (c *Client) request(action string, payload *SendPayload) (string, error) {

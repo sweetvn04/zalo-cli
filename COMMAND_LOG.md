@@ -1638,3 +1638,209 @@ ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
 - Lệnh: `git diff --check`
 - Mục đích: Tái hiện 404 và kiểm tra lịch sử WebSocket nhóm.
 - Kết quả: Exit 0. Không có output.
+
+### Lưu bản sửa 404 — 2026-11-09T21:06:16.687349+07:00
+- Lệnh: `git add -- daemon/history.mjs daemon/history.test.mjs CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu fallback đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu bản sửa 404 — 2026-11-09T21:06:16.692911+07:00
+- Lệnh: `git commit -m fix(history): fall back to group WebSocket history on HTTP 404`
+- Mục đích: Lưu fallback đã kiểm chứng.
+- Kết quả: Exit 0. [main 25d604c] fix(history): fall back to group WebSocket history on HTTP 404
+ 4 files changed, 240 insertions(+), 12 deletions(-)
+
+### Cuộn lịch sử khảo sát — 2026-11-09T21:33:24.010547+07:00
+- Lệnh: `git status --short`
+- Mục đích: Kiểm tra phân trang và viewport hiện tại.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### Cuộn lịch sử khảo sát — 2026-11-09T21:33:24.012168+07:00
+- Lệnh: `cat internal/tui/history.go`
+- Mục đích: Kiểm tra phân trang và viewport hiện tại.
+- Kết quả: Exit 0, 3392 ký tự output.
+
+### Cuộn lịch sử khảo sát — 2026-11-09T21:33:24.013784+07:00
+- Lệnh: `cat daemon/history.mjs`
+- Mục đích: Kiểm tra phân trang và viewport hiện tại.
+- Kết quả: Exit 0, 4842 ký tự output.
+
+### Cuộn lịch sử khảo sát — 2026-11-09T21:33:24.015239+07:00
+- Lệnh: `cat internal/tui/view.go`
+- Mục đích: Kiểm tra phân trang và viewport hiện tại.
+- Kết quả: Exit 0, 5643 ký tự output.
+
+### Cuộn lịch sử khảo sát — 2026-11-09T21:33:24.017871+07:00
+- Lệnh: `rg -n "pgup|pgdown|Mouse|requestExpired|history|resize" internal/tui/model.go`
+- Mục đích: Kiểm tra phân trang và viewport hiện tại.
+- Kết quả: Exit 0, 1130 ký tự output.
+
+### Cuộn lịch sử khảo sát — 2026-11-09T21:33:24.019448+07:00
+- Lệnh: `cat internal/ipc/protocol.go`
+- Mục đích: Kiểm tra phân trang và viewport hiện tại.
+- Kết quả: Exit 0, 1592 ký tự output.
+
+### Cuộn và phân trang kiểm chứng — 2026-11-09T21:37:35.497408+07:00
+- Lệnh: `gofmt -w internal/ipc internal/tui`
+- Mục đích: Kiểm tra cuộn, vị trí đọc và tải tiếp không mất tin.
+- Kết quả: Exit 0. Không có output.
+
+### Cuộn và phân trang kiểm chứng — 2026-11-09T21:37:36.112147+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...`
+- Mục đích: Kiểm tra cuộn, vị trí đọc và tải tiếp không mất tin.
+- Kết quả: Exit 0. Không có output.
+
+### Cuộn và phân trang kiểm chứng — 2026-11-09T21:37:36.524212+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
+- Mục đích: Kiểm tra cuộn, vị trí đọc và tải tiếp không mất tin.
+- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.026s
+
+### Cuộn và phân trang kiểm chứng — 2026-11-09T21:37:36.855211+07:00
+- Lệnh: `node daemon/history.test.mjs`
+- Mục đích: Kiểm tra cuộn, vị trí đọc và tải tiếp không mất tin.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+ok 1 - nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian
+  ---
+  duration_ms: 2.151661
+  ...
+# Subtest: cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+ok 2 - cá nhân phân trang một luồng, chia sẻ snapshot và lọc từng người
+  ---
+  duration_ms: 1.35571
+  ...
+# Subtest: lỗi lịch sử trả đúng ID và không giữ listener chờ
+ok 3 - lỗi lịch sử trả đúng ID và không giữ listener chờ
+  ---
+  duration_ms: 0.717589
+  ...
+# Subtest: trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+ok 4 - trang lỗi sau trang hợp lệ vẫn trả lịch sử một phần
+  ---
+  duration_ms: 0.289792
+  ...
+# Subtest: phản hồi gửi trả ID Zalo để ghép với lịch sử
+ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
+  ---
+  duration_ms: 0.203381
+  ...
+# Subtest: HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+ok 6 - HTTP nhóm 404 chuyển sang WebSocket và chỉ lọc đúng nhóm
+  ---
+  duration_ms: 0.479448
+  ...
+# Subtest: snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+ok 7 - snapshot WebSocket cá nhân và nhóm đồng thời không lẫn dữ liệu
+  ---
+  duration_ms: 0.583985
+  ...
+# Subtest: lỗi quyền truy cập nhóm không bị coi là endpoint 404
+ok 8 - lỗi quyền truy cập nhóm không bị coi là endpoint 404
+  ---
+  duration_ms: 0.400349
+  ...
+# Subtest: phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+ok 9 - phân trang giữ đủ hơn 100 tin và dùng con trỏ mới
+  ---
+  duration_ms: 1.230859
+  ...
+# Subtest: hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự hóa
+  ---
+  duration_ms: 6.389375
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 23.644567
+
+### Cuộn và phân trang kiểm chứng — 2026-11-09T21:37:36.859049+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra cuộn, vị trí đọc và tải tiếp không mất tin.
+- Kết quả: Exit 0. Không có output.
+
+### Chuẩn bị terminal cuộn — 2026-11-09
+- Lệnh: Python heredoc cập nhật /tmp/zalo-tui-fixture.mjs và /tmp/zalo-tui-pty.py.
+- Mục đích: Kiểm tra entrypoint với F7, before_id và mouse wheel bằng dữ liệu mẫu.
+- Kết quả: Đã cập nhật harness.
+
+### Cuộn kiểm tra hồi quy — 2026-11-09T21:38:39.911972+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
+- Mục đích: Xác nhận code và bảo toàn luồng gửi/danh sách.
+- Kết quả: Exit 0. Không có output.
+
+### Cuộn kiểm tra hồi quy — 2026-11-09T21:38:40.136542+07:00
+- Lệnh: `node daemon/ipc.test.mjs`
+- Mục đích: Xác nhận code và bảo toàn luồng gửi/danh sách.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.791135
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.269776
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.33685
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.173126
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 7.620575
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.184203
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24.449249
+
+### Cuộn kiểm tra hồi quy — 2026-11-09T21:38:40.140603+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Xác nhận code và bảo toàn luồng gửi/danh sách.
+- Kết quả: Exit 0. Không có output.
+
+### Cuộn race và terminal — 2026-11-09T21:38:49.297318+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
+- Mục đích: Kiểm tra race, F7 tải trang tiếp và mouse wheel qua terminal mẫu.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
+ok  	zalo-cli/internal/ipc	1.015s
+ok  	zalo-cli/internal/tui	1.105s
+
+### TUI build fixture — 2026-11-09T21:38:49.764813
+- Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
+- Mục đích: Đổi endpoint trong binary kiểm thử sang cổng giả lập ngẫu nhiên.
+- Kết quả: Exit 0. Thành công.
+
+### Cuộn race và terminal — 2026-11-09T21:38:53.191926+07:00
+- Lệnh: `python3 /tmp/zalo-tui-pty.py`
+- Mục đích: Kiểm tra race, F7 tải trang tiếp và mouse wheel qua terminal mẫu.
+- Kết quả: Exit 0. PASS: CLI -tui received history, sent Vietnamese, requested the next cursor via F7, accepted mouse wheel and quit with Esc.
+
+### Hoàn thiện cuộn lịch sử — 2026-11-09T21:39:31.117593+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra định dạng trước commit.
+- Kết quả: Exit 0. Không có output.
