@@ -54,3 +54,36 @@ test("gửi nhóm dùng đúng ThreadType.Group", async () => {
   });
   assert.equal(response.ok, true);
 });
+
+
+test("danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời", async () => {
+  const pages = [];
+  const result = await handleCommand(JSON.stringify({ id: "list-1", action: "list_recipients" }), {
+    async getAllFriends(count, page) {
+      pages.push([count, page]);
+      if (page === 1) return Array.from({ length: 200 }, (_, i) => ({
+        userId: String(i), displayName: "Bạn " + i,
+      }));
+      return [{ userId: "last", displayName: "An" }];
+    },
+    async getAllGroups() { return { gridVerMap: { "group-1": "v1", "removed": "v1" } }; },
+    async getGroupInfo(ids) {
+      assert.deepEqual(ids, ["group-1", "removed"]);
+      return { gridInfoMap: { "group-1": { name: "Nhóm Go" } } };
+    },
+  });
+  assert.equal(result.id, "list-1");
+  assert.equal(result.event, "recipients_result");
+  assert.equal(result.ok, true);
+  assert.equal(result.recipients.length, 202);
+  assert.deepEqual(pages, [[200, 1], [200, 2]]);
+  assert.equal(result.recipients[0].name, "An");
+  assert.ok(result.recipients.some(r => r.thread_id === "group-1" && r.thread_type === "group"));
+});
+
+test("lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu", async () => {
+  const result = await handleCommand(JSON.stringify({ id: "list-2", action: "list_recipients" }), {
+    async getAllFriends() { throw new Error("Mất mạng"); },
+  });
+  assert.deepEqual(result, { event: "recipients_result", id: "list-2", ok: false, error: "Mất mạng" });
+});

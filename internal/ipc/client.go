@@ -92,11 +92,17 @@ func (c *Client) SendMessage(threadID, threadType, text string) (string, error) 
 	if threadType != "user" && threadType != "group" {
 		return "", fmt.Errorf("loại hội thoại phải là user hoặc group")
 	}
+	return c.request("send_message", &SendPayload{ThreadID: threadID, ThreadType: threadType, Text: text})
+}
+
+// ListRecipients yêu cầu danh sách bạn bè và nhóm, kết quả về qua Results.
+func (c *Client) ListRecipients() (string, error) {
+	return c.request("list_recipients", nil)
+}
+
+func (c *Client) request(action string, payload *SendPayload) (string, error) {
 	id := fmt.Sprintf("req-%d", c.nextID.Add(1))
-	request := SendRequest{
-		ID: id, Action: "send_message",
-		Payload: SendPayload{ThreadID: threadID, ThreadType: threadType, Text: text},
-	}
+	request := SendRequest{ID: id, Action: action, Payload: payload}
 	// Gorilla WebSocket cho phép một reader và một writer đồng thời.
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()

@@ -16,11 +16,22 @@ import (
 func main() {
 	to := flag.String("to", "", "ID hội thoại Zalo cần gửi")
 	kind := flag.String("type", "user", "Loại hội thoại: user hoặc group")
+	list := flag.Bool("list", false, "Liệt kê bạn bè/nhóm; thêm -text để chọn người nhận và gửi")
 	text := flag.String("text", "", "Nội dung tin nhắn")
 	flag.Parse()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if err := run(ctx, "ws://127.0.0.1:8989", *to, *kind, *text); err != nil {
+	var err error
+	if *list {
+		if *to != "" {
+			err = fmt.Errorf("dùng -list để chọn hoặc -to để chỉ định người nhận")
+		} else {
+			err = runList(ctx, "ws://127.0.0.1:8989", *text, os.Stdin, os.Stdout)
+		}
+	} else {
+		err = run(ctx, "ws://127.0.0.1:8989", *to, *kind, *text)
+	}
+	if err != nil {
 		log.Print(err)
 		os.Exit(1)
 	}

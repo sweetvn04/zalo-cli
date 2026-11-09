@@ -190,17 +190,17 @@ ac0d756 docs: finalize command 31 in COMMAND_LOG.md
 - Lệnh: `nl -ba cmd/zalo-cli/main.go` (qua Python subprocess trong exec_command).
 - Mục đích: Đối chiếu mã nguồn và kiểm tra khả năng chạy/biên dịch.
 - Kết quả: Exit code 0; 1	package main
-     2	
+     2
      3	import (
      4		"encoding/json"
      5		"log"
      6		"os"
      7		"os/signal"
      8		"syscall"
-     9	
+     9
     10		"github.com/gorilla/websocket"
     11	)
-    12	
+    12
     13	// 1. Gom nhom goi tin tu daemon.
     14	type MessageEvent struct {
     15		Event string `json:"event"`
@@ -215,11 +215,11 @@ ac0d756 docs: finalize command 31 in COMMAND_LOG.md
     24			IsSelf     bool   `json:"is_self"`
     25		}
     26	}
-    27	
+    27
     28	func main() {
     29		serverURL := "ws://127.0.0.1:8989"
     30		log.Printf("Connecting to daemon at %s", serverURL)
-    31	
+    31
     32		// 2. Cu phap kiem tra loi IF ERR != NIL: Kiem tra xem ket noi co thanh cong khong.
     33		conn, _, err := websocket.DefaultDialer.Dial(serverURL, nil)
     34		if err != nil {
@@ -227,7 +227,7 @@ ac0d756 docs: finalize command 31 in COMMAND_LOG.md
     36		}
     37		// 3. Khi nao ham main bi tat do loi thi tu dong tat websocket
     38		defer conn.Close()
-    39	
+    39
 
 
 ### Khảo sát tiến độ 12 — 2026-11-01T21:52:50.202547+07:00
@@ -237,17 +237,17 @@ ac0d756 docs: finalize command 31 in COMMAND_LOG.md
      2	import fs from "node:fs";
      3	import { execSync } from "node:child_process";
      4	import WebSocket, { WebSocketServer } from "ws";
-     5	
+     5
      6	const PORT = 8989;
      7	const SESSION_FILE = "session.json";
      8	const QR_FILE = "qr.png";
      9	const zalo = new Zalo();
     10	let api;
-    11	
+    11
     12	// khoi tao WebSocket
     13	const wss = new WebSocketServer({port: PORT})
     14	console.log(`🚀 Daemon WebSocket Server đang mở tại ws://127.0.0.1:${PORT}`);
-    15	
+    15
     16	// ham phat du lieu cho go cli
     17	function broadcast(event, data) {
     18	  const payload = JSON.stringify({ event, data });
@@ -257,7 +257,7 @@ ac0d756 docs: finalize command 31 in COMMAND_LOG.md
     22	    }
     23	  }
     24	}
-    25	
+    25
     26	// khi co go ket noi vao
     27	wss.on("connection", (socket) => {
     28	  console.log("[IPC] Đã có client kết nối vào Web socket server!")
@@ -717,3 +717,207 @@ ok  	zalo-cli/internal/ipc	1.010s
 - Lệnh: `git diff --check`
 - Mục đích: Hiển thị ID hội thoại và kiểm tra thay đổi cuối.
 - Kết quả: Exit 0. Không có output.
+
+### Lưu bước gửi tin — 2026-11-09T18:37:19.828252+07:00
+- Lệnh: `git add -- cmd/zalo-cli/main.go cmd/zalo-cli/main_test.go internal/ipc daemon/index.mjs daemon/ipc.mjs daemon/ipc.test.mjs CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Commit tính năng đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu bước gửi tin — 2026-11-09T18:37:19.834372+07:00
+- Lệnh: `git commit -m feat(cli): send messages and await daemon acknowledgement`
+- Mục đích: Commit tính năng đã kiểm chứng.
+- Kết quả: Exit 0. [main 872f0df] feat(cli): send messages and await daemon acknowledgement
+ 10 files changed, 426 insertions(+), 22 deletions(-)
+ create mode 100644 cmd/zalo-cli/main_test.go
+ create mode 100644 daemon/ipc.mjs
+ create mode 100644 daemon/ipc.test.mjs
+
+### Danh sách khảo sát — 2026-11-09T18:43:01.489052+07:00
+- Lệnh: `git status --short`
+- Mục đích: Kiểm tra IPC và API lấy bạn bè/nhóm.
+- Kết quả: Exit 0, 35 ký tự output.
+
+### Danh sách khảo sát — 2026-11-09T18:43:01.490621+07:00
+- Lệnh: `cat daemon/ipc.mjs internal/ipc/protocol.go cmd/zalo-cli/main.go`
+- Mục đích: Kiểm tra IPC và API lấy bạn bè/nhóm.
+- Kết quả: Exit 0, 4468 ký tự output.
+
+### Danh sách khảo sát — 2026-11-09T18:43:01.502450+07:00
+- Lệnh: `rg -n "getAllFriends|getAllGroups|getGroupInfo" daemon/node_modules/zca-js/dist/apis -g "*.d.ts"`
+- Mục đích: Kiểm tra IPC và API lấy bạn bè/nhóm.
+- Kết quả: Exit 0, 720 ký tự output.
+
+### Danh sách khảo sát — 2026-11-09T18:43:01.504019+07:00
+- Lệnh: `cat daemon/ipc.test.mjs`
+- Mục đích: Kiểm tra IPC và API lấy bạn bè/nhóm.
+- Kết quả: Exit 0, 2087 ký tự output.
+
+### Đọc API danh sách — 2026-11-09T18:43:10.831739+07:00
+- Lệnh: `cat daemon/node_modules/zca-js/dist/apis/getAllFriends.d.ts daemon/node_modules/zca-js/dist/apis/getAllFriends.js daemon/node_modules/zca-js/dist/apis/getAllGroups.d.ts daemon/node_modules/zca-js/dist/apis/getGroupInfo.d.ts`
+- Mục đích: Xác định schema và phân trang bạn bè/nhóm.
+- Kết quả: Exit 0.
+
+### Đọc model danh sách — 2026-11-09T18:43:10.836041+07:00
+- Lệnh: `rg -n "interface User|type User|displayName|groupId|name:" daemon/node_modules/zca-js/dist/models/User.d.ts daemon/node_modules/zca-js/dist/models/Group.d.ts`
+- Mục đích: Xác định tên hiển thị và ID.
+- Kết quả: Exit 0.
+
+### Tạo chức năng danh sách — 2026-11-09
+- Lệnh: Python heredoc cập nhật daemon/ipc.mjs, Go protocol/client, main.go, thêm recipients.go, CHANGELOG.md.
+- Mục đích: Liệt kê và chọn người nhận trong cùng snapshot.
+- Kết quả: Đã ghi các file.
+
+### Danh sách kiểm chứng — 2026-11-09T18:44:40.092088+07:00
+- Lệnh: `gofmt -w internal/ipc cmd/zalo-cli`
+- Mục đích: Kiểm tra build, phân trang và chọn người nhận.
+- Kết quả: Exit 2. cmd/zalo-cli/recipients.go:34:23: string literal not terminated
+cmd/zalo-cli/recipients.go:35:1: string literal not terminated
+cmd/zalo-cli/recipients.go:36:2: expected operand, found '}'
+cmd/zalo-cli/recipients.go:37:2: missing ',' in argument list
+cmd/zalo-cli/recipients.go:42:2: missing ',' in argument list
+cmd/zalo-cli/recipients.go:48:5: missing ',' before newline in argument list
+cmd/zalo-cli/recipients.go:49:2: expected operand, found 'var'
+cmd/zalo-cli/recipients.go:50:2: missing ',' in argument list
+cmd/zalo-cli/recipients.go:51:21: missing ',' in argument list
+cmd/zalo-cli/recipients.go:52:2: expected operand, found 'case'
+cmd/zalo-cli/recipients.go:53:2: expected operand, found 'case'
+
+### Danh sách kiểm chứng — 2026-11-09T18:44:40.201965+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go build ./...`
+- Mục đích: Kiểm tra build, phân trang và chọn người nhận.
+- Kết quả: Exit 1. # zalo-cli/cmd/zalo-cli
+cmd/zalo-cli/recipients.go:34:40: newline in string
+cmd/zalo-cli/recipients.go:34:40: syntax error: unexpected newline in argument list; possibly missing comma or )
+cmd/zalo-cli/recipients.go:35:66: newline in string
+cmd/zalo-cli/recipients.go:69:66: newline in string
+cmd/zalo-cli/recipients.go:69:66: syntax error: unexpected newline in argument list; possibly missing comma or )
+cmd/zalo-cli/recipients.go:70:19: newline in string
+cmd/zalo-cli/recipients.go:71:2: syntax error: unexpected keyword return at end of statement
+
+### Danh sách kiểm chứng — 2026-11-09T18:44:40.239047+07:00
+- Lệnh: `node --check daemon/ipc.mjs`
+- Mục đích: Kiểm tra build, phân trang và chọn người nhận.
+- Kết quả: Exit 0. Không có output.
+
+### Danh sách kiểm chứng — 2026-11-09T18:44:40.603805+07:00
+- Lệnh: `node --test daemon/ipc.test.mjs`
+- Mục đích: Kiểm tra build, phân trang và chọn người nhận.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: /home/sweetvn/MyProjects/zalo-cli/daemon/ipc.test.mjs
+ok 1 - /home/sweetvn/MyProjects/zalo-cli/daemon/ipc.test.mjs
+  ---
+  duration_ms: 296.24273
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 303.423186
+
+### Danh sách kiểm chứng — 2026-11-09T18:44:40.607862+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra build, phân trang và chọn người nhận.
+- Kết quả: Exit 0. Không có output.
+
+### Danh sách kiểm tra lại — 2026-11-09T18:44:52.439827+07:00
+- Lệnh: `gofmt -w internal/ipc cmd/zalo-cli`
+- Mục đích: Kiểm tra sau sửa chuỗi xuống dòng trong Go.
+- Kết quả: Exit 0. Không có output.
+
+### Danh sách kiểm tra lại — 2026-11-09T18:44:52.840948+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go build ./...`
+- Mục đích: Kiểm tra sau sửa chuỗi xuống dòng trong Go.
+- Kết quả: Exit 0. Không có output.
+
+### Danh sách kiểm tra lại — 2026-11-09T18:44:52.973236+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go vet ./...`
+- Mục đích: Kiểm tra sau sửa chuỗi xuống dòng trong Go.
+- Kết quả: Exit 0. Không có output.
+
+### Danh sách kiểm tra lại — 2026-11-09T18:44:53.261725+07:00
+- Lệnh: `node --test --test-reporter=spec daemon/ipc.test.mjs`
+- Mục đích: Kiểm tra sau sửa chuỗi xuống dòng trong Go.
+- Kết quả: Exit 0. ✔ /home/sweetvn/MyProjects/zalo-cli/daemon/ipc.test.mjs (246.404252ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 250.986665
+
+### Danh sách kiểm tra lại — 2026-11-09T18:44:53.265210+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Kiểm tra sau sửa chuỗi xuống dòng trong Go.
+- Kết quả: Exit 0. Không có output.
+
+### Kiểm tra test Node — 2026-11-09T18:45:00.481543+07:00
+- Lệnh: `rg -n "process.exit|process.env|NODE_TEST" daemon/node_modules/zca-js/dist/index.js daemon/node_modules/zca-js/dist/utils.js`
+- Mục đích: Xác nhận các ca kiểm thử Node thực sự được thực thi.
+- Kết quả: Exit 1.
+
+### Kiểm tra test Node — 2026-11-09T18:45:00.739548+07:00
+- Lệnh: `node daemon/ipc.test.mjs`
+- Mục đích: Xác nhận các ca kiểm thử Node thực sự được thực thi.
+- Kết quả: Exit 0. TAP version 13
+# Subtest: chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+ok 1 - chờ Zalo hoàn thành rồi trả đúng mã yêu cầu
+  ---
+  duration_ms: 1.731636
+  ...
+# Subtest: trả lỗi Zalo và mã yêu cầu cho client
+ok 2 - trả lỗi Zalo và mã yêu cầu cho client
+  ---
+  duration_ms: 0.296466
+  ...
+# Subtest: từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+ok 3 - từ chối khi chưa đăng nhập hoặc payload không hợp lệ
+  ---
+  duration_ms: 0.330121
+  ...
+# Subtest: gửi nhóm dùng đúng ThreadType.Group
+ok 4 - gửi nhóm dùng đúng ThreadType.Group
+  ---
+  duration_ms: 0.175732
+  ...
+# Subtest: danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+ok 5 - danh sách gồm bạn bè và nhóm được chuẩn hóa, phân trang và bỏ nhóm đã rời
+  ---
+  duration_ms: 8.65856
+  ...
+# Subtest: lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
+  ---
+  duration_ms: 0.381525
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 29.611769
+
+### Danh sách Go tests — 2026-11-09T18:45:14.111909+07:00
+- Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go test -race ./...`
+- Mục đích: Kiểm tra chọn nhóm và hủy với WebSocket localhost.
+- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.014s
+ok  	zalo-cli/internal/ipc	1.011s
+
+### Lưu bước danh sách — 2026-11-09T18:45:33.848156+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Lưu tính năng danh sách đã kiểm chứng.
+- Kết quả: Exit 2. COMMAND_LOG.md:862: trailing whitespace.
++- Kết quả: Exit 1.
+
+### Lưu danh sách sau sửa khoảng trắng — 2026-11-09T18:45:47.192686+07:00
+- Lệnh: `git diff --check`
+- Mục đích: Lưu tính năng và nhật ký đúng định dạng.
+- Kết quả: Exit 0. Thành công.

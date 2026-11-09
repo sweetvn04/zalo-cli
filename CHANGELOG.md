@@ -95,3 +95,13 @@
 * **Tests:** daemon/ipc.test.mjs và internal/ipc/client_test.go kiểm tra lệnh JSON, phản hồi đúng ID, Zalo trả lỗi, payload lỗi, gửi nhóm và chờ API hoàn thành.
 * **Tests CLI:** cmd/zalo-cli/main_test.go chạy entrypoint logic với WebSocket giả lập để xác nhận bỏ qua ID khác và xử lý đúng thành công/thất bại.
 * **Trải nghiệm:** Log nhận tin hiển thị loại và ID hội thoại để người dùng lấy đúng -to và -type. Build, vet, race tests và kiểm thử daemon giả lập đều qua. Chưa gửi tin qua tài khoản Zalo thật.
+
+### Chọn người nhận từ danh sách bạn bè và nhóm
+* **Thời gian:** 2026-11-09 (Asia/Ho_Chi_Minh).
+* **Commit:** Chưa tạo.
+* **Scope:** feat(cli).
+* **Files Changed:** daemon/ipc.mjs, internal/ipc/protocol.go, internal/ipc/client.go, cmd/zalo-cli/main.go, cmd/zalo-cli/recipients.go.
+* **Chi tiết:** Thêm list_recipients/recipients_result, phân trang bạn bè và lấy tên nhóm theo batch. -list in danh sách người nhận sắp xếp theo tên. -list -text cho phép chọn số từ chính snapshot đang hiển thị, Enter để hủy, Ctrl+C hủy chờ nhập. Tự chọn user/group khi gửi và chờ phản hồi theo request ID.
+* **Giới hạn:** Đây là danh sách bạn bè/nhóm, chưa gồm lịch sử hoặc thứ tự hội thoại gần đây. Thao tác lấy danh sách lỗi sẽ báo thất bại toàn bộ, không hiển thị danh sách thiếu mà không báo.
+* **Tests:** daemon/ipc.test.mjs kiểm tra phân trang, nhóm đã rời, danh sách lỗi; cmd/zalo-cli/recipients_test.go kiểm tra chọn đúng nhóm, hủy và lựa chọn ngoài phạm vi không gửi tin.
+* **Kiểm chứng:** Build và vet Go, go test -race ./..., sáu ca Node chạy trực tiếp bằng node daemon/ipc.test.mjs đều qua. Chưa gọi API danh sách trên tài khoản thật.
