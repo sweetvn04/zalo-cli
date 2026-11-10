@@ -226,3 +226,9 @@
 - Refresh cloud nền khi mở nhóm và sau cập nhật danh sách ở startup, single-flight và queue, có nghỉ1s giữa trang, cooldown60s, tối đa250 tin/lượt, F7 tiếp tục cursor bền vững. Ghi payload qua Archive.captureBatch để giữ dedup và tự tải media; emit update cho TUI.
 - Archive trả has_more khi còn cloud cursor, giữ con trỏ local khi đã hết trang để F7 tiếp tục từ server, trả notice/partial theo riêng nhóm. Khi sync nền, không đánh dấu chat đang mở là first-load để tránh nhảy về đáy khi đang đọc tin cũ.
 - Validation: 46 Node unit tests (cloud 5) + startup integration (cloud có tin không có trong replay) qua; Go build, vet, TUI race test qua. Trên tài khoản thật: API cloud trả50 tin mới hơn mốc local; khởi động lại đúng daemon đã xác minh PID/cwd, kho nhóm tăng51→73 tin và newest khớp cloud. Không gửi tin, không mở listener Zalo thứ hai trong probe; không in nội dung tin hay cookie. Mã -69 thật được tái hiện và kiểm thử.
+
+## 2026-11-11T01:16:52.621165 — feat: hiện thời gian từng tin trong chat (commit hiện tại)
+- Files Changed: internal/tui/view.go, CHANGELOG.md, COMMAND_LOG.md.
+- Dùng timestamp millisecond có sẵn trên mỗi chatLine, hiển thị cạnh tên theo dạng dd/mm/yyyy HH:mm, múi giờ máy đang chạy TUI; áp dụng cả tin văn bản, ảnh, video và tin gửi. Tin không có timestamp hợp lệ (>0) không hiện ngày giả.
+- Dành chỗ cho thời gian, cắt ngắn tên dài theo độ rộng terminal; dùng màu phụ để không lấn nội dung. Không thay đổi kho local hoặc IPC.
+- Validation: go build ./... và go test ./internal/tui qua.

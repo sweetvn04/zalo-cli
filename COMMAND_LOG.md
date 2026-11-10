@@ -5741,3 +5741,70 @@ git diff --check; git status --short
 ?? daemon/group-cloud.mjs
 ?? daemon/group-sync.mjs
 ?? daemon/group-sync.test.mjs
+
+### 2026-11-11T00:59:09.113618 — Đồng bộ khi mở CLI
+```sh
+git add CHANGELOG.md COMMAND_LOG.md plan.md daemon/archive.mjs daemon/index.mjs daemon/package.json daemon/startup.test.mjs daemon/group-cloud.mjs daemon/group-sync.mjs daemon/group-sync.test.mjs internal/tui/model.go internal/tui/model_test.go && git commit -m "fix(history): fetch recent group messages from cloud"
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; [main b40cacb] fix(history): fetch recent group messages from cloud
+ 12 files changed, 878 insertions(+), 7 deletions(-)
+ create mode 100644 daemon/group-cloud.mjs
+ create mode 100644 daemon/group-sync.mjs
+ create mode 100644 daemon/group-sync.test.mjs
+
+### 2026-11-11T01:16:26.576726 — Đồng bộ khi mở CLI
+```sh
+git status --short; sed -n "1,115p" internal/tui/view.go; rg -n "timestamp|Timestamp|sender|Bạn" internal/tui/model_test.go | tail -20
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;  append(parts, bright.Render(clip(label, m.chat.Width)))
+            if line == m.selectedLine {
+                switch {
+                case line.previewLoading:
+                    parts = append(parts, muted.Render("Đang tải ảnh..."))
+                case line.previewError != "":
+                    parts = append(parts, muted.Render(ansi.Hardwrap(clean(line.previewError)+" · Enter thử lại", m.chat.Width, false)))
+                case line.preview != "" && line.previewWidth <= m.chat.Width:
+                    parts = append(parts, line.preview)
+                }
+            }
+        }
+        if line.text != "" {
+            parts = append(parts, ansi.Hardwrap(clean(line.text), m.chat.Width, false))
+        }
+        if line.state != "" {
+            parts = append(parts, muted.Render(ansi.Hardwrap(clean(line.state), m.chat.Width, false)))
+        }
+        parts = append(parts, "")
+        content := strings.Join(parts, "\n")
+        height := strings.Count(content, "\n") + 1
+        m.lineRanges[line] = lineRange{start: row, end: row + height - 1}
+        row += height
+        lines = append(lines, content)
+    }
+    if len(lines) == 0 {
+        text := "Chưa có tin nhắn."
+        if state := m.historyStates[m.active]; state != nil {
+            if state.loading {
+                text = "Đang tải tin nhắn cũ..."
+147:    m.appendLine("user:an", &chatLine{sender: "Quốc Bảo", text: strings.Repeat("Tiếng Việt 🌸 ", 100)})
+
+### 2026-11-11T01:16:40.988278 — Đồng bộ khi mở CLI
+```sh
+gofmt -w internal/tui/view.go; GOCACHE=/tmp/zalo-start-go-cache go build ./... && GOCACHE=/tmp/zalo-start-go-cache go test ./internal/tui
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; ok      zalo-cli/internal/tui   0.040s
+
+### 2026-11-11T01:16:52.621165 — Nhật ký thay đổi thời gian tin
+- Lệnh: Python append CHANGELOG.md và COMMAND_LOG.md.
+- Mục đích: Ghi phạm vi giao diện và kiểm chứng.
+- Kết quả: Exit 0.
+
+### 2026-11-11T01:16:52.655716 — Đồng bộ khi mở CLI
+```sh
+git diff --check
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;

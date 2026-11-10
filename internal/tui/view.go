@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/charmbracelet/lipgloss"
@@ -68,7 +69,17 @@ func (m *model) refreshChat(bottom bool) {
 		} else {
 			name = "  " + name
 		}
-		parts = append(parts, style.Render(clip(name, m.chat.Width)))
+		nameWidth := m.chat.Width
+		stamp := ""
+		if line.timestamp > 0 {
+			stamp = time.UnixMilli(line.timestamp).In(time.Local).Format("02/01/2006 15:04")
+			nameWidth -= ansi.StringWidth(stamp) + 3
+		}
+		header := style.Render(clip(name, nameWidth))
+		if stamp != "" {
+			header += muted.Render(" · " + stamp)
+		}
+		parts = append(parts, clip(header, m.chat.Width))
 		if line.kind == "image" || line.kind == "video" {
 			imageNumber++
 			label := fmt.Sprintf("[Ảnh %d] · ↑↓ xem", imageNumber)
