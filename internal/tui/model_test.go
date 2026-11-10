@@ -214,3 +214,29 @@ func TestF5RateLimitKeepsRecipientsAndHonorsCooldown(t *testing.T) {
 		t.Fatal("refresh must work after cooldown")
 	}
 }
+
+func TestArchiveNotificationDuringRequestTriggersAnotherRead(t *testing.T) {
+	m := fixture()
+	state := m.historyStates[m.active]
+	state.id = "first"
+	attempt := state.attempt
+	m = update(m, packet{open: true, result: ipc.Result{Event: ipc.Event{Event: "archive_updated", Data: ipc.Message{ThreadType: "user"}}}})
+	if !m.historyDirty[m.active] || state.attempt != attempt {
+		t.Fatal("notification lost while history request pending")
+	}
+	m = update(m, packet{open: true, result: ipc.Result{Event: ipc.Event{Event: "history_result", ID: "first", OK: true, ThreadID: "an", ThreadType: "user"}}})
+	if m.historyDirty[m.active] || !state.loading || state.attempt != attempt+1 {
+		t.Fatal("latest local snapshot was not requested after reply")
+	}
+
+	m.loading, m.listID = true, "contacts-first"
+	listAttempt := m.listAttempt
+	m = update(m, packet{open: true, result: ipc.Result{Event: ipc.Event{Event: "recipients_updated"}}})
+	if !m.listDirty {
+		t.Fatal("contact notification lost")
+	}
+	m = update(m, packet{open: true, result: ipc.Result{Event: ipc.Event{Event: "recipients_result", ID: "contacts-first", OK: true, Recipients: m.recipients}}})
+	if m.listDirty || !m.loading || m.listAttempt != listAttempt+1 {
+		t.Fatal("contacts were not refreshed after outstanding reply")
+	}
+}

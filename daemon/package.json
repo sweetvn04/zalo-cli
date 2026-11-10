@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node auth.test.mjs && node ipc.test.mjs && node history.test.mjs && node recipients.test.mjs && node archive.test.mjs"
+    "test": "node auth.test.mjs && node ipc.test.mjs && node history.test.mjs && node recipients.test.mjs && node archive.test.mjs",
+    "test:startup": "node startup.test.mjs"
   },
   "keywords": [],
   "type": "commonjs",

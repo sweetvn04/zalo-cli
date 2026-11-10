@@ -10,11 +10,14 @@ import (
 	"syscall"
 	"time"
 
+	"zalo-cli/internal/daemon"
 	"zalo-cli/internal/ipc"
 	"zalo-cli/internal/tui"
 )
 
 func main() {
+	manual := flag.Bool("no-autostart", false, "Chỉ kết nối daemon đã chạy")
+	bridgeDir := flag.String("daemon-dir", "", "Thư mục chứa daemon/index.mjs")
 	ui := flag.Bool("tui", false, "Mở giao diện chat tương tác")
 	to := flag.String("to", "", "ID hội thoại Zalo cần gửi")
 	kind := flag.String("type", "user", "Loại hội thoại: user hoặc group")
@@ -24,6 +27,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	var err error
+	if (*ui && (*list || *to != "" || *text != "")) || (*list && *to != "") ||
+		(!*ui && !*list && ((*to == "") != (*text == ""))) || (*kind != "user" && *kind != "group") {
+		log.Print("tham số không hợp lệ; dùng -help để xem cách chạy")
+		os.Exit(1)
+	}
+	if !*manual {
+		if err := daemon.Ensure(ctx, "ws://127.0.0.1:8989", *bridgeDir, os.Stderr); err != nil {
+			log.Print(err)
+			os.Exit(1)
+		}
+	}
 	if *ui {
 		if *list || *to != "" || *text != "" {
 			err = fmt.Errorf("dùng -tui riêng để mở giao diện chat")

@@ -51,12 +51,12 @@ const unavailableGroupHTTP = new WeakSet();
 
 // Đồng bộ nền dùng cùng hàng đợi WebSocket với các yêu cầu từ giao diện.
 export function archiveHistoryPage(api, type, beforeID = "") {
-  return oldMessageSnapshot(api, type === "group" ? ThreadType.Group : ThreadType.User, beforeID);
+  return oldMessageSnapshot(api, type === "group" ? ThreadType.Group : ThreadType.User, beforeID, 1);
 }
 
 // old_messages không có request ID. Chỉ một chuỗi phân trang được chạy trên
 // mỗi loại hội thoại; các client cùng chờ snapshot rồi lọc đúng hội thoại.
-async function oldMessageSnapshot(api, threadType, beforeID = "") {
+async function oldMessageSnapshot(api, threadType, beforeID = "", maxPages = 10) {
   let states = snapshots.get(api);
   if (!states) {
     states = new Map();
@@ -75,7 +75,7 @@ async function oldMessageSnapshot(api, threadType, beforeID = "") {
     const requestedCursor = state.requestedCursor;
     const result = await state.pending;
     if (requestedCursor === beforeID) return result;
-    return oldMessageSnapshot(api, threadType, beforeID);
+    return oldMessageSnapshot(api, threadType, beforeID, maxPages);
   }
   if (state.result && state.requestedCursor === beforeID && Date.now() - state.time < 30000) return state.result;
   const label = threadType === ThreadType.Group ? "nhóm" : "cá nhân";
@@ -88,7 +88,7 @@ async function oldMessageSnapshot(api, threadType, beforeID = "") {
     let partial = true;
     let more = true;
     const deadline = Date.now() + 15000;
-    for (let page = 0; page < 10; page++) {
+    for (let page = 0; page < maxPages; page++) {
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
       const messages = await new Promise((resolve, reject) => {

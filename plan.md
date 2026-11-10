@@ -253,3 +253,12 @@ Daemon lưu tin nhận/gửi và payload gốc vào SQLite theo tài khoản, t�
 - Đã hỗ trợ video chat.video.msg (MP4/WebM), tải nền vào cùng thư mục media với ảnh; tối đa 1 GiB mỗi video.
 - Tự cập nhật raw video đã lưu từ phiên bản trước. URL đã hết hạn trước khi tải vẫn phụ thuộc khả năng Zalo cung cấp lại.
 - ↑↓ chọn video, Enter khi ô soạn trống hoặc Ctrl+O để mở trình phát mặc định. Video chưa phát trực tiếp trong terminal.
+
+### Mở CLI một lệnh và đồng bộ khi quay lại
+- Chạy `go run ./cmd/zalo-cli -tui`: tự dùng daemon hiện có hoặc bật Node daemon nền; đóng TUI vẫn để daemon lưu tin. Sau khi tắt máy, mở CLI lại để bật daemon và đồng bộ phần lịch sử Zalo còn trả.
+- Kho local mở trước khi đăng nhập/mạng sẵn sàng (tự chọn khi có đúng một tài khoản đã lưu). Danh sách, lịch sử local không chờ API Zalo; danh sách/chat được cập nhật bằng thông báo IPC khi dữ liệu nền về.
+- Đồng bộ luân phiên từng trang cá nhân/nhóm từ tin gần nhất, lưu idempotent; hiển thị trạng thái và báo thiếu lịch sử khi máy chủ không trả đủ. Không khẳng định khôi phục được tất cả tin trong thời gian offline.
+- Tự mở QR bằng ứng dụng mặc định khi daemon do CLI bật cần đăng nhập lại. Session/QR luôn tính theo thư mục daemon, không theo thư mục chạy CLI.
+- `-no-autostart`: chỉ dùng daemon đã chạy; `-daemon-dir /absolute/path/daemon`: chỉ định nơi cài bridge. Kho nhiều tài khoản hoặc cookie khác tài khoản cần chọn đúng kho khi chạy daemon thủ công bằng `--account ID`.
+- Nhật ký daemon tự bật: `$XDG_CACHE_HOME/zalo-cli/daemon.log` hoặc `~/.cache/zalo-cli/daemon.log`. Có thể chạy `node daemon/index.mjs` thủ công để xem log trực tiếp; dừng daemon thủ công bằng Ctrl+C.
+- Kiểm thử startup có server local: `npm --prefix daemon run test:startup` (tài khoản mẫu, không đọc session thật).

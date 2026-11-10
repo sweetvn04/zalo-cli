@@ -186,6 +186,24 @@ test("đồng bộ nền lưu lịch sử cả user/group khi không có giao di
   await archive.close();
 });
 
+test("lỗi lịch sử cá nhân không chặn nhóm và không báo đồng bộ đầy đủ", async t => {
+  const archive = new Archive("1001",{root:temporary(t),worker:false});
+  t.after(()=>archive.close());
+  const listener = new EventEmitter();
+  listener.requestOldMessages = (type,cursor) => {
+    if(type===0) throw new Error("fixture: lịch sử cá nhân chưa có");
+    const message=raw(300,"Tin nhóm lúc vắng mặt");message.type=type;
+    queueMicrotask(()=>listener.emit("old_messages",cursor===null?[message]:[],type));
+  };
+  const statuses=[];
+  await syncArchive({listener},archive,new AbortController().signal,notice=>statuses.push(notice));
+  assert.equal(archive.history("friend","group").messages[0].content,"Tin nhóm lúc vắng mặt");
+  assert.equal(archive.meta("sync-done:user"),false);
+  assert.equal(archive.meta("sync-running:user"),false);
+  assert.match(archive.meta("sync-error:user"),/fixture/);
+  assert.match(statuses.at(-1),/chưa cung cấp đủ/);
+});
+
 test("tận dụng cache ảnh cũ mà không truy cập URL đã hết hạn", async t => {
   const root = temporary(t);
   const oldCache = process.env.XDG_CACHE_HOME;

@@ -75,6 +75,8 @@ type model struct {
 	active                  string
 	history                 map[string][]*chatLine
 	historyStates           map[string]*historyState
+	historyDirty            map[string]bool
+	listDirty               bool
 	drafts                  map[string]string
 	unread                  map[string]int
 	filter                  textinput.Model
@@ -127,6 +129,7 @@ func newModel(client transport) model {
 		chat: viewport.New(40, 10), connected: true,
 		history: make(map[string][]*chatLine), drafts: make(map[string]string),
 		historyStates: make(map[string]*historyState),
+		historyDirty:  make(map[string]bool),
 		unread:        make(map[string]int), status: "Đang tải bạn bè và nhóm...",
 		loading: true, listAttempt: 1, earlyList: make(map[string]ipc.Event),
 	}
@@ -385,15 +388,21 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.handleEvent(msg.result.Event)
 		}
 		if msg.result.Event.Event == "archive_updated" {
-			if r, ok := m.recipient(); ok && r.ThreadType == msg.result.Event.Data.ThreadType {
-				return m, tea.Batch(m.listen(), m.loadHistory(true), m.ensurePreview(false))
+			for k, state := range m.historyStates {
+				if strings.HasPrefix(k, msg.result.Event.Data.ThreadType+":") {
+					state.loaded = false
+					m.historyDirty[k] = true
+				}
 			}
 		}
-		return m, tea.Batch(m.listen(), m.ensurePreview(false))
+		if msg.result.Event.Event == "recipients_updated" {
+			m.listDirty = true
+		}
+		return m, tea.Batch(m.listen(), m.refreshFromArchive(), m.ensurePreview(false))
 	case requestStarted:
 		if msg.kind == "history" {
 			m.historyStarted(msg)
-			return m, m.ensurePreview(false)
+			return m, tea.Batch(m.refreshFromArchive(), m.ensurePreview(false))
 		}
 		if msg.kind == "list" && m.loading && msg.attempt == m.listAttempt {
 			if msg.err != nil {
@@ -416,7 +425,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		}
-		return m, nil
+		return m, m.refreshFromArchive()
 	case requestExpired:
 		if msg.kind == "history" {
 			if state := m.historyStates[msg.thread]; state != nil && state.loading && state.attempt == msg.attempt {

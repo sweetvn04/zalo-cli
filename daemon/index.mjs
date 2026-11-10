@@ -8,18 +8,30 @@ import { loadRecipients } from "./recipients.mjs";
 import { parseArgs } from "node:util";
 import path from "node:path";
 import fs from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import WebSocket, { WebSocketServer } from "ws";
 
 const PORT = 8989;
-const SESSION_FILE = "session.json";
-const QR_FILE = "qr.png";
-const { values: options } = parseArgs({ options: { offline: { type: "boolean", default: false }, account: { type: "string" } } });
+const directory = path.dirname(fileURLToPath(import.meta.url));
+const SESSION_FILE = path.join(directory,"session.json");
+const QR_FILE = path.join(directory,"qr.png");
+const { values: options } = parseArgs({ options: { managed: {type:"boolean",default:false}, offline: { type: "boolean", default: false }, account: { type: "string" } } });
 const zalo = new Zalo({ selfListen: true });
 let api;
 let archive;
 let syncRun;
 const syncAbort = new AbortController();
+let online = false;
+let loginNotice = options.offline ? "Đang đọc kho offline." : "Đang đọc kho local; kết nối Zalo và đồng bộ nền...";
+const root = archiveRoot();
+const accounts = fs.existsSync(root) ? fs.readdirSync(root).filter(id => /^\d{1,32}$/.test(id) && fs.existsSync(path.join(root,id,"messages.sqlite3"))) : [];
+const localAccount = options.account || (accounts.length === 1 ? accounts[0] : "");
+if (options.offline && (!localAccount || !accounts.includes(localAccount))) {
+  throw new Error("Chọn kho đã lưu bằng --offline --account ID. Các tài khoản: "+accounts.join(", "));
+}
+// Mở kho trước khi đợi mạng/QR. Worker chỉ tải khi tài khoản đã xác minh.
+if (localAccount && accounts.includes(localAccount)) archive = new Archive(localAccount,{worker:false});
 
 // khoi tao WebSocket
 const wss = new WebSocketServer({
@@ -45,7 +57,14 @@ wss.on("connection", (socket) => {
   console.log("[IPC] Đã có client kết nối vào Web socket server!")
   //lang nghe lenh tu go, vi du gui tin nhan.
   socket.on("message", async (raw) => {
-    const result = await handleCommand(raw, api, archive);
+    let action;
+    try { action = JSON.parse(raw.toString()); } catch { /* handleCommand trả lỗi JSON. */ }
+    if (action?.action === "daemon_status") {
+      socket.send(JSON.stringify({event:"daemon_status",id:action.id,ready:!!archive,online,notice:loginNotice}));
+      return;
+    }
+    if (action?.action === "list_recipients" && online) refreshRecipients();
+    const result = await handleCommand(raw, online ? api : undefined, archive);
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(result));
     }
@@ -55,9 +74,23 @@ wss.on("connection", (socket) => {
     console.log("🔌 [IPC] Client đã ngắt kết nối.");
   });
   socket.on("error", error => console.warn("⚠️ Kết nối CLI gặp lỗi:",error.message));
+  socket.send(JSON.stringify({event:"archive_status",data:{notice:loginNotice}}));
 });
 
+let recipientRefresh;
+function refreshRecipients() {
+  if (!online || recipientRefresh) return;
+  recipientRefresh = loadRecipients(api).then(list => {
+    const previous = JSON.stringify(archive.recipients());
+    archive.saveRecipients(list.recipients);
+    if (JSON.stringify(archive.recipients()) !== previous) broadcast("recipients_updated",{});
+  }).catch(error => {
+    broadcast("archive_status",{notice:"Đang dùng danh sách local; chưa cập nhật được từ Zalo: "+error.message});
+  }).finally(() => { recipientRefresh = null; });
+}
+
 // Khôi phục phiên; nếu thất bại tự yêu cầu QR và chỉ thay session sau khi thành công.
+async function connectZalo() {
 if (!options.offline) {
   api = await loginWithSession(zalo, {
     sessionFile: SESSION_FILE,
@@ -66,7 +99,11 @@ if (!options.offline) {
       if (event.type === 0 && event.data?.image) {
         fs.writeFileSync(QR_FILE, Buffer.from(event.data.image, "base64"), { mode: 0o600 });
         console.log("📷 Quét mã QR bên dưới bằng app Zalo trên điện thoại.");
-        try {
+        if (options.managed) {
+          const viewer = spawn("xdg-open",[QR_FILE],{stdio:"ignore"});
+          viewer.on("error",error => console.warn("Mở QR bằng: xdg-open "+QR_FILE,error.message));
+          broadcast("archive_status",{notice:"Cần quét QR để kết nối Zalo. Ảnh QR: "+QR_FILE});
+        } else try {
           execFileSync("kitten", ["icat", "--align", "left", QR_FILE], { stdio: "inherit" });
         } catch {
           console.log("Mở ảnh QR bằng: xdg-open " + QR_FILE);
@@ -74,13 +111,13 @@ if (!options.offline) {
       }
     },
   });
-  archive = new Archive(String(api.getOwnId()), { onMedia: event => broadcast(event.event, event.data) });
-} else {
-  const root = archiveRoot();
-  const accounts = fs.existsSync(root) ? fs.readdirSync(root).filter(id => /^\d{1,32}$/.test(id) && fs.existsSync(path.join(root,id,"messages.sqlite3"))) : [];
-  const account = options.account || (accounts.length === 1 ? accounts[0] : "");
-  if (!account || !accounts.includes(account)) throw new Error("Chọn kho đã lưu bằng --offline --account ID. Các tài khoản: "+accounts.join(", "));
-  archive = new Archive(account, { worker: false });
+  if (syncAbort.signal.aborted) { api.listener.stop(); return; }
+  const account = String(api.getOwnId());
+  if (archive && archive.account !== account) {
+    throw new Error("Phiên Zalo khác tài khoản kho local. Dừng daemon rồi chọn đúng --account "+account);
+  }
+  if (archive) await archive.close();
+  archive = new Archive(account, { onMedia: event => broadcast(event.event, event.data) });
 }
 
 console.log("💾 Kho tin nhắn trên máy:", archive.directory);
@@ -111,6 +148,7 @@ if (api) {
     try {
       archive.captureBatch(messages);
       broadcast("archive_updated", {thread_type:type === ThreadType.Group ? "group" : "user"});
+      broadcast("recipients_updated",{});
     } catch (error) {
       console.error("❌ Không ghi được lịch sử vào kho:",error.message);
       broadcast("archive_status", {notice:"Không ghi được lịch sử trên máy: "+error.message});
@@ -123,7 +161,10 @@ if (api) {
     if (syncRun) { syncQueued = true; return; }
     syncQueued = false;
     const signal = AbortSignal.any([syncAbort.signal,connectionAbort.signal]);
-    syncRun = syncArchive(api,archive,signal).catch(error => {
+    syncRun = syncArchive(api,archive,signal,notice => {
+      loginNotice = notice;
+      broadcast("archive_status",{notice});
+    }).catch(error => {
       console.error("❌ Đồng bộ kho local tạm dừng:",error.message);
       broadcast("archive_status",{notice:"Đồng bộ local tạm dừng: "+error.message});
     }).finally(() => {
@@ -133,32 +174,53 @@ if (api) {
   }
   // connected chỉ báo socket mở; cipher_key mới báo sẵn sàng giải mã lịch sử.
   api.listener.on("cipher_key", () => {
+    online = true;
+    loginNotice = "Đã kết nối Zalo; đang đồng bộ tin trong thời gian vắng mặt.";
+    broadcast("archive_status",{notice:loginNotice});
+    refreshRecipients();
     connectionAbort = new AbortController();
     beginSync();
   });
-  api.listener.on("disconnected", () => connectionAbort.abort());
+  api.listener.on("disconnected", () => {
+    online = false;
+    connectionAbort.abort();
+    loginNotice = "Mất kết nối Zalo; vẫn đọc được tin local, đang chờ kết nối lại.";
+    broadcast("archive_status",{notice:loginNotice});
+  });
   api.listener.on("error", error => {
     console.warn("⚠️ Kết nối Zalo gặp lỗi:",error.message || String(error));
     broadcast("archive_status",{notice:"Kết nối Zalo gặp lỗi; kho local vẫn đọc được."});
-  });
-  api.listener.on("connected", () => {
-    loadRecipients(api).then(list => archive.saveRecipients(list.recipients)).catch(error => console.warn("⚠️ Danh sách người nhận chưa cập nhật:",error.message));
   });
 
   // Bắt đầu lắng nghe
   api.listener.start();
 }
+}
+// Không để lỗi mạng/đăng nhập lấy mất quyền đọc kho local.
+let loginRetry;
+function connectInBackground() { connectZalo().catch(error => {
+  if (syncAbort.signal.aborted) return;
+  online = false;
+  loginNotice = "Chưa kết nối được Zalo; kho local vẫn đọc được: "+error.message;
+  console.error(loginNotice);
+  broadcast("archive_status",{notice:loginNotice});
+  loginRetry = setTimeout(connectInBackground,30000);
+  loginRetry.unref();
+}); }
+connectInBackground();
 
 let closing = false;
 async function shutdown() {
   if (closing) return;
   closing = true;
   syncAbort.abort();
+  clearTimeout(loginRetry);
   api?.listener.stop();
   for (const client of wss.clients) client.terminate();
   wss.close();
   await syncRun;
-  await archive.close();
+  await recipientRefresh;
+  await archive?.close();
   console.log("💾 Đã đóng kho local an toàn.");
 }
 process.on("SIGINT", () => shutdown().catch(error => { console.error(error.message); process.exitCode=1; }));

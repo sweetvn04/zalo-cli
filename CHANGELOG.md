@@ -209,3 +209,12 @@
 - Kiểm chứng: kiểm thử nhận diện URL, stream file/loại trang lỗi và dọn file tạm, lưu/restart/migration; Go kiểm tra đường dẫn video local và thao tác Enter. Kết quả chi tiết ghi COMMAND_LOG.md. Chưa thử với video thật của tài khoản.
 
 - Kết quả cuối: 40 kiểm thử Node qua (archive 12), Go test -race ./..., go build ./..., go vet ./... qua; sau điều chỉnh giữ giới hạn ảnh chạy lại media test.
+
+## 2026-11-11T00:44:09.707039 — feat: tự khởi động daemon, đọc kho local trước và đồng bộ khi quay lại (commit hiện tại)
+- Files Changed: cmd/zalo-cli/main.go; internal/daemon/start.go, start_test.go; daemon/index.mjs, ipc.mjs, history.mjs, archive-sync.mjs, archive.test.mjs, startup.test.mjs, package.json; internal/tui/model.go, model_test.go, archive.go; plan.md; COMMAND_LOG.md.
+- Nguyên nhân: CLI chỉ dial WebSocket nên không chạy khi daemon vắng; kho mở sau login làm đọc local phụ thuộc mạng; đồng bộ đào hết cá nhân trước nhóm và giao diện có thể bỏ lỡ notification đến trong lúc request đang chạy.
+- Launcher: dò daemon qua health IPC, chỉ bật khi kết nối bị từ chối, dùng flock để hai CLI không tạo hai tiến trình. Node detached sống tiếp khi TUI thoát, log 0600, timeout/cancellation/chẩn đoán child exit; tìm bridge theo cwd/executable hoặc -daemon-dir; -no-autostart cho thao tác thủ công. Không dừng/thay tiến trình đã chạy.
+- Daemon: mở kho sớm khi có một account hoặc account chỉ định; trả local danh sách/history ngay, refresh contacts nền có single-flight và chỉ notify khi thay đổi; login nền và retry 30s khi thất bại, worker media chỉ bật sau xác minh đúng account; không gửi tin khi Zalo chưa kết nối; session/QR đường dẫn tuyệt đối, QR managed qua xdg-open, giữ kho local khi login thất bại.
+- Đồng bộ: luân phiên một trang user/group, ghi trạng thái bắt đầu/kết thúc/lỗi, báo rõ lịch sử có thể thiếu; mỗi socket reconnect quét lại từ đầu để lấy phần tin bỏ lỡ, dedup qua SQLite. Không thể bảo đảm dữ liệu Zalo đã xóa hoặc ngừng cung cấp.
+- TUI: dirty flags giữ các yêu cầu cập nhật đến trong khi history/list đang chờ, đọc lại sau phản hồi; invalidate history của chat chưa mở, cập nhật tên và chat khi sync có dữ liệu.
+- Validation: Node 41 unit tests qua (archive 13), startup integration 1 test qua với daemon thật trên cổng ngẫu nhiên và API giả lập/SQLite trong thư mục tạm; xác nhận local trước login, gửi bị chặn trước kết nối, đồng bộ tin vắng mặt user/group và thứ tự xen kẽ. Go build, vet, test -race toàn bộ 5 packages qua; thêm test dirty flag TUI qua. Chưa đăng nhập hoặc chạy daemon trên tài khoản thật.

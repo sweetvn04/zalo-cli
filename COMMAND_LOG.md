@@ -4589,4 +4589,544 @@ COMMAND_LOG.md:4462: space before tab in indent.
 GOCACHE=/tmp/zalo-video-go-cache go test ./internal/media && git diff --check
 ```
 - Mục đích: Triển khai và kiểm chứng lưu video.
-- Kết quả: Exit 0; ok  	zalo-cli/internal/media	0.014s
+- Kết quả: Exit 0; ok   zalo-cli/internal/media 0.014s
+
+### 2026-11-10T09:45:31.020063 — Video local
+```sh
+git add CHANGELOG.md COMMAND_LOG.md plan.md daemon/archive.mjs daemon/archive.test.mjs daemon/history.mjs daemon/image-store.mjs internal/ipc/protocol.go internal/media/archive.go internal/media/archive_test.go internal/tui/images.go internal/tui/model.go internal/tui/model_test.go internal/tui/view.go && git commit -m "feat(media): archive videos locally and open from chat"
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0; [main f5fa365] feat(media): archive videos locally and open from chat
+ 14 files changed, 824 insertions(+), 154 deletions(-)
+
+### 2026-11-11T00:35:36.089539 — Khởi động lại công việc
+- Lệnh: `python3 /tmp/zalo-run.py ...`
+- Kết quả: Exit 2, helper tạm không còn; tạo lại helper ghi log.
+
+### 2026-11-11T00:35:36.094439 — Đọc luồng hiện tại
+```sh
+git status --short; cat daemon/archive-sync.mjs; sed -n "1,180p" cmd/zalo-cli/main.go; sed -n "1,240p" daemon/index.mjs
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T00:35:42.014797 — Đồng bộ khi mở CLI
+```sh
+cat daemon/history.mjs; cat daemon/ipc.mjs; rg -n "cipher_key|old_messages|requestOldMessages" daemon/node_modules/zca-js/dist/listener.js; sed -n "180,260p" internal/tui/model.go; cat internal/tui/history.go | head -100; cat daemon/auth.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; (zalo, { sessionFile, qrFile, onQR }) {
+  if (fs.existsSync(sessionFile)) {
+    console.log("🔄 Đang khôi phục phiên đăng nhập cũ...");
+    try {
+      const session = JSON.parse(fs.readFileSync(sessionFile, "utf-8"));
+      const api = await zalo.login(session);
+      return api;
+    } catch {
+      console.warn("⚠️ Không khôi phục được phiên đã lưu. Đang chuyển sang đăng nhập QR...");
+    }
+  }
+
+  console.log("📱 Đang yêu cầu mã QR chính chủ từ server Zalo...");
+  const api = await zalo.loginQR({ qrPath: qrFile }, onQR);
+  const ctx = api.getContext();
+  const data = {
+    imei: ctx.imei,
+    cookie: ctx.cookie.serializeSync(),
+    userAgent: ctx.userAgent,
+  };
+  // Ghi hoàn chỉnh file riêng trước khi thay phiên cũ. Nếu QR hoặc ghi file
+  // thất bại, session cũ vẫn còn. Đuôi .cookie nằm trong .gitignore.
+  const temporary = `${sessionFile}.${randomUUID()}.cookie`;
+  try {
+    fs.writeFileSync(temporary, JSON.stringify(data, null, 2), { mode: 0o600, flag: "wx" });
+    fs.renameSync(temporary, sessionFile);
+  } finally {
+    fs.rmSync(temporary, { force: true });
+  }
+  console.log("💾 Đã lưu phiên đăng nhập mới.");
+  if (fs.existsSync(qrFile)) fs.unlinkSync(qrFile);
+  return api;
+}
+
+### 2026-11-11T00:35:46.785896 — Đồng bộ khi mở CLI
+```sh
+rg --files daemon | head -30; cat daemon/package.json; cat internal/ipc/client.go | head -75; rg -n "archive_updated" internal/tui/model.go; cat .gitignore; head -15 go.mod
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; g việc nền.
+func (c *Client) Close() {
+    c.cancel()
+    c.conn.Close()
+    <-c.done
+}
+
+func (c *Client) read(ctx context.Context) {
+    for {
+        _, data, err := c.conn.ReadMessage()
+        if err != nil {
+            c.deliver(ctx, Result{Err: fmt.Errorf("mất kết nối daemon: %w", err)})
+            return
+        }
+        var event Event
+        if err := json.Unmarshal(data, &event); err != nil {
+            if !c.deliver(ctx, Result{Err: fmt.Errorf("giải mã JSON: %w", err)}) {
+                return
+            }
+            continue
+        }
+        if !c.deliver(ctx, Result{Event: event}) {
+            return
+        }
+    }
+}
+387:        if msg.result.Event.Event == "archive_updated" {
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/zalo-cli
+
+# Go
+vendor/
+
+# Node / Bun
+node_modules/
+dist/
+bun.lockb
+bun.lock
+
+# Session / Credentials / Config (Tuyệt đối không push cookie Zalo lên git)
+session.json
+*.cookie
+.env
+.env.*
+
+# OS / Editor
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+module zalo-cli
+
+go 1.27.2
+
+require (
+    github.com/charmbracelet/bubbles v0.21.0
+    github.com/charmbracelet/bubbletea v1.3.10
+    github.com/charmbracelet/lipgloss v1.1.0
+    github.com/charmbracelet/x/ansi v0.10.1
+    github.com/gorilla/websocket v1.5.3
+    golang.org/x/image v0.31.0
+)
+
+require (
+    github.com/atotto/clipboard v0.1.4 // indirect
+
+### 2026-11-11T00:37:11.669347 — Đồng bộ khi mở CLI
+```sh
+rg -n "cipher_key|requestOldMessages|old_messages|lastMsg" daemon/node_modules/zca-js/dist -g "*listen*" -g "*Listener*" | head -55
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; .js:404:    requestOldReactions(threadType, lastMsgId = null) {
+daemon/node_modules/zca-js/dist/apis/listen.js:409:            data: { first: true, lastId: lastMsgId, preIds: [] },
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:172:                    this.emit("cipher_key", parsed.key);
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:307:                    this.emit("old_messages", responseMsgs, Enum.ThreadType.User);
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:313:                    this.emit("old_messages", responseMsgs, Enum.ThreadType.Group);
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:401:     * @param lastMsgId
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:403:    requestOldMessages(threadType, lastMsgId = null) {
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:408:            data: { first: true, lastId: lastMsgId, preIds: [] },
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:415:     * @param lastMsgId
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:417:    requestOldReactions(threadType, lastMsgId = null) {
+daemon/node_modules/zca-js/dist/cjs/apis/listen.cjs:422:            data: { first: true, lastId: lastMsgId, preIds: [] },
+
+### 2026-11-11T00:37:12.500612 — Đồng bộ khi mở CLI
+```sh
+npm --prefix daemon ci --cache /tmp/zalo-npm-cache
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+npm warn deprecated crypto-js@4.2.0: Active development of CryptoJS has been discontinued. This library is no longer maintained.
+
+added 69 packages, and audited 70 packages in 1m
+
+15 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+
+### 2026-11-11T00:38:53.170613 — Đồng bộ khi mở CLI
+```sh
+cat > daemon/archive-sync.mjs <<'EOF'
+import { setTimeout as pause } from "node:timers/promises";
+import { archiveHistoryPage } from "./history.mjs";
+
+// Luân phiên từng trang: lấy tin gần nhất của cả cá nhân và nhóm trước
+// khi đào sâu lịch sử, để một loại hội thoại không chặn loại còn lại.
+export async function syncArchive(api, archive, signal, onStatus = () => {}) {
+  const states = ["user","group"].map(type => ({type,cursor:"",done:false,error:false}));
+  let count = 0;
+  for (const {type} of states) {
+    archive.meta("sync-done:"+type,false);
+    archive.meta("sync-running:"+type,true);
+    archive.meta("sync-error:"+type,null);
+    archive.meta("sync-started:"+type,Date.now());
+  }
+  onStatus("Đang lấy tin gần đây từ Zalo; tin local vẫn đọc được.");
+  try {
+    while (states.some(state => !state.done)) {
+      for (const state of states) {
+        if (signal.aborted) return;
+        if (state.done) continue;
+        const {type} = state;
+        try {
+          const page = await archiveHistoryPage(api,type,state.cursor);
+          if (signal.aborted) return;
+          archive.captureBatch(page.messages);
+          count += page.messages.length;
+          if (!page.more || !page.cursor || page.cursor === state.cursor) {
+            state.done = true;
+            archive.meta("sync-done:"+type,!page.partial);
+            archive.meta("sync-finished:"+type,Date.now());
+            archive.meta("sync-running:"+type,false);
+          }
+          state.cursor = page.cursor;
+          onStatus(`Đã đọc ${count} tin từ Zalo trong lượt đồng bộ; đang cập nhật kho local.`);
+        } catch (error) {
+          if (signal.aborted) return;
+          state.done = true;
+          state.error = true;
+          archive.meta("sync-error:"+type,error.message);
+          archive.meta("sync-running:"+type,false);
+          console.warn(`⚠️ Đồng bộ lịch sử ${type} tạm dừng:`,error.message);
+        }
+        if (states.some(state => !state.done)) await pause(2000,undefined,{signal});
+      }
+    }
+    const incomplete = states.some(state => state.error || !archive.meta("sync-done:"+state.type));
+    onStatus(incomplete ? "Đã lưu phần lịch sử nhận được; Zalo chưa cung cấp đủ tin. Kho local vẫn đọc được." :
+      "Đã cập nhật phần lịch sử Zalo hiện cung cấp. Tin mới sẽ tiếp tục được lưu trên máy.");
+  } finally {
+    for (const {type} of states) archive.meta("sync-running:"+type,false);
+  }
+}
+EOF
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;
+
+### 2026-11-11T00:39:05.609122 — Đồng bộ khi mở CLI
+```sh
+sed -n "365,435p" internal/tui/model.go; sed -n "115,160p" internal/tui/model.go; rg -n "func .*list|loadRecipients|listAttempt" internal/tui/model.go; sed -n "140,185p" daemon/archive.test.mjs; rg -n "requestOldMessages|syncArchive" daemon/archive.test.mjs; sed -n "142,165p;270,305p;390,400p" daemon/node_modules/zca-js/dist/apis/listen.js
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; sgs = parsedData.msgs;
+                    const responseMsgs = msgs.map((msg) => new UserMessage(this.ctx.uid, msg));
+                    this.emit("old_messages", responseMsgs, ThreadType.User);
+                }
+                if (cmd == 511 && subCmd == 1) {
+                    const parsedData = (await decodeEventData(parsed, this.cipherKey)).data;
+                    const groupMsgs = parsedData.groupMsgs;
+                    const responseMsgs = groupMsgs.map((msg) => new GroupMessage(this.ctx.uid, msg));
+                    this.emit("old_messages", responseMsgs, ThreadType.Group);
+                }
+                if (cmd == 602 && subCmd == 0) {
+                    const parsedData = (await decodeEventData(parsed, this.cipherKey)).data;
+                    const { actions } = parsedData;
+                    for (const action of actions) {
+    requestOldMessages(threadType, lastMsgId = null) {
+        const payload = {
+            version: 1,
+            cmd: threadType === ThreadType.User ? 510 : 511,
+            subCmd: 1,
+            data: { first: true, lastId: lastMsgId, preIds: [] },
+        };
+        this.sendWs(payload);
+    }
+    /**
+     * Request old messages
+
+### 2026-11-11T00:39:26.832152 — Đồng bộ khi mở CLI
+```sh
+sed -n "70,110p" internal/tui/model.go; sed -n "480,500p" internal/tui/model.go; tail -10 daemon/archive.test.mjs; node --check daemon/index.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; ea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithContext(ctx)).Run()
+    if ctx.Err() != nil {
+        return nil
+    }
+    return err
+                return m, m.openSelected()
+            }
+            m.editing = false
+            m.composer.Blur()
+            return m, m.filter.Focus()
+        case "f5":
+            if remaining := time.Until(m.listNextLoad); remaining > 0 {
+                m.status = fmt.Sprintf("Đang giữ danh sách hiện tại. Có thể tải lại sau %d giây.", int(remaining.Seconds())+1)
+                return m, nil
+            }
+            if m.connected && !m.loading {
+                m.loading, m.listID = true, ""
+                m.earlyList = make(map[string]ipc.Event)
+                m.listAttempt++
+                m.status = "Đang tải lại danh sách..."
+                return m, tea.Batch(m.loadList(), expires("list", m.listAttempt))
+            }
+            return m, nil
+        case "pgup", "pgdown", "ctrl+u", "ctrl+d":
+            if msg.String() == "pgup" || msg.String() == "ctrl+u" {
+                m.chat.HalfViewUp()
+  let timer;
+  try {
+    const result=await Promise.race([completed,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error("Ảnh không tự tải")),3000);})]);
+    assert.equal(result.event,"media_updated");
+    assert.equal(result.data.image_state,"ready");
+  } finally {
+    clearTimeout(timer);
+    await archive.close();
+  }
+});
+
+### 2026-11-11T00:40:04.009610 — Đồng bộ khi mở CLI
+```sh
+gofmt -w cmd/zalo-cli/main.go internal/daemon/start.go internal/tui/model.go internal/tui/archive.go; npm --prefix daemon test > /tmp/zalo-start-node-tests.txt 2>&1; tail -18 /tmp/zalo-start-node-tests.txt
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; ok 11 - gửi tin được lưu local và lỗi lưu không báo nhầm là gửi thất bại
+  ---
+  duration_ms: 5.667933
+  ...
+# Subtest: ảnh được tự tải khi capture, không cần mở chat hoặc gọi pump
+ok 12 - ảnh được tự tải khi capture, không cần mở chat hoặc gọi pump
+  ---
+  duration_ms: 1004.351652
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7110.594103
+
+### 2026-11-11T00:40:50.859220 — Đồng bộ khi mở CLI
+```sh
+gofmt -w internal/daemon; sed -n "115,175p" internal/daemon/start.go; GOCACHE=/tmp/zalo-start-go-cache go test ./internal/tui ./internal/media; GOCACHE=/tmp/zalo-start-go-cache go build ./...
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; PPEND|os.O_WRONLY, 0600)
+        if err != nil {
+            return err
+        }
+        command := exec.Command("node", "index.mjs", "--managed")
+        command.Dir, command.Stdout, command.Stderr = dir, log, log
+        command.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+        err = command.Start()
+        log.Close()
+        if err != nil {
+            return fmt.Errorf("không bật được daemon: %w", err)
+        }
+        // Reap while this CLI lives; after exit the detached process is adopted by init.
+        finished := make(chan error, 1)
+        exited = finished
+        go func() { finished <- command.Wait() }()
+        fmt.Fprintf(output, "Đang bật daemon. Nhật ký: %s\nNếu cần đăng nhập, ảnh QR sẽ mở bằng ứng dụng xem ảnh.\n", logPath)
+    }
+    timeout := time.NewTimer(2 * time.Minute)
+    defer timeout.Stop()
+    for {
+        ready, _ = probe(ctx, address)
+        if ready {
+            return nil
+        }
+        select {
+        case err := <-exited:
+            return fmt.Errorf("daemon đã dừng (%v); xem %s", err, filepath.Join(root, "daemon.log"))
+        case <-ctx.Done():
+            return ctx.Err()
+        case <-timeout.C:
+            return fmt.Errorf("daemon chưa sẵn sàng; xem %s", filepath.Join(root, "daemon.log"))
+        case <-time.After(250 * time.Millisecond):
+        }
+    }
+}
+ok      zalo-cli/internal/tui   0.035s
+ok      zalo-cli/internal/media 0.013s
+
+### 2026-11-11T00:41:02.615348 — Đồng bộ khi mở CLI
+```sh
+sed -n "120,185p" internal/daemon/start.go; sed -n "1,55p" daemon/recipients.mjs; tail -20 internal/tui/model_test.go
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; throw error;
+      const delay = Math.min(300000, ttl * 2 ** state.failures);
+      state.failures++;
+      state.blockedUntil = now + delay;
+      return rateLimitedResult(state, now);
+    }
+  })();
+  try {
+    return await state.pending;
+  } finally {
+    state.pending = null;
+  }
+}
+
+async function fetchRecipients(api) {
+  const friends = [];
+  const pageSize = 200;
+  for (let page = 1; ; page++) {
+func TestF5RateLimitKeepsRecipientsAndHonorsCooldown(t *testing.T) {
+    m := fixture()
+    m.loading = true
+    m.listID = "refresh-1"
+    m.handleEvent(ipc.Event{Event: "recipients_result", ID: "refresh-1", OK: false,
+        Error: "Zalo đang giới hạn yêu cầu", RetryAfter: 60})
+    if len(m.recipients) != 2 || m.active != "user:an" {
+        t.Fatal("refresh failure changed current recipients or conversation")
+    }
+    updated, command := m.Update(tea.KeyMsg{Type: tea.KeyF5})
+    m = updated.(model)
+    if command != nil || m.loading || !strings.Contains(m.status, "giây") {
+        t.Fatal("F5 must wait during cooldown")
+    }
+    m.listNextLoad = time.Now().Add(-time.Second)
+    updated, command = m.Update(tea.KeyMsg{Type: tea.KeyF5})
+    if command == nil || !updated.(model).loading {
+        t.Fatal("refresh must work after cooldown")
+    }
+}
+
+### 2026-11-11T00:41:31.490901 — Đồng bộ khi mở CLI
+```sh
+GOCACHE=/tmp/zalo-start-go-cache go test -race ./... && GOCACHE=/tmp/zalo-start-go-cache go vet ./...
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; ok      zalo-cli/cmd/zalo-cli   1.019s
+ok      zalo-cli/internal/daemon    1.314s
+ok      zalo-cli/internal/ipc   1.015s
+ok      zalo-cli/internal/media 1.096s
+ok      zalo-cli/internal/tui   1.188s
+
+### 2026-11-11T00:42:12.794785 — Đồng bộ khi mở CLI
+```sh
+node daemon/startup.test.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; TAP version 13
+# Subtest: đọc local trước login, tự cập nhật tin vắng mặt và đồng bộ cả user/group
+ok 1 - đọc local trước login, tự cập nhật tin vắng mặt và đồng bộ cả user/group
+  ---
+  duration_ms: 6488.624787
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7957.782478
+
+### 2026-11-11T00:42:38.938229 — Đồng bộ khi mở CLI
+```sh
+gofmt -w internal/tui/model_test.go; GOCACHE=/tmp/zalo-start-go-cache go test ./internal/tui; git diff --stat; git diff --check
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 2; ok      zalo-cli/internal/tui   0.033s
+ COMMAND_LOG.md             | 450 +++++++++++++++++++++++++++++++++++++++++++++
+ cmd/zalo-cli/main.go       |  14 ++
+ daemon/archive-sync.mjs    |  70 ++++---
+ daemon/history.mjs         |   8 +-
+ daemon/index.mjs           | 100 ++++++++--
+ daemon/ipc.mjs             |   2 +-
+ daemon/package.json        |   3 +-
+ internal/tui/model.go      |  19 +-
+ internal/tui/model_test.go |  26 +++
+ 9 files changed, 635 insertions(+), 57 deletions(-)
+COMMAND_LOG.md:4825: trailing whitespace.
++- Kết quả: Exit 0;
+
+### 2026-11-11T00:43:16.936272 — Đồng bộ khi mở CLI
+```sh
+git status --short; cat cmd/zalo-cli/main.go | head -75; sed -n "1,130p" daemon/index.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;          const viewer = spawn("xdg-open",[QR_FILE],{stdio:"ignore"});
+          viewer.on("error",error => console.warn("Mở QR bằng: xdg-open "+QR_FILE,error.message));
+          broadcast("archive_status",{notice:"Cần quét QR để kết nối Zalo. Ảnh QR: "+QR_FILE});
+        } else try {
+          execFileSync("kitten", ["icat", "--align", "left", QR_FILE], { stdio: "inherit" });
+        } catch {
+          console.log("Mở ảnh QR bằng: xdg-open " + QR_FILE);
+        }
+      }
+    },
+  });
+  if (syncAbort.signal.aborted) { api.listener.stop(); return; }
+  const account = String(api.getOwnId());
+  if (archive && archive.account !== account) {
+    throw new Error("Phiên Zalo khác tài khoản kho local. Dừng daemon rồi chọn đúng --account "+account);
+  }
+  if (archive) await archive.close();
+  archive = new Archive(account, { onMedia: event => broadcast(event.event, event.data) });
+}
+
+console.log("💾 Kho tin nhắn trên máy:", archive.directory);
+if (options.offline) console.log("📂 Đang đọc kho offline; gửi tin cần đăng nhập Zalo.");
+
+if (api) {
+  console.log("✅ ĐÃ ĐĂNG NHẬP THÀNH CÔNG! Đang lắng nghe tin nhắn...\n");
+
+  // 2. Lắng nghe tin nhắn đến
+  api.listener.on("message", (message) => {
+
+### 2026-11-11T00:43:24.669555 — Đồng bộ khi mở CLI
+```sh
+npm --prefix daemon test > /tmp/zalo-start-node-tests.txt 2>&1 && tail -12 /tmp/zalo-start-node-tests.txt; node --check daemon/index.mjs; GOCACHE=/tmp/zalo-start-go-cache go build ./...
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;   ---
+  duration_ms: 1004.27408
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11085.357391
+
+### 2026-11-11T00:43:34.234670 — Đồng bộ khi mở CLI
+```sh
+GOCACHE=/tmp/zalo-start-go-cache go test -race ./internal/tui && GOCACHE=/tmp/zalo-start-go-cache go vet ./...
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; ok      zalo-cli/internal/tui   1.172s
+
+### 2026-11-11T00:44:09.707039 — Ghi tài liệu
+- Lệnh: Python append plan.md và CHANGELOG.md, chuẩn hóa khoảng trắng nhật ký.
+- Mục đích: Ghi hành vi mở CLI, giới hạn đồng bộ và kiểm chứng.
+- Kết quả: Exit 0.
+
+### 2026-11-11T00:44:09.751612 — Đồng bộ khi mở CLI
+```sh
+git diff --check
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;

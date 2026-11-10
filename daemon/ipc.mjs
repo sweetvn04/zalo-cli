@@ -30,20 +30,9 @@ export async function handleCommand(raw, api, archive = null) {
     }
     if (command?.action === "list_recipients") {
       event = "recipients_result";
-      if (!api && archive) return {event,id,ok:true,recipients:archive.recipients(),notice:"Đang đọc kho offline trên máy."};
+      if (archive) return {event,id,ok:true,recipients:archive.recipients(),notice:api ? "Đọc danh sách local; đang cập nhật từ Zalo ở nền." : "Đang đọc kho offline trên máy."};
       if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
-      let list;
-      try {
-        list = await loadRecipients(api);
-        if (archive) {
-          archive.saveRecipients(list.recipients);
-          list = {...list,recipients:archive.recipients()};
-        }
-      } catch (error) {
-        const saved = archive?.recipients() ?? [];
-        if (!saved.length) throw error;
-        list = {recipients:saved,notice:"Zalo chưa trả danh sách mới. Đang dùng danh sách lưu trên máy.",retry_after:error.retryAfter || 60};
-      }
+      const list = await loadRecipients(api);
       return { event, id, ok: true, ...list };
     }
     if (command?.action !== "send_message") {
