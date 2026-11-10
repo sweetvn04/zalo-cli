@@ -4,6 +4,7 @@ import { normalizeMessage } from "./history.mjs";
 import { loginWithSession } from "./auth.mjs";
 import { Archive, archiveRoot } from "./archive.mjs";
 import { syncArchive } from "./archive-sync.mjs";
+import { createGroupSync } from "./group-sync.mjs";
 import { loadRecipients } from "./recipients.mjs";
 import { parseArgs } from "node:util";
 import path from "node:path";
@@ -21,6 +22,8 @@ const zalo = new Zalo({ selfListen: true });
 let api;
 let archive;
 let syncRun;
+let groupSync;
+let groupScan;
 const syncAbort = new AbortController();
 let online = false;
 let loginNotice = options.offline ? "Đang đọc kho offline." : "Đang đọc kho local; kết nối Zalo và đồng bộ nền...";
@@ -64,6 +67,12 @@ wss.on("connection", (socket) => {
       return;
     }
     if (action?.action === "list_recipients" && online) refreshRecipients();
+    if (action?.action === "get_history" && action.payload?.thread_type === "group" &&
+        typeof action.payload.thread_id === "string" && /^\d+$/.test(action.payload.thread_id) && online) {
+      groupSync?.refresh(action.payload.thread_id,!!action.payload.archive_before).catch(error=>{
+        broadcast("archive_status",{notice:"Chưa cập nhật được nhóm: "+error.message});
+      });
+    }
     const result = await handleCommand(raw, online ? api : undefined, archive);
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(result));
@@ -84,9 +93,20 @@ function refreshRecipients() {
     const previous = JSON.stringify(archive.recipients());
     archive.saveRecipients(list.recipients);
     if (JSON.stringify(archive.recipients()) !== previous) broadcast("recipients_updated",{});
+    scanGroupHeads();
   }).catch(error => {
     broadcast("archive_status",{notice:"Đang dùng danh sách local; chưa cập nhật được từ Zalo: "+error.message});
   }).finally(() => { recipientRefresh = null; });
+}
+
+function scanGroupHeads() {
+  if (!groupSync || groupScan || !online) return;
+  groupScan = (async()=>{
+    for (const recipient of archive.recipients()) {
+      if (syncAbort.signal.aborted || !online) return;
+      if (recipient.thread_type === "group") await groupSync.refresh(recipient.thread_id);
+    }
+  })().catch(error=>console.warn("Chưa cập nhật được lịch sử cloud:",error.message)).finally(()=>{groupScan=null;});
 }
 
 // Khôi phục phiên; nếu thất bại tự yêu cầu QR và chỉ thay session sau khi thành công.
@@ -118,6 +138,11 @@ if (!options.offline) {
   }
   if (archive) await archive.close();
   archive = new Archive(account, { onMedia: event => broadcast(event.event, event.data) });
+  groupSync = createGroupSync(api,archive,{
+    signal:syncAbort.signal,
+    onUpdate:()=>{broadcast("archive_updated",{thread_type:"group"});broadcast("recipients_updated",{});},
+    onStatus:notice=>{console.log("☁️ "+notice);broadcast("archive_status",{notice});},
+  });
 }
 
 console.log("💾 Kho tin nhắn trên máy:", archive.directory);
@@ -220,6 +245,8 @@ async function shutdown() {
   wss.close();
   await syncRun;
   await recipientRefresh;
+  await groupScan;
+  await groupSync?.done();
   await archive?.close();
   console.log("💾 Đã đóng kho local an toàn.");
 }

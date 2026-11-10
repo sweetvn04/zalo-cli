@@ -219,10 +219,14 @@ func TestArchiveNotificationDuringRequestTriggersAnotherRead(t *testing.T) {
 	m := fixture()
 	state := m.historyStates[m.active]
 	state.id = "first"
+	state.loaded = true
 	attempt := state.attempt
 	m = update(m, packet{open: true, result: ipc.Result{Event: ipc.Event{Event: "archive_updated", Data: ipc.Message{ThreadType: "user"}}}})
 	if !m.historyDirty[m.active] || state.attempt != attempt {
 		t.Fatal("notification lost while history request pending")
+	}
+	if !state.loaded {
+		t.Fatal("background sync must not mark active chat as first load and jump to bottom")
 	}
 	m = update(m, packet{open: true, result: ipc.Result{Event: ipc.Event{Event: "history_result", ID: "first", OK: true, ThreadID: "an", ThreadType: "user"}}})
 	if m.historyDirty[m.active] || !state.loading || state.attempt != attempt+1 {

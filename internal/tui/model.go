@@ -390,7 +390,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.result.Event.Event == "archive_updated" {
 			for k, state := range m.historyStates {
 				if strings.HasPrefix(k, msg.result.Event.Data.ThreadType+":") {
-					state.loaded = false
+					if k != m.active {
+						state.loaded = false
+					}
 					m.historyDirty[k] = true
 				}
 			}

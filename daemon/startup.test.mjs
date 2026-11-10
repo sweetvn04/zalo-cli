@@ -23,6 +23,7 @@ test("đọc local trước login, tự cập nhật tin vắng mặt và đồn
     import fs from 'node:fs';
     import {EventEmitter} from 'node:events';
     import {setTimeout as pause} from 'node:timers/promises';
+    import {createGroupSync as buildGroupSync} from ${JSON.stringify(pathToFileURL(path.join(directory,"group-sync.mjs")).href)};
     const listener = new EventEmitter();
     listener.start = () => queueMicrotask(() => {listener.emit('connected');listener.emit('cipher_key','fixture');});
     listener.stop = () => listener.emit('disconnected');
@@ -35,11 +36,17 @@ test("đọc local trước login, tự cập nhật tin vắng mặt và đồn
       while(!fs.existsSync(${JSON.stringify(gate)})) await pause(20);
       return {getOwnId:()=> '1001',listener};
     }
-    export async function loadRecipients(){ return {recipients:[{thread_id:'friend',thread_type:'user',name:'An mới'}]}; }
+    export async function loadRecipients(){ return {recipients:[{thread_id:'friend',thread_type:'user',name:'An mới'},{thread_id:'123',thread_type:'group',name:'Nhóm mẫu'}]}; }
+    export function createGroupSync(api,archive,options) {
+      return buildGroupSync(api,archive,{...options,delay:0,fetchPage:async(_api,groupId)=>({
+        messages:groupId==='123'?[{type:1,threadId:'123',data:{msgId:'900',idTo:'123',ts:'900',uidFrom:'friend',content:'Tin cloud mới hơn snapshot'}}]:[],
+        cursor:'',more:false,filtered:false,
+      })});
+    }
   `);
   let source = fs.readFileSync(path.join(directory,"index.mjs"),"utf8");
   source = source.replace(/from "\.\/([^"\n]+)"/g,(_,name) => `from ${JSON.stringify(pathToFileURL(path.join(directory,name)).href)}`);
-  for (const name of ["auth.mjs","recipients.mjs"]) source = source.replace(pathToFileURL(path.join(directory,name)).href,pathToFileURL(fixture).href);
+  for (const name of ["auth.mjs","recipients.mjs","group-sync.mjs"]) source = source.replace(pathToFileURL(path.join(directory,name)).href,pathToFileURL(fixture).href);
   source = source.replace('from "zca-js"',`from ${JSON.stringify(pathToFileURL(path.join(directory,"node_modules/zca-js/dist/index.js")).href)}`)
     .replace('from "ws"',`from ${JSON.stringify(pathToFileURL(path.join(directory,"node_modules/ws/wrapper.mjs")).href)}`)
     .replace("const PORT = 8989;","const PORT = 0;")
@@ -86,6 +93,7 @@ test("đọc local trước login, tự cập nhật tin vắng mặt và đồn
   assert.equal(personal.messages.length,2);
   assert.equal(personal.messages[1].content,"Tin gửi khi tắt máy 0");
   assert.equal((await request("get_history",{thread_id:"friend",thread_type:"group"})).messages.length,1);
+  assert.equal((await request("get_history",{thread_id:"123",thread_type:"group"})).messages[0].content,"Tin cloud mới hơn snapshot");
   assert.equal((await request("daemon_status")).online,true);
   assert.ok(events.some(event=>event.event==="recipients_updated"));
   assert.deepEqual(fs.readFileSync(calls,"utf8").trim().split("\n").slice(0,2),["0:null","1:null"]);

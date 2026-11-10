@@ -157,9 +157,11 @@ export class Archive {
       const message = JSON.parse(row.data);
       return this.withMedia(message);
     });
-    return {messages,has_more:rows.length>100,archive_cursor:oldest ? Buffer.from(JSON.stringify([oldest.timestamp,oldest.msg_id])).toString("base64url") : "",
-      cursor:oldest && /^\d+$/.test(oldest.msg_id) ? oldest.msg_id : "", partial:!this.meta("sync-done:"+type),
-      notice:this.meta("sync-running:"+type) ? "Đọc kho local; đang đồng bộ lịch sử nền, tin sẽ cập nhật khi có dữ liệu." : "Đang đọc tin đã lưu trên máy."};
+    const cloudMore = type === "group" && !!this.meta("group-cloud-more:"+thread);
+    const cloudPartial = type === "group" ? this.meta("group-cloud-partial:"+thread) : null;
+    return {messages,has_more:rows.length>100 || cloudMore,archive_cursor:oldest ? Buffer.from(JSON.stringify([oldest.timestamp,oldest.msg_id])).toString("base64url") : cloudMore ? cursor || Buffer.from(JSON.stringify([Number.MAX_SAFE_INTEGER,"\uffff"])).toString("base64url") : "",
+      cursor:oldest && /^\d+$/.test(oldest.msg_id) ? oldest.msg_id : "", partial:cloudPartial ?? !this.meta("sync-done:"+type),
+      notice:(type === "group" && this.meta("group-cloud-notice:"+thread)) || (this.meta("sync-running:"+type) ? "Đọc kho local; đang đồng bộ lịch sử nền, tin sẽ cập nhật khi có dữ liệu." : "Đang đọc tin đã lưu trên máy.")};
   }
 
   meta(key, value) {

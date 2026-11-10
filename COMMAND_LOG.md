@@ -5130,3 +5130,614 @@ git diff --check
 ```
 - Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
 - Kết quả: Exit 0;
+
+### 2026-11-11T00:44:34.203287 — Đồng bộ khi mở CLI
+```sh
+git add CHANGELOG.md COMMAND_LOG.md plan.md cmd/zalo-cli/main.go daemon/archive-sync.mjs daemon/archive.test.mjs daemon/history.mjs daemon/index.mjs daemon/ipc.mjs daemon/package.json daemon/startup.test.mjs internal/daemon/start.go internal/daemon/start_test.go internal/tui/model.go internal/tui/model_test.go internal/tui/archive.go && git commit -m "feat(startup): launch daemon and sync missed messages in background"
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; [main 3e479fc] feat(startup): launch daemon and sync missed messages in background
+ 16 files changed, 1181 insertions(+), 70 deletions(-)
+ create mode 100644 daemon/startup.test.mjs
+ create mode 100644 internal/daemon/start.go
+ create mode 100644 internal/daemon/start_test.go
+ create mode 100644 internal/tui/archive.go
+
+### 2026-11-11T00:49:35.541529 — Đồng bộ khi mở CLI
+```sh
+git status --short; cat daemon/archive-sync.mjs; rg -n "getGroupChatHistory|get.*History|recent|Recent" daemon/node_modules/zca-js/dist/apis -g "*.d.ts"; sed -n "1,150p" daemon/node_modules/zca-js/dist/apis/getGroupChatHistory.js; sed -n "110,165p" internal/tui/history.go
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; Cursor
+        oldHeight, oldOffset := m.chat.TotalLineCount(), m.chat.YOffset
+        atBottom := m.chat.AtBottom()
+        m.mergeHistory(k, event.Messages)
+        if m.active == k {
+            m.status = "Đã tải tin cũ. Cuộn chuột hoặc PgUp/PgDn để đọc."
+            if state.more {
+                m.status = "Cuộn lên đầu hoặc F7 để tải thêm tin cũ."
+            } else if event.Partial {
+                m.status = "Zalo chưa cung cấp thêm tin cũ. F6 để thử tải lại."
+            }
+            if event.Notice != "" {
+                m.status = event.Notice
+            }
+            m.refreshChat(initial || (!state.older && atBottom))
+            if state.older {
+                // Tin được thêm phía trên: giữ nguyên đoạn người dùng đang đọc.
+                m.chat.SetYOffset(oldOffset + max(0, m.chat.TotalLineCount()-oldHeight))
+            }
+        }
+        return
+    }
+}
+
+func (m *model) mergeHistory(k string, messages []ipc.Message) {
+    seen := make(map[string]*chatLine)
+    for _, line := range m.history[k] {
+        if line.id != "" {
+            seen[line.id] = line
+        }
+    }
+    for _, message := range messages {
+        if message.ThreadType+":"+message.ThreadID != k {
+            continue
+        }
+        if existing := seen[message.MsgID]; message.MsgID != "" && existing != nil {
+            if message.Kind == "image" && message.ImageSource() != "" {
+                if existing.imageURL != message.ImageSource() {
+
+### 2026-11-11T00:49:42.420575 — Đồng bộ khi mở CLI
+```sh
+rg -n "sync|Đồng bộ|lịch sử|kết nối|phiên|kho|Error|error" /home/sweetvn/.cache/zalo-cli/daemon.log | tail -35; rg -n "history|lastId|first|preIds|fetch" daemon/node_modules/zca-js/dist/apis/listen.js | tail -25; cat daemon/node_modules/zca-js/dist/apis/getGroupChatHistory.d.ts; sed -n "1,65p" daemon/node_modules/zca-js/dist/models/Message.js
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; storyResponse = {
+    lastActionId: string;
+    lastActionIdOther: string;
+    more: number;
+    groupMsgs: GroupMessage[];
+};
+export declare const getGroupChatHistoryFactory: (ctx: import("../context.js").ContextBase, api: import("../apis.js").API) => (groupId: string, count?: number) => Promise<GetGroupChatHistoryResponse>;
+import { ThreadType } from "./Enum.js";
+export class UserMessage {
+    constructor(uid, data) {
+        this.type = ThreadType.User;
+        this.data = data;
+        this.threadId = data.uidFrom == "0" ? data.idTo : data.uidFrom;
+        this.isSelf = data.uidFrom == "0";
+        if (data.idTo == "0")
+            data.idTo = uid;
+        if (data.uidFrom == "0")
+            data.uidFrom = uid;
+        if (data.quote) {
+            data.quote.ownerId = String(data.quote.ownerId);
+        }
+    }
+}
+export class GroupMessage {
+    constructor(uid, data) {
+        this.type = ThreadType.Group;
+        this.data = data;
+        this.threadId = data.idTo;
+        this.isSelf = data.uidFrom == "0";
+        if (data.uidFrom == "0")
+            data.uidFrom = uid;
+        if (data.quote) {
+            data.quote.ownerId = String(data.quote.ownerId);
+        }
+    }
+}
+
+### 2026-11-11T00:49:55.814683 — Đồng bộ khi mở CLI
+```sh
+node --input-type=module <<'JS'
+import WebSocket from "./daemon/node_modules/ws/wrapper.mjs";
+const ws=new WebSocket("ws://127.0.0.1:8989");
+const timeout=setTimeout(()=>{console.log("Không nhận trạng thái trong 3 giây");ws.terminate();},3000);
+ws.on("open",()=>ws.send(JSON.stringify({id:"diagnose",action:"daemon_status"})));
+ws.on("message",raw=>{const event=JSON.parse(raw);if(event.id!=="diagnose")return;console.log(JSON.stringify({event:event.event,ready:event.ready,online:event.online,notice:event.notice,error:event.error}));clearTimeout(timeout);ws.close();});
+ws.on("error",error=>{console.log(error.message);clearTimeout(timeout);});
+JS
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; {"event":"daemon_status","ready":true,"online":true,"notice":"Đã lưu phần lịch sử nhận được; Zalo chưa cung cấp đủ tin. Kho local vẫn đọc được."}
+
+### 2026-11-11T00:50:04.839143 — Đồng bộ khi mở CLI
+```sh
+node --input-type=module <<'JS'
+import fs from "node:fs";import os from "node:os";import path from "node:path";import Database from "./daemon/node_modules/better-sqlite3/lib/index.js";
+const root=path.join(process.env.XDG_DATA_HOME||path.join(os.homedir(),".local/share"),"zalo-cli/accounts");
+for(const id of fs.readdirSync(root)){if(!/^\d+$/.test(id))continue;const file=path.join(root,id,"messages.sqlite3");if(!fs.existsSync(file))continue;const db=new Database(file,{readonly:true});console.log(JSON.stringify({sync:db.prepare("SELECT key,value FROM metadata WHERE key LIKE sync-%").all(),counts:db.prepare("SELECT thread_type,COUNT(*) count,MAX(timestamp) newest FROM messages GROUP BY thread_type").all()}));db.close();}
+JS
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 1;
+/home/sweetvn/MyProjects/zalo-cli/daemon/node_modules/better-sqlite3/lib/methods/wrappers.js:5
+    return this[cppdb].prepare(sql, this, false);
+                       ^
+SqliteError: near "%": syntax error
+    at Database.prepare (/home/sweetvn/MyProjects/zalo-cli/daemon/node_modules/better-sqlite3/lib/methods/wrappers.js:5:21)
+    at file:///home/sweetvn/MyProjects/zalo-cli/[eval1]:3:231
+    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+    at async ModuleLoader.eval (node:internal/modules/esm/loader:245:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  code: 'SQLITE_ERROR'
+}
+
+Node.js v20.20.2
+
+### 2026-11-11T00:50:14.425500 — Đồng bộ khi mở CLI
+```sh
+node /tmp/zalo-sync-diagnose.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; {"sync":[{"key":"sync-done:user","value":"false"},{"key":"sync-running:user","value":"false"},{"key":"sync-error:user","value":"null"},{"key":"sync-done:group","value":"false"},{"key":"sync-running:group","value":"false"},{"key":"sync-error:group","value":"null"},{"key":"sync-started:user","value":"1794332787933"},{"key":"sync-started:group","value":"1794332787939"},{"key":"sync-finished:user","value":"1794332792180"},{"key":"sync-finished:group","value":"1794332794241"}],"counts":[{"thread_type":"group","count":51,"newest":1794306739962},{"thread_type":"user","count":13,"newest":1794332817753}]}
+
+### 2026-11-11T00:50:43.093360 — Đồng bộ khi mở CLI
+```sh
+curl -L --fail --max-time 25 https://patch-diff.githubusercontent.com/raw/RFS-ADRENO/zca-js/pull/370.patch -o /tmp/zca-history-370.patch && cat /tmp/zca-history-370.patch
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; GetGroupChatHistoryResponse | string;
++
++                if (typeof data === "string") {
++                    data = JSON.parse(data) as GetGroupChatHistoryResponse;
++                }
+
+-            for (let i = 0; i < data.groupMsgs.length; i++) {
+-                data.groupMsgs[i] = new GroupMessage(ctx.uid, data.groupMsgs[i] as unknown as TGroupMessage);
++                return data;
++            });
++
++            if (!lastPage || !Array.isArray(lastPage.groupMsgs)) break;
++
++            for (const rawMsg of lastPage.groupMsgs as unknown as TGroupMessage[]) {
++                if (messages.length >= count) break;
++                if (messages.some((m) => m.msgId === rawMsg.msgId)) continue;
++                messages.push(rawMsg);
+             }
+
+-            return data;
+-        });
++            const nextCursor = Number(lastPage.lastMsgId);
++            if (!lastPage.hasMore || !nextCursor || nextCursor === cursor) break;
++            cursor = nextCursor;
++        }
++
++        const groupMsgs: GroupMessage[] = messages.map((data) => new GroupMessage(ctx.uid, data));
++        return Object.assign({}, lastPage || {}, { groupMsgs }) as GetGroupChatHistoryResponse;
+     };
+ });
+
+### 2026-11-11T00:50:52.537918 — Đồng bộ khi mở CLI
+```sh
+cat daemon/node_modules/zca-js/package.json | head -65; rg -n "function apiFactory|apiFactory =|getContext|getCookie|utils" daemon/node_modules/zca-js/dist/utils.js daemon/node_modules/zca-js/dist/apis.js | tail -20; head -55 daemon/node_modules/zca-js/dist/index.js; sed -n "820,865p" daemon/node_modules/zca-js/dist/utils.js
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;
+daemon/node_modules/zca-js/dist/apis.js:213:        this.getCookie = getCookieFactory(ctx, this);
+daemon/node_modules/zca-js/dist/utils.js:241:        Cookie: await ctx.cookie.getCookieString(origin),
+daemon/node_modules/zca-js/dist/utils.js:621:export function apiFactory() {
+daemon/node_modules/zca-js/dist/utils.js:626:            const utils = {
+daemon/node_modules/zca-js/dist/utils.js:639:            return callback(api, ctx, utils);
+export * from "./Errors/index.js";
+export * from "./models/index.js";
+export * from "./zalo.js";
+// Others (Enum)
+export { CloseReason } from "./apis/listen.js";
+export { LoginQRCallbackEventType } from "./apis/loginQR.js";
+export { FriendRecommendationsType } from "./apis/getFriendRecommendations.js";
+export { ReviewPendingMemberRequestStatus } from "./apis/reviewPendingMemberRequest.js";
+export { TextStyle, Urgency } from "./apis/sendMessage.js";
+export { ReportReason } from "./apis/sendReport.js";
+export { MuteAction, MuteDuration } from "./apis/setMute.js";
+export { ChatTTL } from "./apis/updateAutoDeleteChat.js";
+export { UpdateLangAvailableLanguages } from "./apis/updateLang.js";
+export { UpdateSettingsType } from "./apis/updateSettings.js";
+
+### 2026-11-11T00:51:01.796051 — Đồng bộ khi mở CLI
+```sh
+sed -n "615,642p" daemon/node_modules/zca-js/dist/utils.js; rg -n "resolveResponse|resolve\(|JSON.parse|parse\(" daemon/node_modules/zca-js/dist/utils.js | head -22; cat daemon/node_modules/zca-js/dist/apis/getContext.js; sed -n "65,100p" daemon/archive.mjs; head -25 daemon/history.test.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; sSafeInteger(data.timestamp) ? data.timestamp : 0;
+import test from "node:test";
+import assert from "node:assert/strict";
+import { EventEmitter } from "node:events";
+import { ThreadType } from "zca-js";
+import { loadHistory, normalizeMessage } from "./history.mjs";
+import { handleCommand } from "./ipc.mjs";
+
+function message(id, thread, ts, content, type = ThreadType.User, self = false) {
+  return { type, threadId: thread, isSelf: self,
+    data: { msgId: id, ts: String(ts), uidFrom: self ? "me" : "friend", dName: "Bảo", content } };
+}
+
+test("nhóm lọc đúng hội thoại, chỉ lấy văn bản và sắp thời gian", async () => {
+  const api = { async getGroupChatHistory(id, count) {
+    assert.equal(id, "group-1");
+    assert.equal(count, 100);
+    return { more: 1, groupMsgs: [
+      message("3", id, 3000, "Ba", ThreadType.Group),
+      message("1", id, 1000, "Một", ThreadType.Group, true),
+      message("2", "other", 2000, "Sai nhóm", ThreadType.Group),
+      message("4", id, 4000, { title: "Ảnh" }, ThreadType.Group),
+    ] };
+  } };
+  const response = await handleCommand(JSON.stringify({ id: "req-h", action: "get_history",
+    payload: { thread_id: "group-1", thread_type: "group" } }), api);
+
+### 2026-11-11T00:51:24.571311 — Đồng bộ khi mở CLI
+```sh
+curl -L --fail --max-time 25 https://patch-diff.githubusercontent.com/raw/RFS-ADRENO/zca-js/pull/397.patch -o /tmp/zca-history-397.patch && head -210 /tmp/zca-history-397.patch
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; lean;
+-    lastMsgId?: string | number;
+-    isFiltered?: number | boolean;
+ };
+
+ export const getGroupChatHistoryFactory = apiFactory<GetGroupChatHistoryResponse>()((api, ctx, utils) => {
+-    // Zalo removed `/api/group/history` (see #356). Zalo Web now loads group history
+-    // from the group cloud message service: `getrecentv2` for the latest page and
+-    // `getoldv2` for older pages (paginated by `globalMsgId`).
+-    const recentURL = utils.makeURL(`${api.zpwServiceMap.group_cloud_message[0]}/api/cm/getrecentv2`);
+-    const oldURL = utils.makeURL(`${api.zpwServiceMap.group_cloud_message[0]}/api/cm/getoldv2`);
++    const serviceURL = utils.makeURL(`${api.zpwServiceMap.group[0]}/api/group/history`);
+
+     /**
+      * Get group chat history
+      *
++     * @deprecated Zalo removed the `/api/group/history` endpoint (see #356).
++     * Use {@link getGroupCloudChatHistory} instead, which uses the cloud message service.
++     *
+      * @param groupId group id
+      * @param count count of messages to return (default: 50)
+-     * @param lastMsgId fetch messages older than this message id (use `lastMsgId` from the previous response to paginate). Omit to get the latest messages.
+
+### 2026-11-11T00:51:29.072815 — Đồng bộ khi mở CLI
+```sh
+sed -n "290,455p" /tmp/zca-history-397.patch
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;              });
++            } catch (err) {
++                if (err instanceof ZaloApiError && err.code === -69) {
++                    return { groupMsgs: [], hasMore: false, lastMsgId: "", isFiltered: false };
++                }
++                throw err;
++            }
++        };
++    },
++);
+diff --git a/src/index.ts b/src/index.ts
+index 70e908dc..af073ad2 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -63,6 +63,7 @@ export type { GetFriendRequestStatusResponse } from "./apis/getFriendRequestStat
+ export type { GetFullAvatarResponse } from "./apis/getFullAvatar.js";
+ export type { GetGroupBlockedMemberPayload, GetGroupBlockedMemberResponse } from "./apis/getGroupBlockedMember.js";
+ export type { GetGroupChatHistoryResponse } from "./apis/getGroupChatHistory.js";
++export type { GetGroupCloudChatHistoryResponse } from "./apis/getGroupCloudChatHistory.js";
+ export type { GroupInfoPendingApprove, GroupInfoResponse } from "./apis/getGroupInfo.js";
+ export type { GetGroupInviteBoxInfoPayload, GetGroupInviteBoxInfoResponse } from "./apis/getGroupInviteBoxInfo.js";
+ export type { GetGroupInviteBoxListPayload, GetGroupInviteBoxListResponse } from "./apis/getGroupInviteBoxList.js";
+
+### 2026-11-11T00:52:49.232037 — Đồng bộ khi mở CLI
+```sh
+sed -n "143,170p" daemon/archive.mjs; sed -n "80,100p;190,230p;250,280p" daemon/index.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; g(error));
+    broadcast("archive_status",{notice:"Kết nối Zalo gặp lỗi; kho local vẫn đọc được."});
+  });
+
+  // Bắt đầu lắng nghe
+  api.listener.start();
+}
+}
+// Không để lỗi mạng/đăng nhập lấy mất quyền đọc kho local.
+let loginRetry;
+function connectInBackground() { connectZalo().catch(error => {
+  if (syncAbort.signal.aborted) return;
+  online = false;
+  loginNotice = "Chưa kết nối được Zalo; kho local vẫn đọc được: "+error.message;
+  console.error(loginNotice);
+  broadcast("archive_status",{notice:loginNotice});
+  loginRetry = setTimeout(connectInBackground,30000);
+  loginRetry.unref();
+}); }
+connectInBackground();
+
+let closing = false;
+async function shutdown() {
+  if (closing) return;
+  closing = true;
+  syncAbort.abort();
+  clearTimeout(loginRetry);
+  api?.listener.stop();
+  for (const client of wss.clients) client.terminate();
+  wss.close();
+  await syncRun;
+  await recipientRefresh;
+  await archive?.close();
+  console.log("💾 Đã đóng kho local an toàn.");
+}
+process.on("SIGINT", () => shutdown().catch(error => { console.error(error.message); process.exitCode=1; }));
+process.on("SIGTERM", () => shutdown().catch(error => { console.error(error.message); process.exitCode=1; }));
+
+### 2026-11-11T00:53:57.598452 — Đồng bộ khi mở CLI
+```sh
+node /tmp/zalo-cloud-verify.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; {"localCount":51,"localNewest":1794306739962,"cloudCount":50,"cloudNewest":1794329656053,"cloudMore":true,"filtered":false,"newerThanLocal":true}
+
+### 2026-11-11T00:54:59.699124 — Đồng bộ khi mở CLI
+```sh
+node daemon/group-sync.test.mjs; gofmt -w internal/tui/model.go; GOCACHE=/tmp/zalo-start-go-cache go test ./internal/tui; GOCACHE=/tmp/zalo-start-go-cache go build ./...; node --check daemon/index.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; TAP version 13
+# Subtest: cloud dùng recent/old, nretry và con trỏ chuỗi; không nhận sai nhóm
+ok 1 - cloud dùng recent/old, nretry và con trỏ chuỗi; không nhận sai nhóm
+  ---
+  duration_ms: 3.955346
+  ...
+# Subtest: cloud bổ sung tin mới hơn snapshot local, single-flight và dedup
+ok 2 - cloud bổ sung tin mới hơn snapshot local, single-flight và dedup
+  ---
+  duration_ms: 18.183981
+  ...
+# Subtest: F7 tiếp tục cloud cursor qua restart và giữ cursor sâu khi đọc lại head
+ok 3 - F7 tiếp tục cloud cursor qua restart và giữ cursor sâu khi đọc lại head
+  ---
+  duration_ms: 23.723638
+  ...
+# Subtest: cloud lỗi không xóa local và 429 chặn cả hàng đợi
+ok 4 - cloud lỗi không xóa local và 429 chặn cả hàng đợi
+  ---
+  duration_ms: 2.742187
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 54.347477
+ok      zalo-cli/internal/tui   0.034s
+
+### 2026-11-11T00:55:34.641297 — Đồng bộ khi mở CLI
+```sh
+npm --prefix daemon test > /tmp/zalo-cloud-tests.txt 2>&1 && tail -18 /tmp/zalo-cloud-tests.txt; ss -ltnp "sport = :8989"
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; ok 3 - F7 tiếp tục cloud cursor qua restart và giữ cursor sâu khi đọc lại head
+  ---
+  duration_ms: 23.239522
+  ...
+# Subtest: cloud lỗi không xóa local và 429 chặn cả hàng đợi
+ok 4 - cloud lỗi không xóa local và 429 chặn cả hàng đợi
+  ---
+  duration_ms: 2.701275
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 52.873887
+Cannot open netlink socket: Operation not permitted
+State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+
+### 2026-11-11T00:55:45.593904 — Đồng bộ khi mở CLI
+```sh
+node daemon/startup.test.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; TAP version 13
+# Subtest: đọc local trước login, tự cập nhật tin vắng mặt và đồng bộ cả user/group
+ok 1 - đọc local trước login, tự cập nhật tin vắng mặt và đồng bộ cả user/group
+  ---
+  duration_ms: 6492.589593
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7960.946703
+
+### 2026-11-11T00:56:14.235895 — Đồng bộ khi mở CLI
+```sh
+node daemon/startup.test.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; TAP version 13
+# Subtest: đọc local trước login, tự cập nhật tin vắng mặt và đồng bộ cả user/group
+ok 1 - đọc local trước login, tự cập nhật tin vắng mặt và đồng bộ cả user/group
+  ---
+  duration_ms: 6460.316211
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7938.261931
+
+### 2026-11-11T00:56:18.895769 — Đồng bộ khi mở CLI
+```sh
+ss -ltnp "sport = :8989"; gofmt -w internal/tui/model_test.go; GOCACHE=/tmp/zalo-start-go-cache go test -race ./internal/tui; GOCACHE=/tmp/zalo-start-go-cache go vet ./...; GOCACHE=/tmp/zalo-start-go-cache go build -o /tmp/zalo-cli-cloud ./cmd/zalo-cli
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      511        127.0.0.1:8989      0.0.0.0:*    users:(("node",pid=48336,fd=21))
+ok      zalo-cli/internal/tui   1.169s
+
+### 2026-11-11T00:56:42.279048 — Đồng bộ khi mở CLI
+```sh
+python3 /tmp/zalo-restart-cloud.py
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; {"oldDaemonStopped": true, "launcherExit": 0, "localListAvailable": true}
+
+### 2026-11-11T00:56:46.831561 — Đồng bộ khi mở CLI
+```sh
+node /tmp/zalo-sync-diagnose.mjs; rg -n "☁️|Chưa cập nhật|lịch sử|ĐÃ ĐĂNG|Không|Error|error" /home/sweetvn/.cache/zalo-cli/daemon.log | tail -12
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; {"sync":[{"key":"sync-done:user","value":"false"},{"key":"sync-running:user","value":"true"},{"key":"sync-error:user","value":"null"},{"key":"sync-done:group","value":"false"},{"key":"sync-running:group","value":"true"},{"key":"sync-error:group","value":"null"},{"key":"sync-started:user","value":"1794333402708"},{"key":"sync-started:group","value":"1794333402714"},{"key":"sync-finished:user","value":"1794332792180"},{"key":"sync-finished:group","value":"1794332794241"}],"counts":[{"thread_type":"group","count":73,"newest":1794329656053},{"thread_type":"user","count":13,"newest":1794332817753}]}
+9:✅ ĐÃ ĐĂNG NHẬP THÀNH CÔNG! Đang lắng nghe tin nhắn...
+25:✅ ĐÃ ĐĂNG NHẬP THÀNH CÔNG! Đang lắng nghe tin nhắn...
+27:☁️ Đã lấy 0 tin của nhóm từ cloud.
+28:☁️ Chưa cập nhật được tin mới của nhóm: Stop retry
+29:☁️ Đã lấy 0 tin của nhóm từ cloud. Zalo có lọc một phần lịch sử.
+30:☁️ Đã lấy 0 tin của nhóm từ cloud.
+
+### 2026-11-11T00:56:55.534401 — Đồng bộ khi mở CLI
+```sh
+sed -n "225,300p" daemon/node_modules/zca-js/dist/utils.js; rg -n "Stop retry|Retry" daemon/node_modules/zca-js/dist/utils.js; node /tmp/zalo-sync-diagnose.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; {parsed.domain}` : origin);
+            }
+            catch (error) {
+                logger(ctx).error(error);
+            }
+        }
+    }
+    const redirectURL = response.headers.get("location");
+    if (redirectURL) {
+        const redirectOptions = Object.assign({}, options);
+        redirectOptions.method = "GET";
+        if (!raw) {
+            redirectOptions.headers = new Headers(redirectOptions.headers);
+            redirectOptions.headers.set("Referer", "https://id.zalo.me/");
+        }
+        return await request(ctx, redirectURL, redirectOptions);
+    }
+    return response;
+{"sync":[{"key":"sync-done:user","value":"false"},{"key":"sync-running:user","value":"false"},{"key":"sync-error:user","value":"null"},{"key":"sync-done:group","value":"false"},{"key":"sync-running:group","value":"false"},{"key":"sync-error:group","value":"null"},{"key":"sync-started:user","value":"1794333402708"},{"key":"sync-started:group","value":"1794333402714"},{"key":"sync-finished:user","value":"1794333406947"},{"key":"sync-finished:group","value":"1794333408994"}],"counts":[{"thread_type":"group","count":73,"newest":1794329656053},{"thread_type":"user","count":13,"newest":1794332817753}]}
+
+### 2026-11-11T00:57:13.266094 — Đồng bộ khi mở CLI
+```sh
+node /tmp/zalo-cloud-verify.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; {"localCount":73,"localNewest":1794329656053,"cloudCount":50,"cloudNewest":1794329656053,"cloudMore":true,"filtered":false,"newerThanLocal":false}
+{"olderError":"Stop retry","code":-69}
+
+### 2026-11-11T00:57:34.796978 — Đồng bộ khi mở CLI
+```sh
+node daemon/group-sync.test.mjs; git diff --stat; node --check daemon/index.mjs
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; hóm
+  ---
+  duration_ms: 3.50943
+  ...
+# Subtest: mã -69 là giới hạn server, không hủy các tin mới đã lưu
+ok 2 - mã -69 là giới hạn server, không hủy các tin mới đã lưu
+  ---
+  duration_ms: 14.495046
+  ...
+# Subtest: cloud bổ sung tin mới hơn snapshot local, single-flight và dedup
+ok 3 - cloud bổ sung tin mới hơn snapshot local, single-flight và dedup
+  ---
+  duration_ms: 13.656693
+  ...
+# Subtest: F7 tiếp tục cloud cursor qua restart và giữ cursor sâu khi đọc lại head
+ok 4 - F7 tiếp tục cloud cursor qua restart và giữ cursor sâu khi đọc lại head
+  ---
+  duration_ms: 25.628012
+  ...
+# Subtest: cloud lỗi không xóa local và 429 chặn cả hàng đợi
+ok 5 - cloud lỗi không xóa local và 429 chặn cả hàng đợi
+  ---
+  duration_ms: 2.087095
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 65.20236
+ COMMAND_LOG.md             | 510 +++++++++++++++++++++++++++++++++++++++++++++
+ daemon/archive.mjs         |   8 +-
+ daemon/index.mjs           |  27 +++
+ daemon/package.json        |   2 +-
+ daemon/startup.test.mjs    |  12 +-
+ internal/tui/model.go      |   4 +-
+ internal/tui/model_test.go |   4 +
+ 7 files changed, 560 insertions(+), 7 deletions(-)
+
+### 2026-11-11T00:58:07.950821 — Đồng bộ khi mở CLI
+```sh
+python3 /tmp/zalo-restart-cloud.py
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; {"oldDaemonStopped": true, "launcherExit": 0, "localListAvailable": true}
+
+### 2026-11-11T00:58:28.698188 — Đồng bộ khi mở CLI
+```sh
+npm --prefix daemon test > /tmp/zalo-cloud-tests.txt 2>&1 && tail -12 /tmp/zalo-cloud-tests.txt; node /tmp/zalo-sync-diagnose.mjs; rg -n "☁️" /home/sweetvn/.cache/zalo-cli/daemon.log | tail -5
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;   ---
+  duration_ms: 1.808226
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 59.881664
+{"sync":[{"key":"sync-done:user","value":"false"},{"key":"sync-running:user","value":"false"},{"key":"sync-error:user","value":"null"},{"key":"sync-done:group","value":"false"},{"key":"sync-running:group","value":"false"},{"key":"sync-error:group","value":"null"},{"key":"sync-started:user","value":"1794333488307"},{"key":"sync-started:group","value":"1794333488311"},{"key":"sync-finished:user","value":"1794333492525"},{"key":"sync-finished:group","value":"1794333494605"}],"counts":[{"thread_type":"group","count":75,"newest":1794333462874},{"thread_type":"user","count":13,"newest":1794332817753}]}
+30:☁️ Đã lấy 0 tin của nhóm từ cloud.
+63:☁️ Đã lấy 0 tin của nhóm từ cloud.
+64:☁️ Đã lấy 50 tin của nhóm từ cloud. Zalo chưa cung cấp thêm tin cũ hơn.
+65:☁️ Đã lấy 0 tin của nhóm từ cloud. Zalo có lọc một phần lịch sử.
+66:☁️ Đã lấy 0 tin của nhóm từ cloud.
+
+### 2026-11-11T00:58:55.058046 — Ghi tài liệu sửa lịch sử nhóm
+- Lệnh: Python cập nhật plan.md, CHANGELOG.md và chuẩn hóa khoảng trắng COMMAND_LOG.md.
+- Mục đích: Ghi nguyên nhân thật, phạm vi và kết quả kiểm chứng.
+- Kết quả: Exit 0.
+
+### 2026-11-11T00:58:55.098813 — Đồng bộ khi mở CLI
+```sh
+git diff --check; git status --short
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0;  M CHANGELOG.md
+ M COMMAND_LOG.md
+ M daemon/archive.mjs
+ M daemon/index.mjs
+ M daemon/package.json
+ M daemon/startup.test.mjs
+ M internal/tui/model.go
+ M internal/tui/model_test.go
+ M plan.md
+?? daemon/group-cloud.mjs
+?? daemon/group-sync.mjs
+?? daemon/group-sync.test.mjs

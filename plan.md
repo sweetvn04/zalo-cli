@@ -262,3 +262,10 @@ Daemon lưu tin nhận/gửi và payload gốc vào SQLite theo tài khoản, t�
 - `-no-autostart`: chỉ dùng daemon đã chạy; `-daemon-dir /absolute/path/daemon`: chỉ định nơi cài bridge. Kho nhiều tài khoản hoặc cookie khác tài khoản cần chọn đúng kho khi chạy daemon thủ công bằng `--account ID`.
 - Nhật ký daemon tự bật: `$XDG_CACHE_HOME/zalo-cli/daemon.log` hoặc `~/.cache/zalo-cli/daemon.log`. Có thể chạy `node daemon/index.mjs` thủ công để xem log trực tiếp; dừng daemon thủ công bằng Ctrl+C.
 - Kiểm thử startup có server local: `npm --prefix daemon run test:startup` (tài khoản mẫu, không đọc session thật).
+
+### Sửa nhóm chỉ hiện snapshot cũ
+- Không chỉ dựa vào old_messages: bổ sung lịch sử cloud theo nhóm (getrecentv2, getoldv2) qua adapter dùng helper AES/cookie/request của zca-js 2.2.0, tham khảo upstream PR #397.
+- Khi kết nối cập nhật các nhóm đã lưu; khi mở/F6 nhóm đọc local trước và refresh cloud nền. Single-flight từng nhóm, hàng đợi tuần tự, tối đa 5 trang/lượt, cooldown head 60s, nghỉ giữa trang 1s; 429 dừng hàng đợi 60s.
+- Con trỏ cloud lưu riêng theo nhóm trong SQLite; F7 tiếp tục cloud khi local chưa đủ. Quét lại head không làm lùi con trỏ đã tải sâu.
+- -69 Stop retry được xem là giới hạn server: giữ dữ liệu mới, kết thúc phân trang và báo tin cũ chưa được cung cấp, không tuyên bố đã có toàn bộ lịch sử.
+- Đã kiểm chứng tài khoản thật: nhóm có nhiều tin nhất trước sửa 51 tin; sau cloud đã có 73 tin, mốc mới nhất khớp trang cloud. Chỉ đọc/lưu, không gửi tin.
