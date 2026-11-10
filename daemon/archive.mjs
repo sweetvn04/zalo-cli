@@ -58,6 +58,14 @@ export class Archive {
     this.abort = new AbortController();
     this.closed = false;
     this.enabled = worker;
+    // Re-index videos already retained as raw attachments before video support.
+    if (!this.meta("video-schema-v1")) {
+      this.db.transaction(() => {
+        const rows = this.db.prepare("SELECT raw FROM messages WHERE raw IS NOT NULL AND json_extract(raw,'$.data.msgType')='chat.video.msg' AND json_extract(data,'$.kind')<>'video'").all();
+        for (const row of rows) this.capture(JSON.parse(row.raw), false);
+        this.meta("video-schema-v1", true);
+      })();
+    }
     this.db.prepare("UPDATE messages SET media_state='pending', retry_at=0 WHERE media_state='downloading'").run();
     if (worker) {
       this.timer = setInterval(() => this.wake(), 1000);
@@ -92,7 +100,7 @@ export class Archive {
     data.timestamp = Number.isSafeInteger(data.timestamp) ? data.timestamp : 0;
     delete data.image_local;
     if (!data.msg_id) data.msg_id = "local-"+createHash("sha256").update(JSON.stringify(raw ?? data)).digest("hex");
-    const url = data.kind === "image" ? data.image_url || "" : "";
+    const url = data.kind === "video" ? data.video_url || "" : data.kind === "image" ? data.image_url || "" : "";
     const parameters = {type:data.thread_type,thread:data.thread_id,id:data.msg_id,time:data.timestamp || 0,
       data:JSON.stringify(data),raw:raw ? JSON.stringify(raw) : null,url,state:url ? "pending" : ""};
     const name = data.thread_type === "group" ? "Nhóm "+data.thread_id : data.is_self ? data.thread_id : data.sender_name || data.thread_id;
@@ -107,7 +115,7 @@ export class Archive {
   withMedia(message) {
     const row = this.db.prepare("SELECT media_key,media_state FROM messages WHERE thread_type=? AND thread_id=? AND msg_id=?")
       .get(message.thread_type, message.thread_id, message.msg_id);
-    if (message.kind !== "image") return message;
+    if (!["image", "video"].includes(message.kind)) return message;
     const wire = { ...message, image_state:row?.media_state || "" };
     if (row?.media_key) {
       const file = path.join(this.mediaDirectory,row.media_key);
@@ -178,8 +186,8 @@ export class Archive {
       this.db.prepare("UPDATE messages SET media_state='downloading',attempts=attempts+1 WHERE thread_type=? AND thread_id=? AND msg_id=?")
         .run(job.thread_type,job.thread_id,job.msg_id);
       try {
-        const name = await this.download(job.media_url,this.mediaDirectory,{signal:this.abort.signal});
-        if (!/^[a-f0-9]{64}\.(jpg|png|gif|webp|bmp)$/.test(name)) throw new Error("Tên file ảnh archive không hợp lệ");
+        const name = await this.download(job.media_url,this.mediaDirectory,{signal:this.abort.signal,kind:JSON.parse(job.data).kind});
+        if (!/^[a-f0-9]{64}\.(jpg|png|gif|webp|bmp|mp4|webm)$/.test(name)) throw new Error("Tên file media archive không hợp lệ");
         this.db.prepare(`UPDATE messages SET media_key=?,media_state='ready',media_error='' WHERE thread_type=? AND thread_id=? AND msg_id=? AND media_url=?`)
           .run(name,job.thread_type,job.thread_id,job.msg_id,job.media_url);
         this.onMedia({event:"media_updated",data:this.withMedia(JSON.parse(job.data))});
@@ -190,7 +198,7 @@ export class Archive {
           .run(cancelled ? "pending" : "error",cancelled ? 1 : 0, cancelled ? 0 : Date.now()+Math.min(1800000,30000*2**Math.min(job.attempts,10)),
             error.message,job.thread_type,job.thread_id,job.msg_id,job.media_url);
         if (!cancelled) {
-          if (job.attempts < 3 || job.attempts % 6 === 0) console.warn("⚠️ Ảnh chưa lưu được, sẽ thử lại:",error.message);
+          if (job.attempts < 3 || job.attempts % 6 === 0) console.warn("⚠️ Media chưa lưu được, sẽ thử lại:",error.message);
           this.onMedia({event:"media_updated",data:this.withMedia(JSON.parse(job.data))});
         }
       }

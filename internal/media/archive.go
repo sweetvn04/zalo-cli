@@ -8,9 +8,9 @@ import (
 	"strings"
 )
 
-var archiveKey = regexp.MustCompile(`^archive:([0-9]{1,32})/([a-f0-9]{64}\.(jpg|png|gif|webp|bmp))$`)
+var archiveKey = regexp.MustCompile(`^archive:([0-9]{1,32})/([a-f0-9]{64}\.(jpg|png|gif|webp|bmp|mp4|webm))$`)
 
-// Chỉ đọc file ảnh trong kho của ứng dụng; không chấp nhận file:// tùy ý.
+// Chỉ đọc media trong kho của ứng dụng; không chấp nhận file:// tùy ý.
 func archivedImage(key string) (string, error) {
 	parts := archiveKey.FindStringSubmatch(key)
 	if parts == nil {
@@ -30,7 +30,11 @@ func archivedImage(key string) (string, error) {
 	if err != nil || !info.Mode().IsRegular() {
 		return "", fmt.Errorf("ảnh chưa có trong kho local; F6 để tải lại")
 	}
-	if info.Size() <= 0 || info.Size() > 100*1024*1024 {
+	limit := int64(100 * 1024 * 1024)
+	if strings.HasSuffix(path, ".mp4") || strings.HasSuffix(path, ".webm") {
+		limit = 1024 * 1024 * 1024
+	}
+	if info.Size() <= 0 || info.Size() > limit {
 		return "", fmt.Errorf("kích thước ảnh local không hợp lệ")
 	}
 	base, err = filepath.EvalSymlinks(base)

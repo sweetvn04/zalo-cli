@@ -69,9 +69,12 @@ func (m *model) refreshChat(bottom bool) {
 			name = "  " + name
 		}
 		parts = append(parts, style.Render(clip(name, m.chat.Width)))
-		if line.kind == "image" {
+		if line.kind == "image" || line.kind == "video" {
 			imageNumber++
 			label := fmt.Sprintf("[Ảnh %d] · ↑↓ xem", imageNumber)
+			if line.kind == "video" {
+				label = "[Video] · Enter mở · Ctrl+O mở"
+			}
 			switch line.mediaState {
 			case "ready":
 				label += " · Đã lưu máy"

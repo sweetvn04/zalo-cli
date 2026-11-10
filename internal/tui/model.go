@@ -333,9 +333,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case imageOpened:
 		m.imageOpening = false
 		if msg.err != nil {
-			m.status = "Không mở được ảnh: " + msg.err.Error()
+			m.status = "Không mở được media: " + msg.err.Error()
 		} else {
-			m.status = "Đã mở ảnh bằng ứng dụng mặc định."
+			m.status = "Đã mở media bằng ứng dụng mặc định."
 		}
 		return m, nil
 	case tea.WindowSizeMsg:
@@ -451,7 +451,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		switch msg.String() {
 		case "f8", "ctrl+o":
-			if msg.String() == "ctrl+o" && m.selectedLine != nil && m.selectedLine.kind == "image" {
+			if msg.String() == "ctrl+o" && m.selectedLine != nil && (m.selectedLine.kind == "image" || m.selectedLine.kind == "video") {
 				return m, m.openExternalImage(m.selectedLine)
 			}
 			images := m.images()
@@ -523,6 +523,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			r, ok := m.recipient()
 			text := m.composer.Value()
+			if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "video" {
+				return m, m.openExternalImage(m.selectedLine)
+			}
 			if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "image" {
 				return m, m.ensurePreview(true)
 			}

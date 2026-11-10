@@ -189,83 +189,83 @@ ac0d756 docs: finalize command 31 in COMMAND_LOG.md
 ### Khảo sát tiến độ 11 — 2026-11-01T21:52:50.200436+07:00
 - Lệnh: `nl -ba cmd/zalo-cli/main.go` (qua Python subprocess trong exec_command).
 - Mục đích: Đối chiếu mã nguồn và kiểm tra khả năng chạy/biên dịch.
-- Kết quả: Exit code 0; 1	package main
+- Kết quả: Exit code 0; 1   package main
      2
-     3	import (
-     4		"encoding/json"
-     5		"log"
-     6		"os"
-     7		"os/signal"
-     8		"syscall"
+     3  import (
+     4      "encoding/json"
+     5      "log"
+     6      "os"
+     7      "os/signal"
+     8      "syscall"
      9
-    10		"github.com/gorilla/websocket"
-    11	)
+    10      "github.com/gorilla/websocket"
+    11  )
     12
-    13	// 1. Gom nhom goi tin tu daemon.
-    14	type MessageEvent struct {
-    15		Event string `json:"event"`
-    16		Data  struct {
-    17			MsgID      string `json:"msg_id"`
-    18			ThreadID   string `json:"thread_id"`
-    19			ThreadType string `json:"thread_type"`
-    20			SenderID   string `json:"sender_id"`
-    21			SenderName string `json:"sender_name"`
-    22			Content    string `json:"content"`
-    23			Timestamp  int64  `json:"timestamp"`
-    24			IsSelf     bool   `json:"is_self"`
-    25		}
-    26	}
+    13  // 1. Gom nhom goi tin tu daemon.
+    14  type MessageEvent struct {
+    15      Event string `json:"event"`
+    16      Data  struct {
+    17          MsgID      string `json:"msg_id"`
+    18          ThreadID   string `json:"thread_id"`
+    19          ThreadType string `json:"thread_type"`
+    20          SenderID   string `json:"sender_id"`
+    21          SenderName string `json:"sender_name"`
+    22          Content    string `json:"content"`
+    23          Timestamp  int64  `json:"timestamp"`
+    24          IsSelf     bool   `json:"is_self"`
+    25      }
+    26  }
     27
-    28	func main() {
-    29		serverURL := "ws://127.0.0.1:8989"
-    30		log.Printf("Connecting to daemon at %s", serverURL)
+    28  func main() {
+    29      serverURL := "ws://127.0.0.1:8989"
+    30      log.Printf("Connecting to daemon at %s", serverURL)
     31
-    32		// 2. Cu phap kiem tra loi IF ERR != NIL: Kiem tra xem ket noi co thanh cong khong.
-    33		conn, _, err := websocket.DefaultDialer.Dial(serverURL, nil)
-    34		if err != nil {
-    35			log.Fatal("Can not connect to daemon!")
-    36		}
-    37		// 3. Khi nao ham main bi tat do loi thi tu dong tat websocket
-    38		defer conn.Close()
+    32      // 2. Cu phap kiem tra loi IF ERR != NIL: Kiem tra xem ket noi co thanh cong khong.
+    33      conn, _, err := websocket.DefaultDialer.Dial(serverURL, nil)
+    34      if err != nil {
+    35          log.Fatal("Can not connect to daemon!")
+    36      }
+    37      // 3. Khi nao ham main bi tat do loi thi tu dong tat websocket
+    38      defer conn.Close()
     39
 
 
 ### Khảo sát tiến độ 12 — 2026-11-01T21:52:50.202547+07:00
 - Lệnh: `nl -ba daemon/index.mjs` (qua Python subprocess trong exec_command).
 - Mục đích: Đối chiếu mã nguồn và kiểm tra khả năng chạy/biên dịch.
-- Kết quả: Exit code 0; 1	import { Zalo, ThreadType } from "zca-js";
-     2	import fs from "node:fs";
-     3	import { execSync } from "node:child_process";
-     4	import WebSocket, { WebSocketServer } from "ws";
+- Kết quả: Exit code 0; 1   import { Zalo, ThreadType } from "zca-js";
+     2  import fs from "node:fs";
+     3  import { execSync } from "node:child_process";
+     4  import WebSocket, { WebSocketServer } from "ws";
      5
-     6	const PORT = 8989;
-     7	const SESSION_FILE = "session.json";
-     8	const QR_FILE = "qr.png";
-     9	const zalo = new Zalo();
-    10	let api;
+     6  const PORT = 8989;
+     7  const SESSION_FILE = "session.json";
+     8  const QR_FILE = "qr.png";
+     9  const zalo = new Zalo();
+    10  let api;
     11
-    12	// khoi tao WebSocket
-    13	const wss = new WebSocketServer({port: PORT})
-    14	console.log(`🚀 Daemon WebSocket Server đang mở tại ws://127.0.0.1:${PORT}`);
+    12  // khoi tao WebSocket
+    13  const wss = new WebSocketServer({port: PORT})
+    14  console.log(`🚀 Daemon WebSocket Server đang mở tại ws://127.0.0.1:${PORT}`);
     15
-    16	// ham phat du lieu cho go cli
-    17	function broadcast(event, data) {
-    18	  const payload = JSON.stringify({ event, data });
-    19	  for (const client of wss.clients) {
-    20	    if (client.readyState === 1) { // 1 nghia la client san sang
-    21	      client.send(payload);
-    22	    }
-    23	  }
-    24	}
+    16  // ham phat du lieu cho go cli
+    17  function broadcast(event, data) {
+    18    const payload = JSON.stringify({ event, data });
+    19    for (const client of wss.clients) {
+    20      if (client.readyState === 1) { // 1 nghia la client san sang
+    21        client.send(payload);
+    22      }
+    23    }
+    24  }
     25
-    26	// khi co go ket noi vao
-    27	wss.on("connection", (socket) => {
-    28	  console.log("[IPC] Đã có client kết nối vào Web socket server!")
-    29	  //lang nghe lenh tu go, vi du gui tin nhan.
-    30	  socket.on("message", async (raw) => {
-    31	    try {
-    32	      const msg = JSON.parse(raw.toString());
-    33	      if (msg.ac
+    26  // khi co go ket noi vao
+    27  wss.on("connection", (socket) => {
+    28    console.log("[IPC] Đã có client kết nối vào Web socket server!")
+    29    //lang nghe lenh tu go, vi du gui tin nhan.
+    30    socket.on("message", async (raw) => {
+    31      try {
+    32        const msg = JSON.parse(raw.toString());
+    33        if (msg.ac
 
 ### Khảo sát tiến độ 13 — 2026-11-01T21:52:50.204188+07:00
 - Lệnh: `cat .gitignore` (qua Python subprocess trong exec_command).
@@ -356,7 +356,7 @@ COMMAND_LOG.
 ### Kiểm tra main 3 — 2026-11-06T11:32:19+07:00
 - Lệnh: `git diff --name-status main`
 - Mục đích: Kiểm tra commit, staging và thay đổi so với main.
-- Kết quả: Exit 0. M	CHANGELOG.md / M	COMMAND_LOG.md
+- Kết quả: Exit 0. M    CHANGELOG.md / M    COMMAND_LOG.md
 
 ### Kiểm tra main 4 — 2026-11-06T11:32:19+07:00
 - Lệnh: `git diff --cached --name-status`
@@ -371,7 +371,7 @@ COMMAND_LOG.
 ### Kiểm tra main 6 — 2026-11-06T11:32:19+07:00
 - Lệnh: `git diff --numstat main`
 - Mục đích: Kiểm tra commit, staging và thay đổi so với main.
-- Kết quả: Exit 0. 4	4	CHANGELOG.md / 247	0	COMMAND_LOG.md
+- Kết quả: Exit 0. 4    4   CHANGELOG.md / 247  0   COMMAND_LOG.md
 
 ### Kiểm tra main 7 — 2026-11-06T11:32:19+07:00
 - Lệnh: `git branch -vv`
@@ -523,8 +523,8 @@ Cannot open netlink socket: Operation not permitted
 ### IPC kiểm chứng 3 — 2026-11-09T18:18:23.712242+07:00
 - Lệnh: `go test -race ./...`
 - Mục đích: Định dạng, build và kiểm tra luồng nhận/hủy IPC.
-- Kết quả: Exit 1. FAIL	zalo-cli/cmd/zalo-cli [setup failed]
-FAIL	zalo-cli/internal/ipc [build failed]
+- Kết quả: Exit 1. FAIL zalo-cli/cmd/zalo-cli [setup failed]
+FAIL    zalo-cli/internal/ipc [build failed]
 FAIL
 # zalo-cli/cmd/zalo-cli
 package zalo-cli/cmd/zalo-cli: cannot find package
@@ -544,30 +544,30 @@ runtime/race: package zalo-cli/cmd/zalo-cli: cannot find package
 ### IPC kiểm tra cache tạm — 2026-11-09T18:18:55.397742+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go test -race ./...`
 - Mục đích: Dùng cache ghi được để chạy kiểm tra.
-- Kết quả: Exit 1. ?   	zalo-cli/cmd/zalo-cli	[no test files]
+- Kết quả: Exit 1. ?      zalo-cli/cmd/zalo-cli [no test files]
 --- FAIL: TestReceiveAfterMalformedJSONAndDisconnect (0.00s)
 panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: socket: operation not permitted [recovered, repanicked]
 
 goroutine 8 [running]:
 testing.tRunner.func1.2({0xdccd48, 0xc000040520})
-	/usr/lib/go/src/testing/testing.go:2125 +0x419
+    /usr/lib/go/src/testing/testing.go:2125 +0x419
 testing.tRunner.func1()
-	/usr/lib/go/src/testing/testing.go:2128 +0x65f
+    /usr/lib/go/src/testing/testing.go:2128 +0x65f
 panic({0xdccd48?, 0xc000040520?})
-	/usr/lib/go/src/runtime/panic.go:859 +0x125
+    /usr/lib/go/src/runtime/panic.go:859 +0x125
 net/http/httptest.newLocalListener()
-	/usr/lib/go/src/net/http/httptest/server.go:226 +0x165
+    /usr/lib/go/src/net/http/httptest/server.go:226 +0x165
 net/http/httptest.NewUnstartedServer(...)
-	/usr/lib/go/src/net/http/httptest/server.go:284
+    /usr/lib/go/src/net/http/httptest/server.go:284
 net/http/httptest.NewServer({0xe22540, 0xe26a10})
-	/usr/lib/go/src/net/http/httptest/server.go:267 +0x2c
+    /usr/lib/go/src/net/http/httptest/server.go:267 +0x2c
 zalo-cli/internal/ipc.TestReceiveAfterMalformedJSONAndDisconnect(0xc0000d8488)
-	/home/sweetvn/MyProjects/zalo-cli/internal/ipc/client_test.go:15 +0x45
+    /home/sweetvn/MyProjects/zalo-cli/internal/ipc/client_test.go:15 +0x45
 testing.tRunner(0xc0000d8488, 0xe26958)
-	/usr/lib/go/src/testing/testing.go:2195 +0x21d
+    /usr/lib/go/src/testing/testing.go:2195 +0x21d
 created by testing.(*T).Run in goroutine 1
-	/usr/lib/go/src/testing/testing.go:2260 +0xb13
-FAIL	zalo-cli/internal/ipc	0.014s
+    /usr/lib/go/src/testing/testing.go:2260 +0xb13
+FAIL    zalo-cli/internal/ipc   0.014s
 FAIL
 
 ### IPC kiểm tra cache tạm — 2026-11-09T18:19:09.426690+07:00
@@ -578,8 +578,8 @@ FAIL
 ### IPC kiểm tra WebSocket cục bộ — 2026-11-09T18:19:18.697506+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go test -race ./...`
 - Mục đích: Kiểm tra race và đóng kết nối với quyền mở cổng localhost.
-- Kết quả: Exit 0. ?   	zalo-cli/cmd/zalo-cli	[no test files]
-ok  	zalo-cli/internal/ipc	1.016s
+- Kết quả: Exit 0. ?      zalo-cli/cmd/zalo-cli [no test files]
+ok     zalo-cli/internal/ipc    1.016s
 
 ### IPC lưu bước — 2026-11-09T18:19:31.983950+07:00
 - Lệnh: `git add -- cmd/zalo-cli/main.go internal/ipc daemon/index.mjs CHANGELOG.md COMMAND_LOG.md`
@@ -673,8 +673,8 @@ ok 1 - /home/sweetvn/MyProjects/zalo-cli/daemon/ipc.test.mjs
 ### Gửi tin kiểm tra cuối — 2026-11-09T18:36:41.818581+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go test -race ./...`
 - Mục đích: Kiểm tra CLI qua WebSocket giả lập và race.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.011s
-ok  	zalo-cli/internal/ipc	1.010s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.011s
+ok     zalo-cli/internal/ipc    1.010s
 
 ### Gửi tin kiểm tra cuối — 2026-11-09T18:36:42.156105+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go build ./...`
@@ -908,8 +908,8 @@ ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
 ### Danh sách Go tests — 2026-11-09T18:45:14.111909+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache go test -race ./...`
 - Mục đích: Kiểm tra chọn nhóm và hủy với WebSocket localhost.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.014s
-ok  	zalo-cli/internal/ipc	1.011s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.014s
+ok     zalo-cli/internal/ipc    1.011s
 
 ### Lưu bước danh sách — 2026-11-09T18:45:33.848156+07:00
 - Lệnh: `git diff --check`
@@ -1015,7 +1015,7 @@ go: added golang.org/x/text v0.3.8
 - Kết quả: Exit 1. go: downloading github.com/gorilla/websocket v1.5.3
 internal/ipc/client.go:12:2: github.com/gorilla/websocket@v1.5.3: Get "https://proxy.golang.org/github.com/gorilla/websocket/@v/v1.5.3.zip": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
 /tmp/zalo-ui-modcache/github.com/charmbracelet/bubbles@v0.21.0/textinput/textinput.go:11:2: missing go.sum entry for module providing package github.com/atotto/clipboard (imported by github.com/charmbracelet/bubbles/textinput); to add:
-	go get github.com/charmbracelet/bubbles/textinput@v0.21.0
+    go get github.com/charmbracelet/bubbles/textinput@v0.21.0
 
 ### TUI hoàn thiện dependencies — 2026-11-09T20:12:33.580089+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go mod tidy`
@@ -1040,7 +1040,7 @@ go: downloading golang.org/x/exp v0.0.0-20220909182711-5c715a9e8561
 - Kết quả: Exit 1. --- FAIL: TestViewFitsResizedTerminalAndUnicode (0.00s)
     model_test.go:119: view 68x25 exceeds terminal 68x18
 FAIL
-FAIL	zalo-cli/internal/tui	0.016s
+FAIL    zalo-cli/internal/tui   0.016s
 FAIL
 
 ### TUI sửa layout — 2026-11-09T20:14:15.872159+07:00
@@ -1054,7 +1054,7 @@ FAIL
 - Kết quả: Exit 1. --- FAIL: TestViewFitsResizedTerminalAndUnicode (0.00s)
     model_test.go:119: view 68x19 exceeds terminal 68x18
 FAIL
-FAIL	zalo-cli/internal/tui	0.018s
+FAIL    zalo-cli/internal/tui   0.018s
 FAIL
 
 ### TUI đọc layout test — 2026-11-09T20:14:30.747815+07:00
@@ -1070,7 +1070,7 @@ FAIL
 ### TUI giới hạn ô nhập — 2026-11-09T20:14:45.781841+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
 - Mục đích: Đảm bảo prompt và cursor không làm tràn cột.
-- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.018s
+- Kết quả: Exit 0. ok     zalo-cli/internal/tui 0.018s
 
 ### TUI kiểm tra toàn bộ — 2026-11-09T20:15:30.753870+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build -o /tmp/zalo-tui-check ./cmd/zalo-cli`
@@ -1095,9 +1095,9 @@ FAIL
 ### TUI race và terminal — 2026-11-09T20:16:11.176847+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
 - Mục đích: Kiểm thử đầy đủ và chạy giao diện qua terminal với WebSocket mẫu.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.018s
-ok  	zalo-cli/internal/ipc	1.015s
-ok  	zalo-cli/internal/tui	1.056s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.018s
+ok     zalo-cli/internal/ipc    1.015s
+ok     zalo-cli/internal/tui    1.056s
 
 ### TUI race và terminal — 2026-11-09T20:16:11.244320+07:00
 - Lệnh: `python3 /tmp/zalo-tui-pty.py`
@@ -1169,9 +1169,9 @@ RuntimeError: Fixture could not start: BUSY EADDRINUSE
 ### TUI lưu bước — 2026-11-09T20:18:13.087964+07:00
 - Lệnh: `go test -race ./...` (GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache).
 - Mục đích: Xác nhận kiểm thử và lưu giao diện đã hoàn thiện.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
-ok  	zalo-cli/internal/ipc	(cached)
-ok  	zalo-cli/internal/tui	1.067s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.019s
+ok     zalo-cli/internal/ipc    (cached)
+ok     zalo-cli/internal/tui    1.067s
 
 ### TUI lưu bước — 2026-11-09T20:18:13.095685+07:00
 - Lệnh: `git add -- internal/tui cmd/zalo-cli/main.go go.mod go.sum plan.md CHANGELOG.md COMMAND_LOG.md` (GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache).
@@ -1358,7 +1358,7 @@ ok 5 - phản hồi gửi trả ID Zalo để ghép với lịch sử
 ### Lịch sử kiểm chứng — 2026-11-09T20:40:53.533832+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
 - Mục đích: Kiểm tra lịch sử và ghép tin an toàn.
-- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.021s
+- Kết quả: Exit 0. ok     zalo-cli/internal/tui 0.021s
 
 ### Lịch sử kiểm chứng — 2026-11-09T20:40:53.667656+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
@@ -1442,9 +1442,9 @@ ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
 ### Lịch sử race và TUI — 2026-11-09T20:41:56.692623+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
 - Mục đích: Kiểm tra race, tải tin cũ và gửi tin qua terminal mẫu.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
-ok  	zalo-cli/internal/ipc	1.015s
-ok  	zalo-cli/internal/tui	1.077s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.019s
+ok     zalo-cli/internal/ipc    1.015s
+ok     zalo-cli/internal/tui    1.077s
 
 ### TUI build fixture — 2026-11-09T20:41:57.191655
 - Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
@@ -1469,7 +1469,7 @@ ok  	zalo-cli/internal/tui	1.077s
 ### Lịch sử hoàn thiện — 2026-11-09T20:42:47.870195+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
 - Mục đích: Cập nhật tiến độ và xác nhận bản cuối.
-- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.019s
+- Kết quả: Exit 0. ok     zalo-cli/internal/tui 0.019s
 
 ### Lịch sử hoàn thiện — 2026-11-09T20:42:47.874395+07:00
 - Lệnh: `git diff --check`
@@ -1693,7 +1693,7 @@ ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
 ### Cuộn và phân trang kiểm chứng — 2026-11-09T21:37:36.524212+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
 - Mục đích: Kiểm tra cuộn, vị trí đọc và tải tiếp không mất tin.
-- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.026s
+- Kết quả: Exit 0. ok     zalo-cli/internal/tui 0.026s
 
 ### Cuộn và phân trang kiểm chứng — 2026-11-09T21:37:36.855211+07:00
 - Lệnh: `node daemon/history.test.mjs`
@@ -1826,9 +1826,9 @@ ok 6 - lỗi lấy danh sách trả đúng loại sự kiện và mã yêu cầu
 ### Cuộn race và terminal — 2026-11-09T21:38:49.297318+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
 - Mục đích: Kiểm tra race, F7 tải trang tiếp và mouse wheel qua terminal mẫu.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
-ok  	zalo-cli/internal/ipc	1.015s
-ok  	zalo-cli/internal/tui	1.105s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.019s
+ok     zalo-cli/internal/ipc    1.015s
+ok     zalo-cli/internal/tui    1.105s
 
 ### TUI build fixture — 2026-11-09T21:38:49.764813
 - Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
@@ -2036,7 +2036,7 @@ ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự h�
 ### F5 cache kiểm chứng — 2026-11-09T21:49:31.864078+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/tui`
 - Mục đích: Tái hiện 429 và kiểm tra cache/cooldown.
-- Kết quả: Exit 0. ok  	zalo-cli/internal/tui	0.023s
+- Kết quả: Exit 0. ok     zalo-cli/internal/tui 0.023s
 
 ### F5 cache kiểm chứng — 2026-11-09T21:49:31.997487+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
@@ -2051,9 +2051,9 @@ ok 10 - hai yêu cầu con trỏ khác nhau cùng loại được tuần tự h�
 ### F5 race kiểm chứng — 2026-11-09T21:49:46.818604+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
 - Mục đích: Kiểm tra race sau khi thêm cooldown UI và thông báo CLI.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.020s
-ok  	zalo-cli/internal/ipc	1.012s
-ok  	zalo-cli/internal/tui	1.102s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.020s
+ok     zalo-cli/internal/ipc    1.012s
+ok     zalo-cli/internal/tui    1.102s
 
 ### Lưu bản sửa F5 — 2026-11-09T21:50:22.556831+07:00
 - Lệnh: `git diff --check`
@@ -2156,8 +2156,8 @@ ok  	zalo-cli/internal/tui	1.102s
 ### Ảnh kiểm chứng — 2026-11-09T23:18:58.103396+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
 - Mục đích: Kiểm tra tải/cache ảnh, lựa chọn và luồng lịch sử.
-- Kết quả: Exit 0. ok  	zalo-cli/internal/media	0.016s
-ok  	zalo-cli/internal/tui	0.030s
+- Kết quả: Exit 0. ok     zalo-cli/internal/media   0.016s
+ok     zalo-cli/internal/tui    0.030s
 
 ### Ảnh kiểm chứng — 2026-11-09T23:18:58.326869+07:00
 - Lệnh: `node daemon/history.test.mjs`
@@ -2413,10 +2413,10 @@ ok 4 - 429 khi chưa có cache trả lỗi tiếng Việt cùng request ID và r
 ### Ảnh race và terminal — 2026-11-09T23:24:36.481532+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
 - Mục đích: Kiểm tra toàn bộ Go và menu ảnh qua terminal mẫu.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.019s
-ok  	zalo-cli/internal/ipc	1.015s
-ok  	zalo-cli/internal/media	1.030s
-ok  	zalo-cli/internal/tui	1.200s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.019s
+ok     zalo-cli/internal/ipc    1.015s
+ok     zalo-cli/internal/media  1.030s
+ok     zalo-cli/internal/tui    1.200s
 
 ### TUI build fixture — 2026-11-09T23:24:36.982633
 - Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
@@ -2777,11 +2777,11 @@ go: upgraded golang.org/x/text v0.3.8 => v0.29.0
 ### Preview inline kiểm chứng — 2026-11-09T23:58:14.894976+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
 - Mục đích: Build điều hướng tin và preview trong viewport.
-- Kết quả: Exit 1. ok  	zalo-cli/internal/media	0.010s
+- Kết quả: Exit 1. ok     zalo-cli/internal/media   0.010s
 --- FAIL: TestScrollKeysAndMouseMoveChat (0.00s)
     history_test.go:25: up arrow did not scroll while composing
 FAIL
-FAIL	zalo-cli/internal/tui	0.033s
+FAIL    zalo-cli/internal/tui   0.033s
 FAIL
 
 ### Inline tiếp tục — 2026-11-10T00:00:28.974317+07:00
@@ -2802,11 +2802,11 @@ FAIL
 ### Inline lựa chọn kiểm chứng — 2026-11-10T00:01:54.145566+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
 - Mục đích: Kiểm tra màu preview và điều hướng tin trực tiếp.
-- Kết quả: Exit 1. ok  	zalo-cli/internal/media	0.013s
+- Kết quả: Exit 1. ok     zalo-cli/internal/media   0.013s
 --- FAIL: TestScrollKeysAndMouseMoveChat (0.00s)
     history_test.go:29: up arrow did not scroll while composing
 FAIL
-FAIL	zalo-cli/internal/tui	0.038s
+FAIL    zalo-cli/internal/tui   0.038s
 FAIL
 
 ### Inline kiểm tra điều hướng — 2026-11-10T00:02:28.913540+07:00
@@ -2817,8 +2817,8 @@ FAIL
 ### Inline kiểm tra điều hướng — 2026-11-10T00:02:29.402135+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
 - Mục đích: Xác nhận chọn tin đang nhìn thấy không ép cuộn ngoài ý muốn.
-- Kết quả: Exit 0. ok  	zalo-cli/internal/media	(cached)
-ok  	zalo-cli/internal/tui	0.035s
+- Kết quả: Exit 0. ok     zalo-cli/internal/media   (cached)
+ok     zalo-cli/internal/tui    0.035s
 
 ### Inline kiểm tra điều hướng — 2026-11-10T00:02:29.675334+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go vet ./...`
@@ -2838,10 +2838,10 @@ ok  	zalo-cli/internal/tui	0.035s
 ### Inline race và terminal — 2026-11-10T00:03:14.143818+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
 - Mục đích: Kiểm tra race và chọn ảnh trực tiếp bằng Up trong terminal mẫu.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.018s
-ok  	zalo-cli/internal/ipc	(cached)
-ok  	zalo-cli/internal/media	1.082s
-ok  	zalo-cli/internal/tui	1.212s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.018s
+ok     zalo-cli/internal/ipc    (cached)
+ok     zalo-cli/internal/media  1.082s
+ok     zalo-cli/internal/tui    1.212s
 
 ### TUI build fixture — 2026-11-10T00:03:14.643379
 - Lệnh: go build -overlay /tmp/zalo-tui-overlay.json -o /tmp/zalo-tui-check ./cmd/zalo-cli
@@ -3073,8 +3073,8 @@ ok 7 - tải ảnh chặn mạng nội bộ và URL không phải HTTP
 ### Archive bền vững kiểm chứng — 2026-11-10T00:24:25.618846+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./internal/media ./internal/tui`
 - Mục đích: Kiểm tra dữ liệu sau restart và ảnh không cần URL Zalo.
-- Kết quả: Exit 0. ok  	zalo-cli/internal/media	0.015s
-ok  	zalo-cli/internal/tui	0.035s
+- Kết quả: Exit 0. ok     zalo-cli/internal/media   0.015s
+ok     zalo-cli/internal/tui    0.035s
 
 ### Archive bền vững kiểm chứng — 2026-11-10T00:24:25.623482+07:00
 - Lệnh: `git diff --check`
@@ -3659,10 +3659,10 @@ ok 9 - ảnh được tự tải khi capture, không cần mở chat hoặc gọ
 ### Archive race và offline — 2026-11-10T00:34:49.360469+07:00
 - Lệnh: `GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test -race ./...`
 - Mục đích: Kiểm tra race và xác nhận kho vẫn đọc được sau restart/URL hết hạn.
-- Kết quả: Exit 0. ok  	zalo-cli/cmd/zalo-cli	1.021s
-ok  	zalo-cli/internal/ipc	1.015s
-ok  	zalo-cli/internal/media	1.089s
-ok  	zalo-cli/internal/tui	1.177s
+- Kết quả: Exit 0. ok     zalo-cli/cmd/zalo-cli 1.021s
+ok     zalo-cli/internal/ipc    1.015s
+ok     zalo-cli/internal/media  1.089s
+ok     zalo-cli/internal/tui    1.177s
 
 ### Offline E2E — 2026-11-10T00:34:49.623663
 - Lệnh: `node /tmp/zalo-offline-e2e-0zr4xkwz/seed.mjs`
@@ -4091,3 +4091,502 @@ ok 9 - ảnh được tự tải khi capture, không cần mở chat hoặc gọ
 - Lệnh: `git diff --check`
 - Mục đích: Lưu archive bền vững và chế độ offline đã kiểm chứng.
 - Kết quả: Exit 0. Thành công.
+
+### Lưu kho local — 2026-11-10T00:41:40.229161+07:00
+- Lệnh: `git add -- daemon/archive.mjs daemon/archive.test.mjs daemon/archive-sync.mjs daemon/image-store.mjs daemon/index.mjs daemon/ipc.mjs daemon/history.mjs daemon/history.test.mjs daemon/package.json daemon/package-lock.json internal/ipc internal/media/archive.go internal/media/archive_test.go internal/media/image.go internal/tui cmd/zalo-cli/main.go cmd/zalo-cli/recipients.go plan.md CHANGELOG.md COMMAND_LOG.md`
+- Mục đích: Lưu archive bền vững và chế độ offline đã kiểm chứng.
+- Kết quả: Exit 0. Thành công.
+
+### Lưu kho local — 2026-11-10T00:41:40.236929+07:00
+- Lệnh: `git commit -m feat(archive): persist messages and images per account with offline access`
+- Mục đích: Lưu archive bền vững và chế độ offline đã kiểm chứng.
+- Kết quả: Exit 0. [main 11f6c01] feat(archive): persist messages and images per account with offline access
+ 24 files changed, 2558 insertions(+), 63 deletions(-)
+ create mode 100644 daemon/archive-sync.mjs
+ create mode 100644 daemon/archive.mjs
+ create mode 100644 daemon/archive.test.mjs
+ create mode 100644 daemon/image-store.mjs
+ create mode 100644 internal/media/archive.go
+ create mode 100644 internal/media/archive_test.go
+
+### 2026-11-10T09:40:59.612683 — Kiểm tra video
+- Lệnh: `pwd; rg -n ... daemon/archive.mjs daemon/image-store.mjs daemon/history.mjs internal/media internal/tui/images.go; cat AGENTS.md`
+- Mục đích: Đọc luồng media và quy tắc repository.
+- Kết quả: Exit 0; chỉ hỗ trợ ảnh.
+
+### 2026-11-10T09:40:59.623885 — Đọc luồng media
+```sh
+git status --short; cat daemon/history.mjs | head -65; cat daemon/image-store.mjs; cat internal/media/archive.go; cat internal/tui/selection.go
+```
+- Mục đích: Chuẩn bị bổ sung video.
+- Kết quả: Exit 0
+
+### 2026-11-10T09:41:08.156715 — Video local
+```sh
+cat internal/tui/images.go; rg -n "kind.*image|Ảnh|imageURL" internal/tui/view.go internal/tui/model.go internal/tui/history.go; cat internal/ipc/protocol.go; sed -n "170,198p" daemon/archive.mjs; rg -n "chat.video|videoUrl|video_src" daemon/node_modules/zca-js/dist | head -25
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0; ? AND msg_id=? AND media_url=?`)
+          .run(cancelled ? "pending" : "error",cancelled ? 1 : 0, cancelled ? 0 : Date.now()+Math.min(1800000,30000*2**Math.min(job.attempts,10)),
+            error.message,job.thread_type,job.thread_id,job.msg_id,job.media_url);
+        if (!cancelled) {
+          if (job.attempts < 3 || job.attempts % 6 === 0) console.warn("⚠️ Ảnh chưa lưu được, sẽ thử lại:",error.message);
+          this.onMedia({event:"media_updated",data:this.withMedia(JSON.parse(job.data))});
+        }
+      }
+    }
+  }
+daemon/node_modules/zca-js/dist/utils.js:439:    if (msgType === "chat.video.msg")
+daemon/node_modules/zca-js/dist/cjs/utils.cjs:443:    if (msgType === "chat.video.msg")
+daemon/node_modules/zca-js/dist/apis/sendVideo.d.ts:10:    videoUrl: string;
+daemon/node_modules/zca-js/dist/apis/sendVideo.js:34:            const headResponse = await utils.request(options.videoUrl, { method: "HEAD" }, true);
+daemon/node_modules/zca-js/dist/apis/sendVideo.js:50:                    videoUrl: options.videoUrl,
+daemon/node_modules/zca-js/dist/apis/sendVideo.js:79:                    videoUrl: options.videoUrl,
+daemon/node_modules/zca-js/dist/cjs/apis/sendVideo.cjs:46:            const headResponse = await utils.request(options.videoUrl, { method: "HEAD" }, true);
+daemon/node_modules/zca-js/dist/cjs/apis/sendVideo.cjs:62:                    videoUrl: options.videoUrl,
+daemon/node_modules/zca-js/dist/cjs/apis/sendVideo.cjs:91:                    videoUrl: options.videoUrl,
+
+
+### 2026-11-10T09:41:13.613741 — Video local
+```sh
+sed -n "55,120p" internal/tui/view.go; sed -n "440,465p;520,540p" internal/tui/model.go; head -65 internal/media/image.go; sed -n "30,95p" daemon/node_modules/zca-js/dist/apis/sendVideo.js; head -45 daemon/archive.test.mjs; sed -n "105,125p" daemon/archive.mjs
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0; le/);
+  assert.match(archive.db.prepare("SELECT raw FROM messages WHERE msg_id='2'").get().raw,/file.pdf/);
+  const contacts = await handleCommand(JSON.stringify({id:"list",action:"list_recipients"}),undefined,archive);
+  assert.equal(contacts.recipients[0].name,"An");
+  const other = new Archive("2002",{root,worker:false});
+  assert.equal(other.history("friend","user").messages.length,0);
+  assert.equal(fs.statSync(path.join(root,"1001","messages.sqlite3")).mode&0o777,0o600);
+  await other.close();
+  await archive.close();
+});
+
+  }
+
+  withMedia(message) {
+    const row = this.db.prepare("SELECT media_key,media_state FROM messages WHERE thread_type=? AND thread_id=? AND msg_id=?")
+      .get(message.thread_type, message.thread_id, message.msg_id);
+    if (message.kind !== "image") return message;
+    const wire = { ...message, image_state:row?.media_state || "" };
+    if (row?.media_key) {
+      const file = path.join(this.mediaDirectory,row.media_key);
+      let exists = false;
+      try { exists = fs.lstatSync(file).isFile(); } catch { /* File đã được di chuyển/xóa. */ }
+      if (exists) wire.image_local = `archive:${this.account}/${row.media_key}`;
+      else {
+        this.db.prepare(`UPDATE messages SET media_key='',media_state='pending',attempts=0,retry_at=0
+          WHERE thread_type=? AND thread_id=? AND msg_id=?`).run(message.thread_type,message.thread_id,message.msg_id);
+        wire.image_state = "pending";
+        this.wake();
+      }
+    }
+    return wire;
+  }
+
+
+### 2026-11-10T09:41:23.087718 — Video local
+```sh
+rg -n 'href|params|video' daemon/node_modules/zca-js/dist/models/Message*; cat internal/media/archive_test.go | head -65; rg -n 'imageOpened|Mở ảnh' internal/tui/model.go
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0; daemon/node_modules/zca-js/dist/models/Message.d.ts:5:    href: string;
+daemon/node_modules/zca-js/dist/models/Message.d.ts:9:    params: string;
+daemon/node_modules/zca-js/dist/models/Message.d.ts:40:    paramsExt: {
+package media
+
+import (
+    "context"
+    "os"
+    "path/filepath"
+    "strings"
+    "testing"
+)
+
+func TestArchivedImagePreviewDoesNotNeedRemoteURL(t *testing.T) {
+    root := t.TempDir()
+    t.Setenv("XDG_DATA_HOME", root)
+    directory := filepath.Join(root, "zalo-cli", "accounts", "1001", "media")
+    if err := os.MkdirAll(directory, 0700); err != nil {
+        t.Fatal(err)
+    }
+    name := strings.Repeat("a", 64) + ".png"
+    if err := os.WriteFile(filepath.Join(directory, name), pngBytes(t), 0600); err != nil {
+        t.Fatal(err)
+    }
+    preview, err := Preview(context.Background(), "archive:1001/"+name, 40, 10)
+    if err != nil || !strings.Contains(preview, "▀") {
+        t.Fatalf("local preview failed: %v", err)
+    }
+    for _, key := range []string{"archive:../a.png", "archive:1001/../../etc/passwd", "file:///etc/passwd", "archive:1001/not-a-hash.png"} {
+        if _, err := archivedImage(key); err == nil {
+            t.Fatalf("accepted invalid key %s", key)
+        }
+    }
+}
+333:    case imageOpened:
+
+
+### 2026-11-10T09:41:26.814857 — Video local
+```sh
+sed -n "330,345p" internal/tui/model.go; head -20 daemon/node_modules/zca-js/dist/models/Message.d.ts
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0;    case previewReady:
+        m.acceptPreview(msg)
+        return m, nil
+    case imageOpened:
+        m.imageOpening = false
+        if msg.err != nil {
+            m.status = "Không mở được ảnh: " + msg.err.Error()
+        } else {
+            m.status = "Đã mở ảnh bằng ứng dụng mặc định."
+        }
+        return m, nil
+    case tea.WindowSizeMsg:
+        m.resize(msg.Width, msg.Height)
+        return m, m.ensurePreview(false)
+    case tea.MouseMsg:
+        if m.imageMenu {
+import { ThreadType } from "./Enum.js";
+export type TAttachmentContent = {
+    title: string;
+    description: string;
+    href: string;
+    thumb: string;
+    childnumber: number;
+    action: string;
+    params: string;
+    type: string;
+};
+export type TOtherContent = {
+    [key: string]: unknown;
+};
+export type TMessage = {
+    actionId: string;
+    msgId: string;
+    cliMsgId: string;
+    msgType: string;
+    uidFrom: string;
+
+
+### 2026-11-10T09:42:43.052213 — Bổ sung video
+- Lệnh: Python cập nhật archive, IPC, TUI và đường dẫn media theo script trong phiên làm việc.
+- Kết quả: Exit 0. Lần chạy script trước bị lỗi quoting, không thay đổi mã; đã chạy lại bằng heredoc.
+
+### 2026-11-10T09:42:45.402740 — Video local
+```sh
+gofmt -w internal/ipc/protocol.go internal/media/archive.go internal/tui/images.go internal/tui/model.go internal/tui/view.go; npm --prefix daemon test; GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go test ./...; GOCACHE=/tmp/zalo-ipc-go-cache GOMODCACHE=/tmp/zalo-ui-modcache go build ./...
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 1; 1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+internal/tui/history.go:7:2: github.com/charmbracelet/bubbletea@v1.3.10: Get "https://proxy.golang.org/github.com/charmbracelet/bubbletea/@v/v1.3.10.zip": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+internal/tui/images.go:8:2: github.com/charmbracelet/lipgloss@v1.1.0: Get "https://proxy.golang.org/github.com/charmbracelet/lipgloss/@v/v1.1.0.zip": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+internal/tui/view.go:9:2: github.com/charmbracelet/x/ansi@v0.10.1: Get "https://proxy.golang.org/github.com/charmbracelet/x/ansi/@v/v0.10.1.zip": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+internal/media/preview.go:16:2: golang.org/x/image@v0.31.0: Get "https://proxy.golang.org/golang.org/x/image/@v/v0.31.0.zip": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+internal/media/preview.go:17:2: golang.org/x/image@v0.31.0: Get "https://proxy.golang.org/golang.org/x/image/@v/v0.31.0.zip": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+internal/media/preview.go:18:2: golang.org/x/image@v0.31.0: Get "https://proxy.golang.org/golang.org/x/image/@v/v0.31.0.zip": dial tcp: lookup proxy.golang.org on 1.1.1.1:53: dial udp 1.1.1.1:53: socket: operation not permitted
+
+
+### 2026-11-10T09:42:51.096301 — Video local
+```sh
+sed -n "15,110p" daemon/archive.mjs; head -60 internal/tui/model_test.go; git diff --stat
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0; ser", Name: "An"}}}}
+    return "list-1", nil
+}
+func (f *fakeTransport) SendMessage(id, kind, text string) (string, error) {
+    f.sent <- ipc.SendPayload{ThreadID: id, ThreadType: kind, Text: text}
+    f.results <- ipc.Result{Event: ipc.Event{Event: "send_result", ID: "send-1", OK: true}}
+    return "send-1", nil
+}
+
+func fixture() model {
+    f := &fakeTransport{results: make(chan ipc.Result, 10), sent: make(chan ipc.SendPayload, 10)}
+    m := newModel(f)
+    m.loading = false
+    m.recipients = []ipc.Recipient{
+        {ThreadID: "an", ThreadType: "user", Name: "An"},
+        {ThreadID: "go", ThreadType: "group", Name: "Nhóm Go"},
+    }
+    m.openSelected()
+    return m
+}
+
+func update(m model, msg tea.Msg) model {
+    result, _ := m.Update(msg)
+    return result.(model)
+}
+
+func TestSendAcknowledgementBeforeCommandAndConversationSwitch(t *testing.T) {
+    m := fixture()
+    m.composer.SetValue("Chào An")
+    m = update(m, tea.KeyMsg{Type: tea.KeyEnter})
+    if m.pending == nil || m.history["user:an"][0].state != "Đang gửi..." {
+        t.Fatal("expected pending message")
+    }
+    m.composer.SetValue("Bản nháp An")
+    m.cursor = 1
+ COMMAND_LOG.md            | 197 ++++++++++++++++++++++++++++++++++++++++++++++
+ daemon/archive.mjs        |  10 +--
+ daemon/history.mjs        |   9 ++-
+ daemon/image-store.mjs    |  18 +++--
+ internal/ipc/protocol.go  |   4 +
+ internal/media/archive.go |   4 +-
+ internal/tui/images.go    |  12 ++-
+ internal/tui/model.go     |   9 ++-
+ internal/tui/view.go      |   5 +-
+ 9 files changed, 244 insertions(+), 24 deletions(-)
+
+
+### 2026-11-10T09:43:17.656566 — Video local
+```sh
+rg -n "meta\(" daemon/archive.mjs; rg -n "Test.*Image|openImage =|previewImage =" internal/tui/model_test.go
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 1; 62:    if (!this.meta("video-schema-v1")) {
+66:        this.meta("video-schema-v1", true);
+161:      cursor:oldest && /^\d+$/.test(oldest.msg_id) ? oldest.msg_id : "", partial:!this.meta("sync-done:"+type),
+162:      notice:this.meta("sync-running:"+type) ? "Đọc kho local; đang đồng bộ lịch sử nền, tin sẽ cập nhật khi có dữ liệu." : "Đang đọc tin đã lưu trên máy."};
+165:  meta(key, value) {
+
+
+### 2026-11-10T09:43:24.263923 — Video local
+```sh
+go env GOMODCACHE GOCACHE; npm --prefix daemon test > /tmp/zalo-video-tests.txt 2>&1; tail -18 /tmp/zalo-video-tests.txt; go build ./...
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 1; /home/sweetvn/go/pkg/mod
+/home/sweetvn/.cache/go-build
+ok 10 - gửi tin được lưu local và lỗi lưu không báo nhầm là gửi thất bại
+  ---
+  duration_ms: 2.28121
+  ...
+# Subtest: ảnh được tự tải khi capture, không cần mở chat hoặc gọi pump
+ok 11 - ảnh được tự tải khi capture, không cần mở chat hoặc gọi pump
+  ---
+  duration_ms: 1008.501599
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1072.310697
+cmd/zalo-cli/main.go:13:2: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+cmd/zalo-cli/main.go:14:2: open /home/sweetvn/.cache/go-build/c1/c117ecf805001f969dbb197b2eeac3446cf4cc79eac86e2c0209046545d5edd7-a: read-only file system
+pattern ./...: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+
+
+### 2026-11-10T09:43:43.196560 — Video local
+```sh
+gofmt -w internal/media/archive_test.go internal/tui/model_test.go; go test ./...; go build ./...; go vet ./...
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 1; # zalo-cli/cmd/zalo-cli
+cmd/zalo-cli/main.go:13:2: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+FAIL    zalo-cli/cmd/zalo-cli [setup failed]
+# zalo-cli/internal/tui
+cmd/zalo-cli/main.go:13:2: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+FAIL    zalo-cli/internal/tui [setup failed]
+# ./...
+pattern ./...: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+FAIL    ./... [setup failed]
+ok     zalo-cli/internal/media  0.012s
+FAIL
+cmd/zalo-cli/main.go:13:2: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+pattern ./...: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+cmd/zalo-cli/main.go:13:2: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+pattern ./...: open /home/sweetvn/.cache/go-build/85/85cdd67c52a82d139b4c7a9bd08e5e253e2d0cb12439536ab7a7f03cf124f6c5-a: read-only file system
+
+
+### 2026-11-10T09:44:08.650213 — Video local
+```sh
+GOCACHE=/tmp/zalo-video-go-cache go test ./... && GOCACHE=/tmp/zalo-video-go-cache go build ./... && GOCACHE=/tmp/zalo-video-go-cache go vet ./...
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 1; c1(0x1d2e6166c908)
+    /home/sweetvn/MyProjects/zalo-cli/cmd/zalo-cli/main_test.go:22 +0x6f
+testing.tRunner(0x1d2e6166c908, 0x1d2e615ab970)
+    /usr/lib/go/src/testing/testing.go:2195 +0xea
+created by testing.(*T).Run in goroutine 8
+    /usr/lib/go/src/testing/testing.go:2260 +0x4d4
+FAIL    zalo-cli/cmd/zalo-cli   0.005s
+--- FAIL: TestReceiveAfterMalformedJSONAndDisconnect (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: socket: operation not permitted [recovered, repanicked]
+
+goroutine 21 [running]:
+testing.tRunner.func1.2({0xaed960, 0x3d31b1faa4e0})
+    /usr/lib/go/src/testing/testing.go:2125 +0x232
+testing.tRunner.func1()
+    /usr/lib/go/src/testing/testing.go:2128 +0x329
+panic({0xaed960?, 0x3d31b1faa4e0?})
+    /usr/lib/go/src/runtime/panic.go:859 +0x125
+net/http/httptest.newLocalListener()
+    /usr/lib/go/src/net/http/httptest/server.go:226 +0xd9
+net/http/httptest.NewUnstartedServer(...)
+    /usr/lib/go/src/net/http/httptest/server.go:284
+net/http/httptest.NewServer({0xb3fc48, 0xb44140})
+    /usr/lib/go/src/net/http/httptest/server.go:267 +0x25
+zalo-cli/internal/ipc.TestReceiveAfterMalformedJSONAndDisconnect(0x3d31b1fde488)
+    /home/sweetvn/MyProjects/zalo-cli/internal/ipc/client_test.go:15 +0x50
+testing.tRunner(0x3d31b1fde488, 0xb44080)
+    /usr/lib/go/src/testing/testing.go:2195 +0xea
+created by testing.(*T).Run in goroutine 1
+    /usr/lib/go/src/testing/testing.go:2260 +0x4d4
+FAIL    zalo-cli/internal/ipc   0.005s
+ok     zalo-cli/internal/media  0.013s
+ok     zalo-cli/internal/tui    0.032s
+FAIL
+
+
+### 2026-11-10T09:44:09.504845 — Video local
+```sh
+git diff -- daemon/archive.mjs daemon/history.mjs internal/tui/model.go; sed -n "160,181p" daemon/archive.mjs; rg -n "media_updated" internal/tui/model.go
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0;  tea.Msg) (tea.Model, tea.Cmd) {
+            }
+            r, ok := m.recipient()
+            text := m.composer.Value()
++           if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "video" {
++               return m, m.openExternalImage(m.selectedLine)
++           }
+            if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "image" {
+                return m, m.ensurePreview(true)
+            }
+    return {messages,has_more:rows.length>100,archive_cursor:oldest ? Buffer.from(JSON.stringify([oldest.timestamp,oldest.msg_id])).toString("base64url") : "",
+      cursor:oldest && /^\d+$/.test(oldest.msg_id) ? oldest.msg_id : "", partial:!this.meta("sync-done:"+type),
+      notice:this.meta("sync-running:"+type) ? "Đọc kho local; đang đồng bộ lịch sử nền, tin sẽ cập nhật khi có dữ liệu." : "Đang đọc tin đã lưu trên máy."};
+  }
+
+  meta(key, value) {
+    if (value !== undefined) {
+      this.db.prepare("INSERT INTO metadata VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(key,JSON.stringify(value));
+      return value;
+    }
+    const row = this.db.prepare("SELECT value FROM metadata WHERE key=?").get(key);
+    return row ? JSON.parse(row.value) : null;
+  }
+
+  wake() {
+    if (!this.enabled || this.closed || this.running) return this.running;
+    this.running = this.pump().catch(error => console.error("❌ Không lưu được ảnh vào kho:",error.message))
+      .finally(() => { this.running = null; });
+    return this.running;
+  }
+
+  async pump() {
+221:    case "media_updated":
+
+
+### 2026-11-10T09:44:14.536928 — Video local
+```sh
+tail -12 /tmp/zalo-video-tests.txt; git diff --check
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 2;   ---
+  duration_ms: 1008.501599
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1072.310697
+COMMAND_LOG.md:4454: space before tab in indent.
++           }
+COMMAND_LOG.md:4455: space before tab in indent.
++           r, ok := m.recipient()
+COMMAND_LOG.md:4456: space before tab in indent.
++           text := m.composer.Value()
+COMMAND_LOG.md:4460: space before tab in indent.
++           if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "image" {
+COMMAND_LOG.md:4461: space before tab in indent.
++               return m, m.ensurePreview(true)
+COMMAND_LOG.md:4462: space before tab in indent.
++           }
+COMMAND_LOG.md:4486: new blank line at EOF.
+
+
+### 2026-11-10T09:44:45.622385 — Video local
+```sh
+GOCACHE=/tmp/zalo-video-go-cache go test -race ./... && GOCACHE=/tmp/zalo-video-go-cache go build ./... && GOCACHE=/tmp/zalo-video-go-cache go vet ./...
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0; ok     zalo-cli/cmd/zalo-cli 1.016s
+ok     zalo-cli/internal/ipc    1.012s
+ok     zalo-cli/internal/media  1.090s
+ok     zalo-cli/internal/tui    1.167s
+
+
+### 2026-11-10T09:44:51.367165 — Video local
+```sh
+gofmt -w internal/media/archive.go; npm --prefix daemon test > /tmp/zalo-video-tests.txt 2>&1 && tail -12 /tmp/zalo-video-tests.txt
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0;   ---
+  duration_ms: 1006.786026
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1080.196128
+
+
+### 2026-11-10T09:45:09.543915 — Tài liệu video
+- Lệnh: Python cập nhật CHANGELOG.md, plan.md, chuẩn hóa khoảng trắng nhật ký.
+- Mục đích: Ghi phạm vi, cách dùng và giới hạn video local.
+- Kết quả: Exit 0.
+
+### 2026-11-10T09:45:09.587303 — Video local
+```sh
+git diff --check; git status --short
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0; COMMAND_LOG.md:4454: space before tab in indent.
++           }
+COMMAND_LOG.md:4455: space before tab in indent.
++           r, ok := m.recipient()
+COMMAND_LOG.md:4456: space before tab in indent.
++           text := m.composer.Value()
+COMMAND_LOG.md:4460: space before tab in indent.
++           if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "image" {
+COMMAND_LOG.md:4461: space before tab in indent.
++               return m, m.ensurePreview(true)
+COMMAND_LOG.md:4462: space before tab in indent.
++           }
+ M CHANGELOG.md
+ M COMMAND_LOG.md
+ M daemon/archive.mjs
+ M daemon/archive.test.mjs
+ M daemon/history.mjs
+ M daemon/image-store.mjs
+ M internal/ipc/protocol.go
+ M internal/media/archive.go
+ M internal/media/archive_test.go
+ M internal/tui/images.go
+ M internal/tui/model.go
+ M internal/tui/model_test.go
+ M internal/tui/view.go
+ M plan.md
+
+### 2026-11-10T09:45:20.424014 — Video local
+```sh
+GOCACHE=/tmp/zalo-video-go-cache go test ./internal/media && git diff --check
+```
+- Mục đích: Triển khai và kiểm chứng lưu video.
+- Kết quả: Exit 0; ok  	zalo-cli/internal/media	0.014s

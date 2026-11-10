@@ -199,3 +199,13 @@
 * **Files Changed bổ sung:** plan.md. IPC chỉ nhận native client không có browser Origin, giúp trang web không đọc được archive qua WebSocket. Kiểm thử restart/offline bằng daemon và TUI thật với dữ liệu mẫu đã qua, gồm ảnh local có URL gốc không còn tồn tại. Chưa chạy archive trên tài khoản thật.
 * **Khả năng chạy lâu dài:** Đồng bộ bắt đầu sau cipher_key (socket đã có khóa giải mã), hủy trang đang chờ khi Zalo ngắt và lên lịch lại khi có khóa mới, xử lý event error để daemon vẫn cho đọc kho. Thêm hồi quy ngắt/kết nối lại trong daemon/history.test.mjs.
 * **Kết quả cuối:** Build/vet và race tests Go đều qua, 37 ca Node qua. Thử daemon offline/TUI trên cổng ngẫu nhiên với kho mẫu sau restart hiển thị được tin và ảnh từ file local dù URL ảnh không tồn tại. Chưa kích hoạt trên tài khoản thật; cần khởi động lại daemon để bắt đầu ghi dữ liệu tài khoản.
+
+## 2026-11-10T09:45:09.543915 — feat: lưu video local (commit hiện tại)
+- Scope: nhận diện chat.video.msg trong realtime/lịch sử; lưu binary MP4/WebM vào kho media riêng theo tài khoản.
+- Files Changed: daemon/history.mjs, daemon/image-store.mjs, daemon/archive.mjs, daemon/archive.test.mjs; internal/ipc/protocol.go; internal/media/archive.go, archive_test.go; internal/tui/images.go, model.go, model_test.go, view.go; plan.md; COMMAND_LOG.md.
+- Kỹ thuật: chọn videoUrl/href thay vì thumbnail; dùng hàng đợi media bền vững và retry sẵn có, stream file tạm 0600 + SHA256 + rename atomic, kiểm tra chữ ký container, tối đa video 1 GiB/10 phút. Ảnh giữ giới hạn 100 MiB. Các field image_local/image_state được giữ để tương thích IPC, dùng cho cả ảnh/video; video_url riêng cho nguồn video.
+- Nâng cấp: một lần đọc lại raw chat.video.msg đã lưu từ bản cũ để đưa video vào hàng đợi mà không cần nhận lại từ server.
+- Giao diện: ↑↓ chọn tin video; Enter (ô soạn trống) hoặc Ctrl+O mở file local qua xdg-open; chờ tải xong, không đưa video qua bộ giải mã ảnh. Không phát chuyển động trong terminal.
+- Kiểm chứng: kiểm thử nhận diện URL, stream file/loại trang lỗi và dọn file tạm, lưu/restart/migration; Go kiểm tra đường dẫn video local và thao tác Enter. Kết quả chi tiết ghi COMMAND_LOG.md. Chưa thử với video thật của tài khoản.
+
+- Kết quả cuối: 40 kiểm thử Node qua (archive 12), Go test -race ./..., go build ./..., go vet ./... qua; sau điều chỉnh giữ giới hạn ảnh chạy lại media test.

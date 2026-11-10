@@ -5,8 +5,8 @@ export function normalizeMessage(message) {
   let content = message.data?.content;
   let kind = "text";
   let imageURL = "";
-  if (message.data?.msgType === "chat.photo") {
-    kind = "image";
+  if (["chat.photo", "chat.video.msg"].includes(message.data?.msgType)) {
+    kind = message.data.msgType === "chat.photo" ? "image" : "video";
     if (typeof content === "string") {
       try { content = JSON.parse(content); } catch { content = { href: content }; }
     }
@@ -16,7 +16,7 @@ export function normalizeMessage(message) {
       try { params = JSON.parse(params); } catch { params = {}; }
     }
     if (!params || typeof params !== "object") params = {};
-    const candidates = [content.hdUrl, params.hdUrl, content.rawUrl, params.rawUrl,
+    const candidates = kind === "video" ? [content.videoUrl, params.videoUrl, content.href] : [content.hdUrl, params.hdUrl, content.rawUrl, params.rawUrl,
       content.oriUrl, params.oriUrl, content.normalUrl, params.normalUrl,
       content.href, content.thumb, content.thumbUrl, params.thumbUrl];
     imageURL = candidates.find(value => {
@@ -39,7 +39,8 @@ export function normalizeMessage(message) {
     sender_name: message.isSelf ? "Bạn" : message.data.dName || "Người gửi",
     content,
     kind,
-    image_url: imageURL,
+    image_url: kind === "image" ? imageURL : "",
+    ...(kind === "video" ? { video_url: imageURL } : {}),
     timestamp: Number.isSafeInteger(timestamp) ? timestamp : 0,
     is_self: !!message.isSelf,
   };

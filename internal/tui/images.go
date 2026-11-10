@@ -13,7 +13,7 @@ type imageOpened struct{ err error }
 func (m model) images() []*chatLine {
 	var images []*chatLine
 	for _, line := range m.history[m.active] {
-		if line.kind == "image" {
+		if line.kind == "image" || line.kind == "video" {
 			images = append(images, line)
 		}
 	}
@@ -54,7 +54,11 @@ func (m model) updateImageMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m *model) openExternalImage(line *chatLine) tea.Cmd {
 	if m.imageOpening {
-		m.status = "Đang mở ảnh trước đó..."
+		m.status = "Đang mở media trước đó..."
+		return nil
+	}
+	if line.kind == "video" && !strings.HasPrefix(line.imageURL, "archive:") {
+		m.status = "Video chưa lưu máy. Chờ tải xong rồi Enter để mở."
 		return nil
 	}
 	if line.imageURL == "" {
@@ -63,7 +67,7 @@ func (m *model) openExternalImage(line *chatLine) tea.Cmd {
 	}
 	address := line.imageURL
 	m.imageMenu, m.imageOpening = false, true
-	m.status = "Đang tải và mở ảnh..."
+	m.status = "Đang mở media..."
 	return func() tea.Msg { return imageOpened{err: m.openImage(m.ctx, address)} }
 }
 
@@ -72,7 +76,7 @@ func (m model) imageView() string {
 	width := min(84, m.width-4)
 	rows := max(1, m.height-9)
 	start := max(0, index-rows+1)
-	title := "ẢNH TRONG CUỘC CHAT"
+	title := "ẢNH / VIDEO TRONG CUỘC CHAT"
 	if r, ok := m.recipient(); ok {
 		title += " · " + oneLine(r.Name)
 	}

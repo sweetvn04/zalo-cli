@@ -71,11 +71,19 @@ function previousCache(address) {
   return null;
 }
 
-export async function storeImage(address, directory, { signal } = {}) {
+export function videoExtension(header) {
+  const brand = header.subarray(8,12).toString();
+  if (header.subarray(4,8).toString() === "ftyp" &&
+      /^(isom|iso[2-9]|mp4[12]|avc1|M4V |MSNV|qt  |3gp[4-9])$/.test(brand)) return ".mp4";
+  if (header.subarray(0,4).equals(Buffer.from([0x1a,0x45,0xdf,0xa3])) && header.includes(Buffer.from("webm"))) return ".webm";
+  throw new Error("Dữ liệu không phải video MP4/WebM được hỗ trợ");
+}
+
+export async function storeImage(address, directory, { signal, kind = "image" } = {}) {
   validateImageURL(address);
-  const timeout = AbortSignal.timeout(90000);
+  const timeout = AbortSignal.timeout(kind === "video" ? 600000 : 90000);
   const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
-  const source = previousCache(address) || await imageResponse(address, combined);
+  const source = (kind === "image" ? previousCache(address) : null) || await imageResponse(address, combined);
   const temporary = path.join(directory, ".download-"+randomUUID());
   let file;
   try { file = await fs.promises.open(temporary, "wx", 0o600); }
@@ -87,12 +95,12 @@ export async function storeImage(address, directory, { signal } = {}) {
     for await (const chunk of source) {
       if (combined.aborted) throw combined.reason;
       size += chunk.length;
-      if (size > 100*1024*1024) throw new Error("Ảnh vượt giới hạn lưu trữ 100 MiB");
+      if (size > (kind === "video" ? 1024 : 100)*1024*1024) throw new Error("Media vượt giới hạn (ảnh 100 MiB, video 1 GiB)");
       if (header.length < 512) header = Buffer.concat([header, chunk.subarray(0, 512-header.length)]);
       hash.update(chunk);
       await file.writeFile(chunk);
     }
-    const extension = imageExtension(header);
+    const extension = kind === "video" ? videoExtension(header) : imageExtension(header);
     await file.sync();
     await file.close();
     const name = hash.digest("hex")+extension;

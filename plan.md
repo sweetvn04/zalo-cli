@@ -248,3 +248,8 @@ Phase 2 và giao diện cơ bản Phase 3 đã triển khai. Chạy daemon trư�
 ### Kho local — 2026-11-10
 
 Daemon lưu tin nhận/gửi và payload gốc vào SQLite theo tài khoản, tự tải ảnh nền và đồng bộ phần lịch sử Zalo còn cung cấp dù TUI không mở. Kho mặc định tại ~/.local/share/zalo-cli/accounts/<ID>/ gồm messages.sqlite3 và media/. Ảnh đã tải được đọc từ file local; job ảnh lỗi được giữ qua restart và tiếp tục thử với backoff. TUI hiển thị trạng thái lưu ảnh và đọc lịch sử local theo trang. Chạy node index.mjs --offline trong daemon/ để đọc kho không đăng nhập; nếu có nhiều tài khoản thêm --account ID. Dữ liệu chưa từng nhận/tải và đã mất trên máy chủ không thể được tạo lại. Giới hạn ảnh 100 MiB/file, binary của video/tệp khác chưa tải (giữ payload gốc).
+
+### Video local
+- Đã hỗ trợ video chat.video.msg (MP4/WebM), tải nền vào cùng thư mục media với ảnh; tối đa 1 GiB mỗi video.
+- Tự cập nhật raw video đã lưu từ phiên bản trước. URL đã hết hạn trước khi tải vẫn phụ thuộc khả năng Zalo cung cấp lại.
+- ↑↓ chọn video, Enter khi ô soạn trống hoặc Ctrl+O để mở trình phát mặc định. Video chưa phát trực tiếp trong terminal.

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"bytes"
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -10,6 +11,34 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"zalo-cli/internal/ipc"
 )
+
+func TestSelectedVideoOpensLocalWithoutImagePreview(t *testing.T) {
+	m := fixture()
+	m.resize(100, 30)
+	m.editing = true
+	line := &chatLine{kind: "video", imageURL: "archive:1001/" + strings.Repeat("a", 64) + ".mp4", mediaState: "ready"}
+	m.history[m.active] = []*chatLine{line}
+	m.selectedLine = line
+	if cmd := m.ensurePreview(false); cmd != nil {
+		t.Fatal("video must not enter image decoder")
+	}
+	opened := ""
+	m.openImage = func(_ context.Context, address string) error { opened = address; return nil }
+	next, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = next.(model)
+	if cmd == nil {
+		t.Fatal("Enter did not open selected video")
+	}
+	cmd()
+	if opened != line.imageURL {
+		t.Fatal("video did not use local archive")
+	}
+	m.imageOpening = false
+	line.imageURL = "https://example.org/video.mp4"
+	if cmd := m.openExternalImage(line); cmd != nil {
+		t.Fatal("must wait for archived video before opening")
+	}
+}
 
 type fakeTransport struct {
 	results chan ipc.Result

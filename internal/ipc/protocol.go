@@ -21,6 +21,7 @@ type Event struct {
 }
 
 type Message struct {
+	VideoURL   string `json:"video_url,omitempty"`
 	Notice     string `json:"notice,omitempty"`
 	ImageLocal string `json:"image_local,omitempty"`
 	ImageState string `json:"image_state,omitempty"`
@@ -60,6 +61,9 @@ type SendPayload struct {
 func (m Message) ImageSource() string {
 	if m.ImageLocal != "" {
 		return m.ImageLocal
+	}
+	if m.Kind == "video" {
+		return m.VideoURL
 	}
 	return m.ImageURL
 }

@@ -2,13 +2,81 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
+import https from "node:https";
+import { Readable } from "node:stream";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { Archive } from "./archive.mjs";
 import { handleCommand } from "./ipc.mjs";
 import { syncArchive } from "./archive-sync.mjs";
-import { validateImageURL, storeImage } from "./image-store.mjs";
+import { validateImageURL, storeImage, videoExtension } from "./image-store.mjs";
+import { normalizeMessage } from "./history.mjs";
+
+test("video được stream ra file theo nội dung, không lưu trang lỗi HTTP thành video", async t => {
+  const root = temporary(t);
+  let body = Buffer.concat([Buffer.from([0,0,0,24]),Buffer.from("ftypisom"),Buffer.alloc(20)]);
+  t.mock.method(https,"get",(_url,_options,callback) => {
+    const request = new EventEmitter();
+    const response = Readable.from([body.subarray(0,5),body.subarray(5)]);
+    response.statusCode = 200;
+    response.headers = {};
+    process.nextTick(() => callback(response));
+    return request;
+  });
+  const name = await storeImage("https://example.org/movie",root,{kind:"video"});
+  assert.equal(name,createHash("sha256").update(body).digest("hex")+".mp4");
+  assert.deepEqual(fs.readFileSync(path.join(root,name)),body);
+  assert.equal(fs.statSync(path.join(root,name)).mode&0o777,0o600);
+  body = Buffer.from("<html>Expired video</html>");
+  await assert.rejects(storeImage("https://example.org/expired",root,{kind:"video"}),/không phải video/);
+  assert.deepEqual(fs.readdirSync(root),[name]);
+});
+
+test("video nhận đúng URL, không lấy thumbnail và nhận diện container", () => {
+  for (const content of [
+    {href:"https://example.org/a.mp4",thumb:"https://example.org/thumb.jpg"},
+    JSON.stringify({params:JSON.stringify({videoUrl:"https://example.org/a.mp4"})}),
+  ]) {
+    const video = normalizeMessage(raw(10,content,{msgType:"chat.video.msg"}));
+    assert.equal(video.kind,"video");
+    assert.equal(video.video_url,"https://example.org/a.mp4");
+    assert.equal(video.image_url,"");
+  }
+  assert.equal(normalizeMessage(raw(10,{thumb:"https://example.org/thumb.jpg"},{msgType:"chat.video.msg"})).video_url,"");
+  assert.equal(videoExtension(Buffer.from("0000ftypisom")),".mp4");
+  assert.throws(() => videoExtension(Buffer.from("<html>error</html>")));
+  assert.throws(() => videoExtension(Buffer.from("0000ftypavif")));
+});
+
+test("video tải nền, giữ local sau restart và nâng cấp payload cũ", async t => {
+  const root = temporary(t);
+  let calls = 0;
+  const name = "a".repeat(64)+".mp4";
+  let archive = new Archive("1001",{root,worker:false,download:async (url,dir,options) => {
+    calls++;
+    assert.equal(options.kind,"video");
+    fs.writeFileSync(path.join(dir,name),Buffer.from("0000ftypisom"));
+    return name;
+  }});
+  const message = raw(80,{href:"https://example.org/movie.mp4"},{msgType:"chat.video.msg"});
+  archive.capture(message);
+  await archive.pump();
+  assert.equal(calls,1);
+  await archive.close();
+  archive = new Archive("1001",{root,worker:false});
+  let video = archive.history("friend","user").messages[0];
+  assert.equal(video.image_local,"archive:1001/"+name);
+  assert.equal(video.image_state,"ready");
+  archive.db.prepare("DELETE FROM metadata WHERE key='video-schema-v1'").run();
+  archive.db.prepare("UPDATE messages SET data=?").run(JSON.stringify({...video,kind:"unsupported"}));
+  await archive.close();
+  archive = new Archive("1001",{root,worker:false});
+  video = archive.history("friend","user").messages[0];
+  assert.equal(video.kind,"video");
+  assert.equal(video.image_local,"archive:1001/"+name);
+  await archive.close();
+});
 
 function temporary(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(),"zalo-archive-"));
