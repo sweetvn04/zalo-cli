@@ -232,3 +232,8 @@
 - Dùng timestamp millisecond có sẵn trên mỗi chatLine, hiển thị cạnh tên theo dạng dd/mm/yyyy HH:mm, múi giờ máy đang chạy TUI; áp dụng cả tin văn bản, ảnh, video và tin gửi. Tin không có timestamp hợp lệ (>0) không hiện ngày giả.
 - Dành chỗ cho thời gian, cắt ngắn tên dài theo độ rộng terminal; dùng màu phụ để không lấn nội dung. Không thay đổi kho local hoặc IPC.
 - Validation: go build ./... và go test ./internal/tui qua.
+
+## 2026-11-11T01:19:33.329057 — style: rút gọn giờ tin hôm nay (commit hiện tại)
+- Files Changed: internal/tui/view.go, CHANGELOG.md, COMMAND_LOG.md.
+- Tin cùng ngày hôm nay theo múi giờ máy chỉ hiện HH:mm; các ngày trước giữ dd/mm/yyyy HH:mm. Tính ngày hiện tại một lần khi dựng nội dung chat.
+- Validation: go build ./... và go test ./internal/tui qua.

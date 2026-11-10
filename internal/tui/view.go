@@ -53,6 +53,7 @@ func (m *model) refreshChat(bottom bool) {
 	m.lineRanges = make(map[*chatLine]lineRange)
 	row := 0
 	imageNumber := 0
+	today := time.Now().In(time.Local).Format("2006-01-02")
 	for _, line := range m.history[m.active] {
 		var parts []string
 		name := oneLine(line.sender)
@@ -72,7 +73,11 @@ func (m *model) refreshChat(bottom bool) {
 		nameWidth := m.chat.Width
 		stamp := ""
 		if line.timestamp > 0 {
-			stamp = time.UnixMilli(line.timestamp).In(time.Local).Format("02/01/2006 15:04")
+			sent := time.UnixMilli(line.timestamp).In(time.Local)
+			stamp = sent.Format("02/01/2006 15:04")
+			if sent.Format("2006-01-02") == today {
+				stamp = sent.Format("15:04")
+			}
 			nameWidth -= ansi.StringWidth(stamp) + 3
 		}
 		header := style.Render(clip(name, nameWidth))
