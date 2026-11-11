@@ -25,11 +25,19 @@ test("đọc local trước login, tự cập nhật tin vắng mặt và đồn
     import {setTimeout as pause} from 'node:timers/promises';
     import {createGroupSync as buildGroupSync} from ${JSON.stringify(pathToFileURL(path.join(directory,"group-sync.mjs")).href)};
     const listener = new EventEmitter();
-    listener.start = () => queueMicrotask(() => {listener.emit('connected');listener.emit('cipher_key','fixture');});
+    let connections = 0;
+    listener.start = () => queueMicrotask(() => {
+      connections++;
+      listener.ws = {terminate() {
+        listener.ws = null;
+        queueMicrotask(()=>listener.emit('disconnected',1006));
+      }};
+      listener.emit('connected');listener.emit('cipher_key','fixture');
+    });
     listener.stop = () => listener.emit('disconnected');
     listener.requestOldMessages = (type,cursor) => {
       fs.appendFileSync(${JSON.stringify(calls)},type+':'+cursor+'\\n');
-      const message={type,threadId:'friend',data:{msgId:type===0?'500':'600',ts:'500',uidFrom:'friend',dName:'An',content:'Tin gửi khi tắt máy '+type}};
+      const message={type,threadId:'friend',data:{msgId:String((type===0?499:599)+connections),ts:String(499+connections),uidFrom:'friend',dName:'An',content:'Tin gửi khi tắt máy '+type}};
       queueMicrotask(() => listener.emit('old_messages',cursor===null?[message]:[],type));
     };
     export async function loginWithSession(){
@@ -97,4 +105,11 @@ test("đọc local trước login, tự cập nhật tin vắng mặt và đồn
   assert.equal((await request("daemon_status")).online,true);
   assert.ok(events.some(event=>event.event==="recipients_updated"));
   assert.deepEqual(fs.readFileSync(calls,"utf8").trim().split("\n").slice(0,2),["0:null","1:null"]);
+  const beforeReconnect=events.length;
+  socket.send(JSON.stringify({id:"f6",action:"sync_now",payload:{thread_id:"friend",thread_type:"user"}}));
+  await until(()=>events.slice(beforeReconnect).some(event=>event.event==="zalo_connection" && !event.data.online));
+  await until(()=>events.slice(beforeReconnect).some(event=>event.event==="zalo_connection" && event.data.online));
+  await until(()=>events.slice(beforeReconnect).some(event=>event.event==="archive_updated" && event.data.thread_type==="user"));
+  const updated=await request("get_history",{thread_id:"friend",thread_type:"user"});
+  assert.equal(updated.messages.at(-1).msg_id,"501");
 });

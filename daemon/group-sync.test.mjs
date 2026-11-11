@@ -102,3 +102,18 @@ test("cloud lỗi không xóa local và 429 chặn cả hàng đợi",async t=>{
   assert.equal(archive.history("123","group").messages.length,1);
   assert.match(statuses[0],/429/);
 });
+
+test("F6 đọc tin nhóm mới trong thời gian cache nền",async t=>{
+  const archive = fixture(t);
+  let time = 100000;
+  let calls = 0;
+  t.mock.method(Date,"now",()=>time);
+  const sync = createGroupSync({},archive,{fetchPage:async()=>({messages:[raw(++calls)],more:false})});
+  await sync.refresh("123");
+  time += 6000;
+  await sync.refresh("123");
+  assert.equal(calls,1);
+  await sync.refresh("123",false,true);
+  assert.equal(calls,2);
+  assert.equal(archive.history("123","group").messages.length,2);
+});

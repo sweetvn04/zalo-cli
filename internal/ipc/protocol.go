@@ -21,6 +21,7 @@ type Event struct {
 }
 
 type Message struct {
+	Online       bool   `json:"online,omitempty"`
 	ReplyPreview string `json:"reply_preview,omitempty"`
 	StickerID    int64  `json:"sticker_id,omitempty"`
 	VideoURL     string `json:"video_url,omitempty"`

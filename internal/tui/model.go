@@ -21,6 +21,7 @@ type transport interface {
 	SendImage(string, string, string) (string, error)
 	SendSticker(string, string, int64) (string, error)
 	ListStickers() (string, error)
+	SyncNow(string, string) (string, error)
 	History(string, string, ...string) (string, error)
 }
 
@@ -65,6 +66,7 @@ type outgoing struct {
 }
 
 type model struct {
+	zaloOnline              bool
 	replies                 map[string]*chatLine
 	copiedImage             string
 	copiedSticker           int64
@@ -230,6 +232,8 @@ func (m *model) finishSend(ok bool, message string) {
 
 func (m *model) handleEvent(event ipc.Event) {
 	switch event.Event {
+	case "zalo_connection":
+		m.zaloOnline = event.Data.Online
 	case "archive_status":
 		m.status = event.Data.Notice
 	case "media_updated":
@@ -413,6 +417,10 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, tea.Batch(m.listen(), m.refreshFromArchive(), m.ensurePreview(false))
 	case requestStarted:
+		if msg.kind == "sync" && msg.err != nil {
+			m.status = "Không yêu cầu được đồng bộ: " + msg.err.Error()
+			return m, nil
+		}
 		if msg.kind == "stickers" && msg.err != nil && m.stickerMenu != nil && msg.attempt == m.stickerMenu.attempt {
 			m.stickerMenu.loading = false
 			m.stickerMenu.status = msg.err.Error()
@@ -537,7 +545,17 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.chat.GotoBottom()
 			return m, nil
 		case "f6":
-			return m, m.loadHistory(true)
+			if r, ok := m.recipient(); ok && m.connected {
+				m.chat.GotoBottom()
+				local := m.loadHistory(true)
+				m.status = "Đang yêu cầu tin mới từ Zalo..."
+				client := m.client
+				return m, tea.Batch(local, func() tea.Msg {
+					_, err := client.SyncNow(r.ThreadID, r.ThreadType)
+					return requestStarted{kind: "sync", err: err}
+				})
+			}
+			return m, nil
 		case "tab", "shift+tab":
 			if !m.editing {
 				return m, m.openSelected()

@@ -77,6 +77,8 @@ func (f *fakeTransport) SendSticker(id, kind string, stickerID int64) (string, e
 
 func (f *fakeTransport) ListStickers() (string, error) { return "stickers-1", nil }
 
+func (f *fakeTransport) SyncNow(id, kind string) (string, error) { return "sync-1", nil }
+
 func fixture() model {
 	f := &fakeTransport{results: make(chan ipc.Result, 10), sent: make(chan ipc.SendPayload, 10)}
 	m := newModel(f)

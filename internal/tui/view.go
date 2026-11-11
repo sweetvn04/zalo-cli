@@ -178,7 +178,9 @@ func (m model) View() string {
 	}
 	connection := lipgloss.NewStyle().Foreground(green).Render("● Đã kết nối")
 	if !m.connected {
-		connection = lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Render("● Mất kết nối")
+		connection = lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Render("● Mất kết nối daemon")
+	} else if !m.zaloOnline {
+		connection = muted.Render("● Kho local · Zalo chưa kết nối")
 	}
 	header := bright.Render(" ZALO") + "  " + muted.Render("TERMINAL") + "    " + connection
 	header += "\n" + muted.Render(" Tin nhắn & ảnh · Bạn bè & nhóm")
@@ -264,9 +266,9 @@ func (m model) View() string {
 	}, "\n")
 	right := panel.BorderForeground(rightColor).Width(rightWidth + 2).Height(innerHeight).Render(chat)
 	footer := clip(" "+oneLine(m.status), m.width)
-	keys := " ↑↓ chọn tin · Ctrl+R trả lời · F4 sticker · F9 chép ảnh/sticker · Tab đổi cột · Enter gửi · Esc thoát"
+	keys := " F6 tin mới · ↑↓ chọn tin · Ctrl+R trả lời · F4 sticker · F9 chép ảnh/sticker · Tab đổi cột · Enter gửi"
 	if m.copiedImage != "" || m.copiedSticker > 0 {
-		keys = " Ctrl+G gửi ảnh/sticker đã chép · Ctrl+R trả lời · F4 sticker · Tab đổi cột"
+		keys = " F6 tin mới · Ctrl+G gửi ảnh/sticker đã chép · Ctrl+R trả lời · F4 sticker · Tab đổi cột"
 	}
 	help := muted.Render(clip(keys, m.width))
 	return header + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, left, right) + "\n" + footer + "\n" + help

@@ -6,16 +6,23 @@ export function createGroupSync(api,archive,{signal,onUpdate = () => {},onStatus
   const states = new Map();
   let queue = Promise.resolve();
   let blockedUntil = 0;
-  function refresh(groupId,older = false) {
+  function refresh(groupId,older = false,force = false) {
     const state = states.get(groupId) || {next:0,pending:null};
     states.set(groupId,state);
-    if (state.pending) return state.pending;
-    if (signal?.aborted || Date.now()<blockedUntil || (!older && Date.now()<state.next)) return Promise.resolve();
+    if (state.pending) {
+      if (force && !older && state.older) return state.pending.then(()=>refresh(groupId,false,true));
+      return state.pending;
+    }
+    if (signal?.aborted || Date.now()<blockedUntil || (!older && Date.now()<(force ? (state.last ?? 0)+5000 : state.next))) return Promise.resolve();
+    state.older = older;
     state.pending = queue.then(async () => {
       if (signal?.aborted || Date.now()<blockedUntil) return;
       let cursor = older ? archive.meta("group-cloud-cursor:"+groupId) || "" : "";
       if (older && !cursor) return;
-      state.next = Date.now()+60000;
+      if (!older) {
+        state.last = Date.now();
+        state.next = state.last+60000;
+      }
       let count = 0;
       let more = false;
       let filtered = false;

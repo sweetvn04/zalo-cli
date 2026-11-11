@@ -261,3 +261,9 @@
 - Ctrl+R chọn trích dẫn theo từng cuộc chat, Enter gửi nội dung trả lời, Esc bỏ trích dẫn. Hiện trích dẫn ở ô soạn và trong lịch sử.
 - Daemon tra dữ liệu Zalo gốc bằng bộ khóa cuộc chat và ID tin, dùng quote của zca-js, báo lỗi khi thiếu metadata gốc.
 - Validation: go build, go test ./..., npm test qua; kiểm thử giả lập gửi quote và ngăn quote chéo chat. Kiểm tra kho thật 100/100 tin raw gần nhất có metadata trích dẫn. Daemon đã nạp bản mới.
+
+## 2026-11-11T11:43:58.943443 — fix: khôi phục kết nối Zalo sau sleep (commit hiện tại)
+- Files Changed: daemon/listener-recovery.mjs, listener-recovery.test.mjs, index.mjs, group-sync.mjs, group-sync.test.mjs, startup.test.mjs, package.json; internal/ipc/client.go, protocol.go; internal/tui/model.go, model_test.go, view.go; CHANGELOG.md, COMMAND_LOG.md.
+- Daemon kiểm tra timer bị gián đoạn, WebSocket ping/pong và timeout bắt tay. Nối lại với backoff, rồi đồng bộ replay và cloud nhóm. Mã trùng kết nối đợi F6.
+- F6 gửi yêu cầu cập nhật tới Zalo và đọc lại kho local. Nhóm có thể bỏ qua TTL nền nhưng vẫn giới hạn tần suất và tôn trọng 429. TUI báo trạng thái Zalo riêng với kết nối daemon.
+- Validation: Node unit tests, startup integration mô phỏng nối lại và tin mới, go test ./... và build binary qua.

@@ -5,6 +5,7 @@ import { loginWithSession } from "./auth.mjs";
 import { Archive, archiveRoot } from "./archive.mjs";
 import { syncArchive } from "./archive-sync.mjs";
 import { createGroupSync } from "./group-sync.mjs";
+import { recoverListener } from "./listener-recovery.mjs";
 import { loadRecipients } from "./recipients.mjs";
 import { parseArgs } from "node:util";
 import path from "node:path";
@@ -24,6 +25,8 @@ let archive;
 let syncRun;
 let groupSync;
 let groupScan;
+let listenerRecovery;
+let requestedGroup;
 const syncAbort = new AbortController();
 let online = false;
 let loginNotice = options.offline ? "Đang đọc kho offline." : "Đang đọc kho local; kết nối Zalo và đồng bộ nền...";
@@ -66,6 +69,18 @@ wss.on("connection", (socket) => {
       socket.send(JSON.stringify({event:"daemon_status",id:action.id,ready:!!archive,online,notice:loginNotice}));
       return;
     }
+    if (action?.action === "sync_now") {
+      const {thread_id,thread_type} = action.payload ?? {};
+      if (!listenerRecovery) {
+        socket.send(JSON.stringify({event:"archive_status",data:{notice:"Daemon chưa kết nối Zalo; đang đọc kho local."}}));
+      } else if (online && thread_type === "group" && typeof thread_id === "string" && /^\d+$/.test(thread_id)) {
+        groupSync.refresh(thread_id,false,true).catch(error=>broadcast("archive_status",{notice:error.message}));
+      } else {
+        if (thread_type === "group" && typeof thread_id === "string" && /^\d+$/.test(thread_id)) requestedGroup = thread_id;
+        listenerRecovery.reconnect();
+      }
+      return;
+    }
     if (action?.action === "list_recipients" && online) refreshRecipients();
     if (action?.action === "get_history" && action.payload?.thread_type === "group" &&
         typeof action.payload.thread_id === "string" && /^\d+$/.test(action.payload.thread_id) && online) {
@@ -84,27 +99,38 @@ wss.on("connection", (socket) => {
   });
   socket.on("error", error => console.warn("⚠️ Kết nối CLI gặp lỗi:",error.message));
   socket.send(JSON.stringify({event:"archive_status",data:{notice:loginNotice}}));
+  socket.send(JSON.stringify({event:"zalo_connection",data:{online}}));
 });
 
 let recipientRefresh;
-function refreshRecipients() {
-  if (!online || recipientRefresh) return;
+function refreshRecipients(forceGroups = false) {
+  if (!online) return;
+  if (recipientRefresh) {
+    if (forceGroups) recipientRefresh.then(()=>scanGroupHeads(true));
+    return;
+  }
   recipientRefresh = loadRecipients(api).then(list => {
     const previous = JSON.stringify(archive.recipients());
     archive.saveRecipients(list.recipients);
     if (JSON.stringify(archive.recipients()) !== previous) broadcast("recipients_updated",{});
-    scanGroupHeads();
   }).catch(error => {
     broadcast("archive_status",{notice:"Đang dùng danh sách local; chưa cập nhật được từ Zalo: "+error.message});
-  }).finally(() => { recipientRefresh = null; });
+  }).finally(() => {
+    recipientRefresh = null;
+    scanGroupHeads(forceGroups);
+  });
 }
 
-function scanGroupHeads() {
-  if (!groupSync || groupScan || !online) return;
+function scanGroupHeads(force = false) {
+  if (!groupSync || !online) return;
+  if (groupScan) {
+    if (force) groupScan.then(()=>scanGroupHeads(true));
+    return;
+  }
   groupScan = (async()=>{
     for (const recipient of archive.recipients()) {
       if (syncAbort.signal.aborted || !online) return;
-      if (recipient.thread_type === "group") await groupSync.refresh(recipient.thread_id);
+      if (recipient.thread_type === "group") await groupSync.refresh(recipient.thread_id,false,force);
     }
   })().catch(error=>console.warn("Chưa cập nhật được lịch sử cloud:",error.message)).finally(()=>{groupScan=null;});
 }
@@ -209,15 +235,22 @@ if (api) {
     online = true;
     loginNotice = "Đã kết nối Zalo; đang đồng bộ tin trong thời gian vắng mặt.";
     broadcast("archive_status",{notice:loginNotice});
-    refreshRecipients();
+    broadcast("zalo_connection",{online:true});
+    if (requestedGroup) {
+      groupSync.refresh(requestedGroup,false,true).catch(error=>broadcast("archive_status",{notice:error.message}));
+      requestedGroup = undefined;
+    }
+    refreshRecipients(true);
     connectionAbort = new AbortController();
     beginSync();
   });
-  api.listener.on("disconnected", () => {
+  api.listener.on("disconnected", code => {
     online = false;
     connectionAbort.abort();
-    loginNotice = "Mất kết nối Zalo; vẫn đọc được tin local, đang chờ kết nối lại.";
+    loginNotice = code === 3000 ? "Zalo báo có kết nối khác. F6 để kết nối lại." :
+      "Mất kết nối Zalo; vẫn đọc được tin local, đang chờ kết nối lại.";
     broadcast("archive_status",{notice:loginNotice});
+    broadcast("zalo_connection",{online:false});
   });
   api.listener.on("error", error => {
     console.warn("⚠️ Kết nối Zalo gặp lỗi:",error.message || String(error));
@@ -225,7 +258,12 @@ if (api) {
   });
 
   // Bắt đầu lắng nghe
-  api.listener.start();
+  listenerRecovery = recoverListener(api.listener,{signal:syncAbort.signal,onReconnect:()=>{
+    online = false;
+    connectionAbort.abort();
+    broadcast("zalo_connection",{online:false});
+    broadcast("archive_status",{notice:"Đang nối lại Zalo và đồng bộ tin mới..."});
+  }});
 }
 }
 // Không để lỗi mạng/đăng nhập lấy mất quyền đọc kho local.

@@ -96,6 +96,10 @@ func (c *Client) ListStickers() (string, error) {
 	return c.request("list_stickers", nil)
 }
 
+func (c *Client) SyncNow(threadID, threadType string) (string, error) {
+	return c.request("sync_now", &SendPayload{ThreadID: threadID, ThreadType: threadType})
+}
+
 // SendMessage gửi lệnh qua IPC. Bên gọi phải đợi send_result cùng ID để biết
 // Zalo đã chấp nhận lệnh hay chưa. Không tự gửi lại khi mất phản hồi.
 func (c *Client) SendMessage(threadID, threadType, text string, replyTo ...string) (string, error) {

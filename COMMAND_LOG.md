@@ -6291,3 +6291,163 @@ PY
 git diff --check
 ```
 - Kết quả: Exit 0
+
+### 2026-11-11T10:41:22.932728 — Commit trả lời tin
+```sh
+git add CHANGELOG.md COMMAND_LOG.md daemon/{archive.mjs,archive.test.mjs,history.mjs,ipc.mjs} internal/ipc/{client,protocol}.go internal/tui/{history,model,model_test,view}.go && git commit -m "feat(tui): reply to selected messages"
+```
+- Kết quả: Exit 0 [main 6664657] feat(tui): reply to selected messages
+
+### 2026-11-11T10:50:25.244345 — Sticker và cuộn chat
+```sh
+git status --short; git check-ignore bin/zalo-cli; rg -n 'daemon-dir|func bridgeDirectory' cmd/zalo-cli/main.go internal/daemon/start.go; rg -n 'go run|go build|npm ci' README.md plan.md | tail -16
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:50:38.605779 — Sticker và cuộn chat
+```sh
+sed -n '19,42p' internal/daemon/start.go; mkdir -p bin && GOCACHE=/tmp/zalo-sticker-cache go build -trimpath -o bin/zalo-cli ./cmd/zalo-cli && file bin/zalo-cli && bin/zalo-cli -h
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:50:53.045402 — Kiểm tra bản build ngoài thư mục repo
+```sh
+repo="$PWD" && cd /tmp && "$repo/bin/zalo-cli" -list > /dev/null
+```
+- Mục đích: kiểm tra binary kết nối daemon và đọc danh sách.
+- Kết quả: Exit 0
+
+### 2026-11-11T10:56:51.808572 — Sticker và cuộn chat
+```sh
+git status --short; git remote; git ls-files | rg -i '(^|/)(readme|license|\.github|\.gitignore|session|qr|\.env)|\.(sqlite3?|db)$'; cat .gitignore; git log -4 --oneline
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:56:58.359748 — Sticker và cuộn chat
+```sh
+git log --all --format= --name-only | sort -u | rg -i '(^|/)(session\.json|qr\.png|\.env($|\.))|\.(sqlite3?|db|cookie)$' || test "$?" -eq 1; rg -l -i 'cookie|session\.json|📩|Logged in as' COMMAND_LOG.md CHANGELOG.md
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:59:01.907938 — Sticker và cuộn chat
+```sh
+rg -n '^func (main|Run|Ensure|Dial)|^func .* (read|request|Update|openSelected|beginSend|handleHistory|mergeHistory)\(' cmd internal; rg -n 'export |daemon_status|on\("(message|cipher_key|old_messages)"|new Archive' daemon/{index,auth,ipc,archive,archive-sync,group-sync,group-cloud,history,image-store}.mjs; rg -n 'CREATE TABLE|journal_mode|ON CONFLICT' daemon/archive.mjs
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:39:16.511666 — Sticker và cuộn chat
+```sh
+sed -n '50,83p;185,250p' daemon/index.mjs; cat daemon/group-sync.mjs; sed -n '105,145p;360,388p' daemon/node_modules/zca-js/dist/apis/listen.js; rg -n 'F6|f6|connection :=' internal/tui/{model,view}.go
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:39:22.391598 — Sticker và cuộn chat
+```sh
+sed -n '34,109p' daemon/node_modules/zca-js/dist/apis/listen.js; sed -n '90,130p' daemon/index.mjs; sed -n '25,78p' internal/tui/history.go; head -50 daemon/archive-sync.mjs; rg -n 'closed|retryOnClose|reset\(' daemon/node_modules/zca-js/dist/apis/listen.js
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:40:30.264834 — Sticker và cuộn chat
+```sh
+cat daemon/listener-recovery.mjs; sed -n '80,101p' daemon/index.mjs; sed -n '535,546p' internal/tui/model.go
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:41:33.635777 — Sticker và cuộn chat
+```sh
+gofmt -w internal/ipc/{client,protocol}.go internal/tui/{model,model_test,view}.go && GOCACHE=/tmp/zalo-sticker-cache go build ./... && GOCACHE=/tmp/zalo-sticker-cache go test ./internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:41:41.925455 — Sticker và cuộn chat
+```sh
+sed -n '1,110p' daemon/group-sync.test.mjs; sed -n '410,427p' daemon/node_modules/zca-js/dist/apis/listen.js; rg -n 'connected|sync' daemon/startup.test.mjs | tail -16; git diff --check
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:41:46.365832 — Sticker và cuộn chat
+```sh
+sed -n '326,367p' daemon/node_modules/zca-js/dist/apis/listen.js; rg -n 'enum CloseReason|ManualClosure|Duplicate' daemon/node_modules/zca-js/dist/apis/listen.js; rg -n 'get_history|sync_now' daemon/index.mjs
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:41:47.283816 — Sticker và cuộn chat
+```sh
+npm --prefix daemon test > /tmp/zalo-wake-tests.log 2>&1; result=$?; tail -22 /tmp/zalo-wake-tests.log; exit "$result"
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:42:14.038931 — Sticker và cuộn chat
+```sh
+sed -n '22,49p;78,116p' daemon/startup.test.mjs; git diff --check; node daemon/listener-recovery.test.mjs && node daemon/group-sync.test.mjs
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:42:54.626735 — Kiểm thử khôi phục sau sleep
+```sh
+npm --prefix daemon run test:startup && GOCACHE=/tmp/zalo-sticker-cache go test ./... && GOCACHE=/tmp/zalo-sticker-cache go build -trimpath -o bin/zalo-cli ./cmd/zalo-cli
+```
+- Kết quả: Exit 1
+
+### 2026-11-11T11:43:26.642875 — Kiểm thử khôi phục sau sleep
+```sh
+npm --prefix daemon run test:startup && GOCACHE=/tmp/zalo-sticker-cache go test ./... && GOCACHE=/tmp/zalo-sticker-cache go build -trimpath -o bin/zalo-cli ./cmd/zalo-cli
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:43:51.112802 — Kiểm thử khôi phục sau sleep
+```sh
+python3 - <<'PY2'
+from pathlib import Path
+import os,re,signal,socket,subprocess,time
+p=subprocess.check_output(["ss","-ltnp","sport = :8989"],text=True)
+ids=re.findall(r'"node",pid=(\d+)',p)
+if len(ids)==1:
+    pid=int(ids[0])
+    proc=Path("/proc")/str(pid)
+    if (proc/"cwd").resolve()!=Path.cwd()/"daemon" or (proc/"cmdline").read_bytes().split(b"\0")[1:3]!=[b"index.mjs",b"--managed"]:
+        raise SystemExit("Tiến trình không khớp daemon tự bật của dự án")
+    os.kill(pid,signal.SIGTERM)
+    for _ in range(60):
+        with socket.socket() as sock:
+            if sock.connect_ex(("127.0.0.1",8989)): break
+        time.sleep(.15)
+    else: raise SystemExit("Daemon chưa đóng cổng")
+elif "LISTEN" in p:
+    raise SystemExit("Cổng đang được dùng bởi tiến trình khác")
+subprocess.run(["bin/zalo-cli","-list"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=30)
+print("Daemon mới đã sẵn sàng")
+PY2
+if [ "$?" -ne 0 ]; then exit 1; fi
+node --input-type=module <<'JS'
+import WebSocket from './daemon/node_modules/ws/wrapper.mjs';
+const socket=new WebSocket('ws://127.0.0.1:8989');
+let sent=false, offline=false;
+const timer=setTimeout(()=>{console.log({syncRequested:sent,sawDisconnect:offline,reconnected:false});process.exitCode=1;socket.terminate()},20000);
+socket.on('message',raw=>{
+ const event=JSON.parse(raw);
+ if(event.event!=='zalo_connection')return;
+ if(!sent && event.data.online){
+   sent=true;
+   socket.send(JSON.stringify({id:'resume-check',action:'sync_now',payload:{thread_type:'user'}}));
+ } else if(sent && !event.data.online) offline=true;
+ else if(offline && event.data.online){
+   clearTimeout(timer);
+   console.log({syncRequested:true,sawDisconnect:true,reconnected:true});
+   socket.close();
+ }
+});
+JS
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T11:43:58.952678 — Sticker và cuộn chat
+```sh
+python3 - <<'PY'
+from datetime import datetime
+with open("CHANGELOG.md","a") as f:
+    f.write("\n## "+datetime.now().isoformat()+" — fix: khôi phục kết nối Zalo sau sleep (commit hiện tại)\n- Files Changed: daemon/listener-recovery.mjs, listener-recovery.test.mjs, index.mjs, group-sync.mjs, group-sync.test.mjs, startup.test.mjs, package.json; internal/ipc/client.go, protocol.go; internal/tui/model.go, model_test.go, view.go; CHANGELOG.md, COMMAND_LOG.md.\n- Daemon kiểm tra timer bị gián đoạn, WebSocket ping/pong và timeout bắt tay. Nối lại với backoff, rồi đồng bộ replay và cloud nhóm. Mã trùng kết nối đợi F6.\n- F6 gửi yêu cầu cập nhật tới Zalo và đọc lại kho local. Nhóm có thể bỏ qua TTL nền nhưng vẫn giới hạn tần suất và tôn trọng 429. TUI báo trạng thái Zalo riêng với kết nối daemon.\n- Validation: Node unit tests, startup integration mô phỏng nối lại và tin mới, go test ./... và build binary qua.\n")
+PY
+git diff --check
+```
+- Kết quả: Exit 0
