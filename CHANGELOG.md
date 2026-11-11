@@ -255,3 +255,9 @@
 - F9 giữ ID sticker, Ctrl+G gửi vào chat đang mở. F4 mở bộ chọn từ kho chat với tối đa 200 sticker duy nhất, xem pixel, tên nơi nhận và Enter gửi. Bản nháp văn bản được giữ.
 - Daemon kiểm tra sticker có trong kho, lấy metadata từ Zalo và gọi sendSticker, lưu kết quả vào lịch sử đích. Dùng lại ảnh sticker sẵn có qua hàng đợi media.
 - Validation: kiểm thử Go và Node bao phủ menu, copy khi ảnh chưa tải, đích nhận, danh sách khử trùng và phản hồi gửi giả lập.
+
+## 2026-11-11T10:41:20.227181 — feat: trả lời tin nhắn (commit hiện tại)
+- Files Changed: daemon/archive.mjs, archive.test.mjs, history.mjs, ipc.mjs; internal/ipc/client.go, protocol.go; internal/tui/history.go, model.go, model_test.go, view.go; CHANGELOG.md, COMMAND_LOG.md.
+- Ctrl+R chọn trích dẫn theo từng cuộc chat, Enter gửi nội dung trả lời, Esc bỏ trích dẫn. Hiện trích dẫn ở ô soạn và trong lịch sử.
+- Daemon tra dữ liệu Zalo gốc bằng bộ khóa cuộc chat và ID tin, dùng quote của zca-js, báo lỗi khi thiếu metadata gốc.
+- Validation: go build, go test ./..., npm test qua; kiểm thử giả lập gửi quote và ngăn quote chéo chat. Kiểm tra kho thật 100/100 tin raw gần nhất có metadata trích dẫn. Daemon đã nạp bản mới.

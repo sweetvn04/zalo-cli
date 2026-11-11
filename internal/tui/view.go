@@ -31,6 +31,21 @@ func oneLine(text string) string {
 	return strings.Join(strings.Fields(clean(text)), " ")
 }
 
+func replySummary(line *chatLine) string {
+	text := oneLine(line.text)
+	if text == "" {
+		text = "Tin đính kèm"
+	}
+	name := oneLine(line.sender)
+	if line.self {
+		name = "Bạn"
+	}
+	if name == "" {
+		return text
+	}
+	return name + " · " + text
+}
+
 func clip(text string, width int) string {
 	return ansi.Truncate(text, max(1, width), "…")
 }
@@ -85,6 +100,9 @@ func (m *model) refreshChat(bottom bool) {
 			header += muted.Render(" · " + stamp)
 		}
 		parts = append(parts, clip(header, m.chat.Width))
+		if line.replyPreview != "" {
+			parts = append(parts, muted.Render(clip("↪ "+oneLine(line.replyPreview), m.chat.Width)))
+		}
 		if line.kind == "image" || line.kind == "video" || line.kind == "sticker" {
 			var label string
 			switch line.kind {
@@ -236,15 +254,19 @@ func (m model) View() string {
 	} else if m.active == "" {
 		input = muted.Render("Chọn người nhận để bắt đầu nhắn tin.")
 	}
+	separator := strings.Repeat("─", rightWidth)
+	if reply := m.replies[m.active]; reply != nil {
+		separator = clip("↪ Trả lời "+replySummary(reply), rightWidth)
+	}
 	chat := strings.Join([]string{
 		bright.Render(clip(title, rightWidth)), muted.Render(clip(subtitle, rightWidth)), "",
-		m.chat.View(), muted.Render(strings.Repeat("─", rightWidth)), clip(input, rightWidth),
+		m.chat.View(), muted.Render(separator), clip(input, rightWidth),
 	}, "\n")
 	right := panel.BorderForeground(rightColor).Width(rightWidth + 2).Height(innerHeight).Render(chat)
 	footer := clip(" "+oneLine(m.status), m.width)
-	keys := " ↑↓ chọn tin · F4 sticker · F9 chép ảnh/sticker · Tab đổi cột · Enter gửi · F7 tin cũ · Esc thoát"
+	keys := " ↑↓ chọn tin · Ctrl+R trả lời · F4 sticker · F9 chép ảnh/sticker · Tab đổi cột · Enter gửi · Esc thoát"
 	if m.copiedImage != "" || m.copiedSticker > 0 {
-		keys = " Đã chép ảnh/sticker · Ctrl+G gửi vào chat đang mở · F4 sticker · Tab đổi cột"
+		keys = " Ctrl+G gửi ảnh/sticker đã chép · Ctrl+R trả lời · F4 sticker · Tab đổi cột"
 	}
 	help := muted.Render(clip(keys, m.width))
 	return header + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, left, right) + "\n" + footer + "\n" + help

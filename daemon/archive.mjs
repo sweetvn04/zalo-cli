@@ -188,6 +188,16 @@ export class Archive {
     return !!this.db.prepare("SELECT 1 FROM messages WHERE media_url=? LIMIT 1").get(`sticker:${id}`);
   }
 
+  quote(threadID, threadType, messageID) {
+    const row = this.db.prepare("SELECT raw FROM messages WHERE thread_id=? AND thread_type=? AND msg_id=?")
+      .get(threadID,threadType,messageID);
+    const data = row?.raw ? JSON.parse(row.raw).data : null;
+    if (!data?.msgId || data.cliMsgId == null || !data.uidFrom || !data.ts || !data.msgType || data.content == null) {
+      throw new Error("Chưa có dữ liệu gốc của tin trích dẫn. Hãy đồng bộ lại cuộc chat.");
+    }
+    return data;
+  }
+
   saveRecipients(recipients) {
     const put = this.db.prepare("INSERT INTO recipients VALUES(?,?,?) ON CONFLICT(thread_type,thread_id) DO UPDATE SET name=excluded.name");
     this.db.transaction(() => { for (const r of recipients) put.run(r.thread_type,r.thread_id,r.name); })();

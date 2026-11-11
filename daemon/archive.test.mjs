@@ -13,6 +13,26 @@ import { syncArchive } from "./archive-sync.mjs";
 import { validateImageURL, storeImage, videoExtension } from "./image-store.mjs";
 import { normalizeMessage } from "./history.mjs";
 
+test("reply lấy tin gốc trong đúng cuộc trò chuyện", async t => {
+  const archive = new Archive("1001",{root:temporary(t),worker:false});
+  t.after(() => archive.close());
+  const source = raw(100,"Tin gốc",{msgType:"webchat",cliMsgId:"123"});
+  archive.capture(source);
+  let calls = 0;
+  const api = {sendMessage:async (payload,id,type) => {
+    calls++;
+    assert.deepEqual([payload,id,type],[{msg:"Trả lời",quote:source.data},"friend",0]);
+    return {message:{msgId:"200"}};
+  }};
+  const reply = thread_id => handleCommand(JSON.stringify({id:"reply",action:"send_message",
+    payload:{thread_id,thread_type:"user",text:"Trả lời",reply_to:"100"}}),api,archive);
+  assert.equal((await reply("other")).ok,false);
+  assert.equal(calls,0);
+  assert.equal((await reply("friend")).msg_id,"200");
+  assert.equal(calls,1);
+  assert.equal(archive.history("friend","user").messages.find(item => item.msg_id === "200").reply_preview,"Tin gốc");
+});
+
 test("sticker trong kho cũ được nâng cấp và các tin cùng sticker dùng chung ảnh", async t => {
   const root = temporary(t);
   const rawSticker = id => raw(id,JSON.stringify({sticker_id:123,cate_id:1,type:1}),{msgType:"chat.sticker"});

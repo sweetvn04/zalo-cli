@@ -21,21 +21,22 @@ type Event struct {
 }
 
 type Message struct {
-	StickerID  int64  `json:"sticker_id,omitempty"`
-	VideoURL   string `json:"video_url,omitempty"`
-	Notice     string `json:"notice,omitempty"`
-	ImageLocal string `json:"image_local,omitempty"`
-	ImageState string `json:"image_state,omitempty"`
-	Kind       string `json:"kind,omitempty"`
-	ImageURL   string `json:"image_url,omitempty"`
-	MsgID      string `json:"msg_id"`
-	ThreadID   string `json:"thread_id"`
-	ThreadType string `json:"thread_type"`
-	SenderID   string `json:"sender_id"`
-	SenderName string `json:"sender_name"`
-	Content    string `json:"content"`
-	Timestamp  int64  `json:"timestamp"`
-	IsSelf     bool   `json:"is_self"`
+	ReplyPreview string `json:"reply_preview,omitempty"`
+	StickerID    int64  `json:"sticker_id,omitempty"`
+	VideoURL     string `json:"video_url,omitempty"`
+	Notice       string `json:"notice,omitempty"`
+	ImageLocal   string `json:"image_local,omitempty"`
+	ImageState   string `json:"image_state,omitempty"`
+	Kind         string `json:"kind,omitempty"`
+	ImageURL     string `json:"image_url,omitempty"`
+	MsgID        string `json:"msg_id"`
+	ThreadID     string `json:"thread_id"`
+	ThreadType   string `json:"thread_type"`
+	SenderID     string `json:"sender_id"`
+	SenderName   string `json:"sender_name"`
+	Content      string `json:"content"`
+	Timestamp    int64  `json:"timestamp"`
+	IsSelf       bool   `json:"is_self"`
 }
 
 // Result chứa một sự kiện hoặc lỗi đọc/giải mã.
@@ -52,6 +53,7 @@ type SendRequest struct {
 }
 
 type SendPayload struct {
+	ReplyTo       string `json:"reply_to,omitempty"`
 	StickerID     int64  `json:"sticker_id,omitempty"`
 	ImageLocal    string `json:"image_local,omitempty"`
 	ArchiveBefore string `json:"archive_before,omitempty"`

@@ -98,14 +98,18 @@ func (c *Client) ListStickers() (string, error) {
 
 // SendMessage gửi lệnh qua IPC. Bên gọi phải đợi send_result cùng ID để biết
 // Zalo đã chấp nhận lệnh hay chưa. Không tự gửi lại khi mất phản hồi.
-func (c *Client) SendMessage(threadID, threadType, text string) (string, error) {
+func (c *Client) SendMessage(threadID, threadType, text string, replyTo ...string) (string, error) {
 	if strings.TrimSpace(threadID) == "" || strings.TrimSpace(text) == "" {
 		return "", fmt.Errorf("người nhận và nội dung không được để trống")
 	}
 	if threadType != "user" && threadType != "group" {
 		return "", fmt.Errorf("loại hội thoại phải là user hoặc group")
 	}
-	return c.request("send_message", &SendPayload{ThreadID: threadID, ThreadType: threadType, Text: text})
+	payload := &SendPayload{ThreadID: threadID, ThreadType: threadType, Text: text}
+	if len(replyTo) > 0 {
+		payload.ReplyTo = replyTo[0]
+	}
+	return c.request("send_message", payload)
 }
 
 // ListRecipients yêu cầu danh sách bạn bè và nhóm, kết quả về qua Results.

@@ -6189,3 +6189,105 @@ PY
 git diff --check
 ```
 - Kết quả: Exit 0
+
+### 2026-11-11T10:36:47.898769 — Commit gửi sticker
+```sh
+git add CHANGELOG.md COMMAND_LOG.md daemon/{archive.mjs,archive.test.mjs,ipc.mjs} internal/ipc/{client,protocol}.go internal/tui/{forward,history,model,model_test,stickers,view}.go && git commit -m "feat(tui): copy and pick native stickers"
+```
+- Kết quả: Exit 0 [main d852b9b] feat(tui): copy and pick native stickers
+
+### 2026-11-11T10:38:41.671738 — Sticker và cuộn chat
+```sh
+rg -n 'quote\.|quote &&' daemon/node_modules/zca-js/dist/apis/sendMessage.js; sed -n '550,596p' internal/tui/model.go; sed -n '220,255p' internal/tui/view.go; rg -n 'raw TEXT|SELECT.*raw' daemon/archive.mjs; sed -n '46,112p' daemon/ipc.mjs
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:38:48.660601 — Sticker và cuộn chat
+```sh
+rg -n 'quote|propertyExt|cliMsgId' daemon/node_modules/zca-js/dist/models/Message.d.ts; sed -n '150,202p' daemon/node_modules/zca-js/dist/apis/sendMessage.js; rg -n 'func prepareQMSG|function prepareQMSG' daemon/node_modules/zca-js/dist/utils.js
+```
+- Kết quả: Exit 1
+
+### 2026-11-11T10:38:54.179056 — Sticker và cuộn chat
+```sh
+sed -n '12,83p' daemon/node_modules/zca-js/dist/models/Message.d.ts; rg -n -A45 'function prepareQMSG' daemon/node_modules/zca-js/dist/apis/sendMessage.js; rg -n 'drafts:' internal/tui/model.go
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:40:04.838691 — Sticker và cuộn chat
+```sh
+gofmt -w internal/ipc/{client,protocol}.go internal/tui/{model,model_test,history,view}.go && GOCACHE=/tmp/zalo-sticker-cache go build ./... && GOCACHE=/tmp/zalo-sticker-cache go test ./internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:40:28.770135 — Sticker và cuộn chat
+```sh
+gofmt -w internal/tui/model_test.go && GOCACHE=/tmp/zalo-sticker-cache go build ./... && GOCACHE=/tmp/zalo-sticker-cache go test ./internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:40:41.338294 — Sticker và cuộn chat
+```sh
+npm --prefix daemon test > /tmp/zalo-reply-tests.log 2>&1; result=$?; tail -15 /tmp/zalo-reply-tests.log; exit "$result"
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:40:50.866746 — Kiểm thử Go và nạp hỗ trợ trả lời tin
+```sh
+GOCACHE=/tmp/zalo-sticker-cache go test ./... && GOCACHE=/tmp/zalo-sticker-cache go build -o /tmp/zalo-reply-cli ./cmd/zalo-cli && python3 - <<'PY2'
+from pathlib import Path
+import os,re,signal,socket,subprocess,time
+p=subprocess.check_output(["ss","-ltnp","sport = :8989"],text=True)
+ids=re.findall(r'"node",pid=(\d+)',p)
+if len(ids)==1:
+    pid=int(ids[0])
+    proc=Path("/proc")/str(pid)
+    if (proc/"cwd").resolve()!=Path.cwd()/"daemon" or (proc/"cmdline").read_bytes().split(b"\0")[1:3]!=[b"index.mjs",b"--managed"]:
+        raise SystemExit("Tiến trình không khớp daemon tự bật của dự án")
+    os.kill(pid,signal.SIGTERM)
+    for _ in range(60):
+        with socket.socket() as sock:
+            if sock.connect_ex(("127.0.0.1",8989)): break
+        time.sleep(.15)
+    else: raise SystemExit("Daemon chưa đóng cổng")
+elif "LISTEN" in p:
+    raise SystemExit("Cổng đang được dùng bởi tiến trình khác")
+subprocess.run(["/tmp/zalo-reply-cli","-list"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=30)
+print("Daemon mới đã sẵn sàng")
+PY2
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:40:57.406221 — Sticker và cuộn chat
+```sh
+node --input-type=module <<'JS'
+import fs from 'node:fs';
+import path from 'node:path';
+import Database from './daemon/node_modules/better-sqlite3/lib/index.js';
+import {archiveRoot} from './daemon/archive.mjs';
+for (const account of fs.readdirSync(archiveRoot()).filter(id=>/^\d+$/.test(id))) {
+ const db=new Database(path.join(archiveRoot(),account,'messages.sqlite3'),{readonly:true,fileMustExist:true});
+ const rows=db.prepare("SELECT thread_id,thread_type,msg_id FROM messages WHERE raw IS NOT NULL ORDER BY timestamp DESC LIMIT 100").all();
+ const get=db.prepare("SELECT raw FROM messages WHERE thread_id=? AND thread_type=? AND msg_id=?");
+ const valid=rows.filter(row=>{
+   const {data}=JSON.parse(get.get(row.thread_id,row.thread_type,row.msg_id).raw);
+   return data?.msgId && data.cliMsgId!=null && data.uidFrom && data.ts && data.msgType && data.content!=null;
+ }).length;
+ console.log({sampled:rows.length,quoteMetadataAvailable:valid});
+ db.close();
+}
+JS
+git diff --check
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:41:20.235756 — Sticker và cuộn chat
+```sh
+python3 - <<'PY'
+from datetime import datetime
+with open("CHANGELOG.md","a") as f:
+    f.write("\n## "+datetime.now().isoformat()+" — feat: trả lời tin nhắn (commit hiện tại)\n- Files Changed: daemon/archive.mjs, archive.test.mjs, history.mjs, ipc.mjs; internal/ipc/client.go, protocol.go; internal/tui/history.go, model.go, model_test.go, view.go; CHANGELOG.md, COMMAND_LOG.md.\n- Ctrl+R chọn trích dẫn theo từng cuộc chat, Enter gửi nội dung trả lời, Esc bỏ trích dẫn. Hiện trích dẫn ở ô soạn và trong lịch sử.\n- Daemon tra dữ liệu Zalo gốc bằng bộ khóa cuộc chat và ID tin, dùng quote của zca-js, báo lỗi khi thiếu metadata gốc.\n- Validation: go build, go test ./..., npm test qua; kiểm thử giả lập gửi quote và ngăn quote chéo chat. Kiểm tra kho thật 100/100 tin raw gần nhất có metadata trích dẫn. Daemon đã nạp bản mới.\n")
+PY
+git diff --check
+```
+- Kết quả: Exit 0

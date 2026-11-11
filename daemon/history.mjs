@@ -46,6 +46,7 @@ export function normalizeMessage(message) {
     sender_id: String(message.data.uidFrom ?? ""),
     sender_name: message.isSelf ? "Bạn" : message.data.dName || "Người gửi",
     content,
+    ...(message.data.quote ? {reply_preview:typeof message.data.quote.msg === "string" && message.data.quote.msg ? message.data.quote.msg : "Tin đính kèm"} : {}),
     kind,
     image_url: kind === "image" ? imageURL : "",
     ...(kind === "sticker" && Number.isSafeInteger(stickerID) && stickerID > 0 ? {sticker_id:stickerID} : {}),

@@ -55,8 +55,12 @@ func (f *fakeTransport) ListRecipients() (string, error) {
 		Recipients: []ipc.Recipient{{ThreadID: "an", ThreadType: "user", Name: "An"}}}}
 	return "list-1", nil
 }
-func (f *fakeTransport) SendMessage(id, kind, text string) (string, error) {
-	f.sent <- ipc.SendPayload{ThreadID: id, ThreadType: kind, Text: text}
+func (f *fakeTransport) SendMessage(id, kind, text string, replyTo ...string) (string, error) {
+	payload := ipc.SendPayload{ThreadID: id, ThreadType: kind, Text: text}
+	if len(replyTo) > 0 {
+		payload.ReplyTo = replyTo[0]
+	}
+	f.sent <- payload
 	f.results <- ipc.Result{Event: ipc.Event{Event: "send_result", ID: "send-1", OK: true}}
 	return "send-1", nil
 }
@@ -83,6 +87,27 @@ func fixture() model {
 	}
 	m.openSelected()
 	return m
+}
+
+func TestReplyStaysInOriginalConversation(t *testing.T) {
+	m := fixture()
+	m.selectedLine = &chatLine{id: "100", sender: "An", text: "Tin gốc"}
+	m = update(m, tea.KeyMsg{Type: tea.KeyCtrlR})
+	m.cursor = 1
+	m.openSelected()
+	if m.replies[m.active] != nil {
+		t.Fatal("reply must not move to another conversation")
+	}
+	m.cursor = 0
+	m.openSelected()
+	m.composer.SetValue("Trả lời")
+	next, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = next.(model)
+	cmd().(tea.BatchMsg)[0]()
+	payload := <-m.client.(*fakeTransport).sent
+	if payload.ThreadID != "an" || payload.ReplyTo != "100" || m.replies[m.active] != nil {
+		t.Fatalf("wrong reply: %+v", payload)
+	}
 }
 
 func TestWheelMovesMessageSelectionWithViewport(t *testing.T) {

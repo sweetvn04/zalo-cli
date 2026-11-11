@@ -74,8 +74,14 @@ export async function handleCommand(raw, api, archive = null) {
       return result;
     }
     if (sendingImage && !archive) throw new Error("Daemon chưa mở kho ảnh local");
+    const replyID = command.payload.reply_to;
+    let quote;
+    if (!sendingImage && replyID != null) {
+      if (typeof replyID !== "string" || !replyID.trim() || !archive) throw new Error("Tin trích dẫn không hợp lệ");
+      quote = archive.quote(thread_id,thread_type,replyID);
+    }
     const image = sendingImage ? await archive.imageForSend(command.payload.image_local) : null;
-    const sent = await api.sendMessage(image ? {msg:"",attachments:[image.attachment]} : {msg:text},
+    const sent = await api.sendMessage(image ? {msg:"",attachments:[image.attachment]} : quote ? {msg:text,quote} : {msg:text},
       thread_id, destination);
     const result = { event: "send_result", id, ok: true };
     const msgId = image ? sent?.attachment?.[0]?.msgId : sent?.message?.msgId;
@@ -84,6 +90,7 @@ export async function handleCommand(raw, api, archive = null) {
       try {
         const message = {msg_id:result.msg_id || "",thread_id,thread_type,sender_id:archive.account,sender_name:"Bạn",
           content:image ? "" : text,kind:image ? "image" : "text",timestamp:Date.now(),is_self:true};
+        if (quote) message.reply_preview = typeof quote.content === "string" && quote.content ? quote.content : "Tin đính kèm";
         if (image) archive.saveImageCopy(message,image.key);
         else archive.save(message);
       } catch (error) {

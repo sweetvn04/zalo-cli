@@ -17,7 +17,7 @@ import (
 type transport interface {
 	Results() <-chan ipc.Result
 	ListRecipients() (string, error)
-	SendMessage(string, string, string) (string, error)
+	SendMessage(string, string, string, ...string) (string, error)
 	SendImage(string, string, string) (string, error)
 	SendSticker(string, string, int64) (string, error)
 	ListStickers() (string, error)
@@ -44,6 +44,7 @@ type requestExpired struct {
 }
 
 type chatLine struct {
+	replyPreview                                string
 	stickerID                                   int64
 	mediaState                                  string
 	preview, previewError                       string
@@ -64,6 +65,7 @@ type outgoing struct {
 }
 
 type model struct {
+	replies                 map[string]*chatLine
 	copiedImage             string
 	copiedSticker           int64
 	stickerMenu             *stickerPicker
@@ -136,6 +138,7 @@ func newModel(client transport) model {
 		client:     client, filter: filter, composer: composer,
 		chat: viewport.New(40, 10), connected: true,
 		history: make(map[string][]*chatLine), drafts: make(map[string]string),
+		replies:       make(map[string]*chatLine),
 		historyStates: make(map[string]*historyState),
 		historyDirty:  make(map[string]bool),
 		unread:        make(map[string]int), status: "Đang tải bạn bè và nhóm...",
@@ -299,7 +302,7 @@ func (m *model) handleEvent(event ipc.Event) {
 		if !found {
 			m.recipients = append(m.recipients, r)
 		}
-		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp, kind: msg.Kind, imageURL: msg.ImageSource(), mediaState: msg.ImageState, stickerID: msg.StickerID})
+		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp, kind: msg.Kind, imageURL: msg.ImageSource(), mediaState: msg.ImageState, stickerID: msg.StickerID, replyPreview: msg.ReplyPreview})
 		if k != m.active {
 			m.unread[k]++
 		} else {
@@ -482,12 +485,25 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 		if msg.String() == "esc" {
+			if m.replies[m.active] != nil {
+				delete(m.replies, m.active)
+				m.status = "Đã bỏ trích dẫn."
+				return m, nil
+			}
 			return m, tea.Quit
 		}
 		if m.width < 68 || m.height < 18 {
 			return m, nil
 		}
 		switch msg.String() {
+		case "ctrl+r":
+			if m.editing && m.selectedLine != nil && m.selectedLine.id != "" {
+				m.replies[m.active] = m.selectedLine
+				m.status = "Nhập nội dung trả lời · Enter gửi · Esc bỏ trích dẫn"
+			} else {
+				m.status = "Dùng ↑↓ chọn tin nhắn rồi bấm Ctrl+R."
+			}
+			return m, nil
 		case "f4":
 			cmd := m.openStickerMenu()
 			return m, cmd
@@ -580,10 +596,16 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			line := &chatLine{sender: "Bạn", text: text, self: true, state: "Đang gửi...", timestamp: time.Now().UnixMilli()}
+			var replyTo []string
+			if reply := m.replies[m.active]; reply != nil {
+				replyTo = []string{reply.id}
+				line.replyPreview = replySummary(reply)
+				delete(m.replies, m.active)
+			}
 			m.composer.Reset()
 			m.drafts[m.active] = ""
 			cmd := m.beginSend(line, func() (string, error) {
-				return m.client.SendMessage(r.ThreadID, r.ThreadType, text)
+				return m.client.SendMessage(r.ThreadID, r.ThreadType, text, replyTo...)
 			})
 			return m, cmd
 		}
