@@ -243,3 +243,9 @@
 - F9 giữ tham chiếu ảnh local trong TUI. Ctrl+G gửi ảnh vào chat đang mở và giữ nguyên bản nháp văn bản.
 - Daemon chỉ đọc ảnh JPG, PNG, GIF, WebP từ kho đúng tài khoản, kiểm tra đường dẫn và đọc kích thước bằng image-size, gửi qua zca-js và dùng lại tệp trong lịch sử đích.
 - Validation: go build, go test ./..., npm test qua. Kiểm thử nơi nhận, dữ liệu ảnh, xác nhận gửi và lưu ảnh bằng phản hồi giả lập.
+
+## 2026-11-11T10:30:33.935000 — feat: hiển thị sticker và di chuyển dấu chọn theo chuột (commit hiện tại)
+- Files Changed: daemon/archive.mjs, archive.test.mjs, history.mjs, index.mjs; internal/tui/history.go, history_test.go, model.go, model_test.go, selection.go, view.go; CHANGELOG.md, COMMAND_LOG.md.
+- Cuộn chuột trong chat dịch viewport và dấu chọn theo cùng độ lệch, vẫn lấy thêm lịch sử ở đầu trang.
+- Chuẩn hóa chat.sticker, nâng cấp tin raw đã lưu, tra ảnh qua getStickersDetail và dùng lại tệp local theo ID. Sticker được chọn có bản xem pixel tĩnh nhỏ hơn ảnh thường.
+- Validation: go build ./..., go test ./..., npm test qua. Daemon thật sau restart có 38 tin sticker ở trạng thái ready.

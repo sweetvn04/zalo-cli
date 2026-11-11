@@ -13,6 +13,38 @@ import { syncArchive } from "./archive-sync.mjs";
 import { validateImageURL, storeImage, videoExtension } from "./image-store.mjs";
 import { normalizeMessage } from "./history.mjs";
 
+test("sticker trong kho cũ được nâng cấp và các tin cùng sticker dùng chung ảnh", async t => {
+  const root = temporary(t);
+  const rawSticker = id => raw(id,JSON.stringify({sticker_id:123,cate_id:1,type:1}),{msgType:"chat.sticker"});
+  let archive = new Archive("1001",{root,worker:false});
+  archive.save({msg_id:"1",thread_id:"friend",thread_type:"user",kind:"unsupported",timestamp:1,content:"[chat.sticker]"},rawSticker(1));
+  archive.db.prepare("DELETE FROM metadata WHERE key=?").run("sticker-schema-v1");
+  await archive.close();
+  let resolutions = 0;
+  const key = "a".repeat(64)+".png";
+  archive = new Archive("1001",{root,worker:false,resolveSticker:async id => {
+    assert.equal(id,123);
+    resolutions++;
+    return "https://example.org/sticker.png";
+  },download:async(address,directory,{kind}) => {
+    assert.equal(address,"https://example.org/sticker.png");
+    assert.equal(kind,"image");
+    fs.writeFileSync(path.join(directory,key),Buffer.from("fixture"));
+    return key;
+  }});
+  t.after(() => archive.close());
+  archive.capture(rawSticker(2));
+  await archive.pump();
+  const messages = archive.history("friend","user").messages;
+  assert.equal(resolutions,1);
+  assert.equal(messages.length,2);
+  for (const message of messages) {
+    assert.equal(message.kind,"sticker");
+    assert.equal(message.content,"");
+    assert.equal(message.image_local,`archive:1001/${key}`);
+  }
+});
+
 test("gửi lại ảnh local vào nhóm và giữ bản ảnh trong lịch sử đích", async t => {
   const archive = new Archive("1001", {root:temporary(t),worker:false});
   t.after(() => archive.close());

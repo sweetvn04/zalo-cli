@@ -78,6 +78,21 @@ func fixture() model {
 	return m
 }
 
+func TestWheelMovesMessageSelectionWithViewport(t *testing.T) {
+	m := fixture()
+	for i := 0; i < 30; i++ {
+		m.appendLine(m.active, &chatLine{sender: "An", text: "Tin nhắn"})
+	}
+	m.selectedLine = m.history[m.active][10]
+	m.refreshChat(false)
+	m.chat.SetYOffset(m.lineRanges[m.selectedLine].start - 3)
+	before := m.chat.YOffset
+	m = update(m, tea.MouseMsg{X: m.sidebarWidth() + 1, Button: tea.MouseButtonWheelUp})
+	if m.chat.YOffset != before-3 || m.selectedLine != m.history[m.active][9] {
+		t.Fatal("mouse wheel must move both viewport and selected message")
+	}
+}
+
 func TestCopyImageThenSendToAnotherConversation(t *testing.T) {
 	m := fixture()
 	image := "archive:1001/" + strings.Repeat("a", 64) + ".png"

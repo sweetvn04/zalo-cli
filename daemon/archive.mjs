@@ -14,7 +14,7 @@ export function archiveRoot() {
 }
 
 export class Archive {
-  constructor(account, { root = archiveRoot(), download = storeImage, onMedia = () => {}, worker = true } = {}) {
+  constructor(account, { root = archiveRoot(), download = storeImage, resolveSticker, onMedia = () => {}, worker = true } = {}) {
     if (!/^\d{1,32}$/.test(account)) throw new Error("ID tài khoản archive không hợp lệ");
     this.account = account;
     this.directory = path.join(root, account);
@@ -55,6 +55,7 @@ export class Archive {
       this.contact.run(parameters.type,parameters.thread,name);
     });
     this.download = download;
+    this.resolveSticker = resolveSticker;
     this.onMedia = onMedia;
     this.abort = new AbortController();
     this.closed = false;
@@ -65,6 +66,13 @@ export class Archive {
         const rows = this.db.prepare("SELECT raw FROM messages WHERE raw IS NOT NULL AND json_extract(raw,'$.data.msgType')='chat.video.msg' AND json_extract(data,'$.kind')<>'video'").all();
         for (const row of rows) this.capture(JSON.parse(row.raw), false);
         this.meta("video-schema-v1", true);
+      })();
+    }
+    if (!this.meta("sticker-schema-v1")) {
+      this.db.transaction(() => {
+        const rows = this.db.prepare("SELECT raw FROM messages WHERE raw IS NOT NULL AND json_extract(raw,'$.data.msgType')='chat.sticker'").all();
+        for (const row of rows) this.capture(JSON.parse(row.raw), false);
+        this.meta("sticker-schema-v1",true);
       })();
     }
     this.db.prepare("UPDATE messages SET media_state='pending', retry_at=0 WHERE media_state='downloading'").run();
@@ -101,7 +109,8 @@ export class Archive {
     data.timestamp = Number.isSafeInteger(data.timestamp) ? data.timestamp : 0;
     delete data.image_local;
     if (!data.msg_id) data.msg_id = "local-"+createHash("sha256").update(JSON.stringify(raw ?? data)).digest("hex");
-    const url = data.kind === "video" ? data.video_url || "" : data.kind === "image" ? data.image_url || "" : "";
+    const url = data.kind === "video" ? data.video_url || "" : data.kind === "image" ? data.image_url || "" :
+      data.kind === "sticker" && data.sticker_id ? `sticker:${data.sticker_id}` : "";
     const parameters = {type:data.thread_type,thread:data.thread_id,id:data.msg_id,time:data.timestamp || 0,
       data:JSON.stringify(data),raw:raw ? JSON.stringify(raw) : null,url,state:url ? "pending" : ""};
     const name = data.thread_type === "group" ? "Nhóm "+data.thread_id : data.is_self ? data.thread_id : data.sender_name || data.thread_id;
@@ -116,7 +125,7 @@ export class Archive {
   withMedia(message) {
     const row = this.db.prepare("SELECT media_key,media_state FROM messages WHERE thread_type=? AND thread_id=? AND msg_id=?")
       .get(message.thread_type, message.thread_id, message.msg_id);
-    if (!["image", "video"].includes(message.kind)) return message;
+    if (!["image", "video", "sticker"].includes(message.kind)) return message;
     const wire = { ...message, image_state:row?.media_state || "" };
     if (row?.media_key) {
       const file = path.join(this.mediaDirectory,row.media_key);
@@ -219,7 +228,20 @@ export class Archive {
       this.db.prepare("UPDATE messages SET media_state='downloading',attempts=attempts+1 WHERE thread_type=? AND thread_id=? AND msg_id=?")
         .run(job.thread_type,job.thread_id,job.msg_id);
       try {
-        const name = await this.download(job.media_url,this.mediaDirectory,{signal:this.abort.signal,kind:JSON.parse(job.data).kind});
+        const message = JSON.parse(job.data);
+        let name;
+        if (message.kind === "sticker") {
+          const saved = this.db.prepare("SELECT media_key FROM messages WHERE media_url=? AND media_state='ready' LIMIT 1").get(job.media_url);
+          if (saved?.media_key && fs.lstatSync(path.join(this.mediaDirectory,saved.media_key),{throwIfNoEntry:false})?.isFile()) {
+            name = saved.media_key;
+          } else {
+            const address = await this.resolveSticker?.(message.sticker_id);
+            if (!address) throw new Error("Zalo chưa trả ảnh sticker");
+            name = await this.download(address,this.mediaDirectory,{signal:this.abort.signal,kind:"image"});
+          }
+        } else {
+          name = await this.download(job.media_url,this.mediaDirectory,{signal:this.abort.signal,kind:message.kind});
+        }
         if (!/^[a-f0-9]{64}\.(jpg|png|gif|webp|bmp|mp4|webm)$/.test(name)) throw new Error("Tên file media archive không hợp lệ");
         this.db.prepare(`UPDATE messages SET media_key=?,media_state='ready',media_error='' WHERE thread_type=? AND thread_id=? AND msg_id=? AND media_url=?`)
           .run(name,job.thread_type,job.thread_id,job.msg_id,job.media_url);

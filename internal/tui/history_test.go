@@ -19,13 +19,13 @@ func TestScrollKeysAndMouseMoveChat(t *testing.T) {
 	if m.chat.YOffset >= bottom {
 		t.Fatal("mouse wheel did not scroll chat")
 	}
-	m = update(m, tea.KeyMsg{Type: tea.KeyUp})
-	if m.selectedLine != m.history[m.active][len(m.history[m.active])-1] {
-		t.Fatal("first Up must select latest message")
+	lines := m.history[m.active]
+	if m.selectedLine != lines[len(lines)-2] {
+		t.Fatal("wheel up must select the message above the latest")
 	}
 	offset := m.chat.YOffset
 	m = update(m, tea.KeyMsg{Type: tea.KeyUp})
-	if m.selectedLine != m.history[m.active][len(m.history[m.active])-2] || m.chat.YOffset > offset {
+	if m.selectedLine != lines[len(lines)-3] || m.chat.YOffset > offset {
 		t.Fatal("up arrow did not select the previous message")
 	}
 	m = update(m, tea.KeyMsg{Type: tea.KeyPgUp})

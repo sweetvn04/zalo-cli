@@ -137,7 +137,14 @@ if (!options.offline) {
     throw new Error("Phiên Zalo khác tài khoản kho local. Dừng daemon rồi chọn đúng --account "+account);
   }
   if (archive) await archive.close();
-  archive = new Archive(account, { onMedia: event => broadcast(event.event, event.data) });
+  archive = new Archive(account, {
+    onMedia: event => broadcast(event.event, event.data),
+    resolveSticker: async id => {
+      const details = await api.getStickersDetail(id);
+      const sticker = details.find(item => Number(item.id) === id);
+      return sticker?.stickerUrl || sticker?.stickerWebpUrl;
+    },
+  });
   groupSync = createGroupSync(api,archive,{
     signal:syncAbort.signal,
     onUpdate:()=>{broadcast("archive_updated",{thread_type:"group"});broadcast("recipients_updated",{});},

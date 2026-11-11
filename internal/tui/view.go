@@ -85,11 +85,16 @@ func (m *model) refreshChat(bottom bool) {
 			header += muted.Render(" · " + stamp)
 		}
 		parts = append(parts, clip(header, m.chat.Width))
-		if line.kind == "image" || line.kind == "video" {
-			imageNumber++
-			label := fmt.Sprintf("[Ảnh %d] · ↑↓ xem", imageNumber)
-			if line.kind == "video" {
+		if line.kind == "image" || line.kind == "video" || line.kind == "sticker" {
+			var label string
+			switch line.kind {
+			case "image":
+				imageNumber++
+				label = fmt.Sprintf("[Ảnh %d] · ↑↓ xem", imageNumber)
+			case "video":
 				label = "[Video] · Enter mở · Ctrl+O mở"
+			case "sticker":
+				label = "[Sticker] · ↑↓ xem"
 			}
 			switch line.mediaState {
 			case "ready":

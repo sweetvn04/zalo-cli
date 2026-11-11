@@ -161,7 +161,7 @@ func (m *model) mergeHistory(k string, messages []ipc.Message) {
 			continue
 		}
 		if existing := seen[message.MsgID]; message.MsgID != "" && existing != nil {
-			if message.Kind == "image" && message.ImageSource() != "" {
+			if (message.Kind == "image" && message.ImageSource() != "") || message.Kind == "sticker" {
 				if existing.imageURL != message.ImageSource() {
 					if m.previewLine == existing {
 						m.stopPreview()
@@ -171,6 +171,9 @@ func (m *model) mergeHistory(k string, messages []ipc.Message) {
 				}
 				existing.kind, existing.imageURL = message.Kind, message.ImageSource()
 				existing.mediaState = message.ImageState
+				if message.Kind == "sticker" {
+					existing.text = message.Content
+				}
 			}
 			continue
 		}

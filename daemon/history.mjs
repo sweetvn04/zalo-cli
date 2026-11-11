@@ -5,7 +5,15 @@ export function normalizeMessage(message) {
   let content = message.data?.content;
   let kind = "text";
   let imageURL = "";
-  if (["chat.photo", "chat.video.msg"].includes(message.data?.msgType)) {
+  let stickerID = 0;
+  if (message.data?.msgType === "chat.sticker") {
+    kind = "sticker";
+    if (typeof content === "string") {
+      try { content = JSON.parse(content); } catch { content = null; }
+    }
+    stickerID = Number(content?.sticker_id ?? content?.stickerId ?? content?.id);
+    content = "";
+  } else if (["chat.photo", "chat.video.msg"].includes(message.data?.msgType)) {
     kind = message.data.msgType === "chat.photo" ? "image" : "video";
     if (typeof content === "string") {
       try { content = JSON.parse(content); } catch { content = { href: content }; }
@@ -40,6 +48,7 @@ export function normalizeMessage(message) {
     content,
     kind,
     image_url: kind === "image" ? imageURL : "",
+    ...(kind === "sticker" && Number.isSafeInteger(stickerID) && stickerID > 0 ? {sticker_id:stickerID} : {}),
     ...(kind === "video" ? { video_url: imageURL } : {}),
     timestamp: Number.isSafeInteger(timestamp) ? timestamp : 0,
     is_self: !!message.isSelf,

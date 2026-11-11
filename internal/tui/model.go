@@ -365,14 +365,11 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		if msg.Button == tea.MouseButtonWheelUp {
-			m.chat.LineUp(3)
-			if m.chat.AtTop() {
-				return m, m.loadOlder()
-			}
-		} else {
-			m.chat.LineDown(3)
+			cmd := m.scrollMessages(-3)
+			return m, cmd
 		}
-		return m, nil
+		cmd := m.scrollMessages(3)
+		return m, cmd
 	case packet:
 		if !msg.open {
 			m.connected = false
@@ -545,7 +542,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "video" {
 				return m, m.openExternalImage(m.selectedLine)
 			}
-			if strings.TrimSpace(text) == "" && m.selectedLine != nil && m.selectedLine.kind == "image" {
+			if strings.TrimSpace(text) == "" && m.selectedLine != nil && (m.selectedLine.kind == "image" || m.selectedLine.kind == "sticker") {
 				return m, m.ensurePreview(true)
 			}
 			if !ok || !m.connected || m.pending != nil || strings.TrimSpace(text) == "" {

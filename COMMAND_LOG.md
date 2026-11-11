@@ -5945,3 +5945,153 @@ PY
 git diff --check
 ```
 - Kết quả: Exit 0
+
+### 2026-11-11T10:16:27.744505 — Chuyển tiếp ảnh
+```sh
+git add CHANGELOG.md COMMAND_LOG.md daemon/{archive.mjs,archive.test.mjs,ipc.mjs,package.json,package-lock.json} internal/ipc/{client,protocol}.go internal/tui/{model,model_test,forward,view}.go && git commit -m "feat(tui): copy and resend archived images"
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:16:42.499692 — Chuyển tiếp ảnh
+```sh
+python3 - <<'PY'
+from pathlib import Path
+import os, signal, socket, subprocess, time
+pid = 4403
+proc = Path("/proc") / str(pid)
+cwd = Path.cwd()
+if (proc / "cwd").resolve() != cwd / "daemon" or (proc / "cmdline").read_bytes().split(b"\0")[1:3] != [b"index.mjs", b"--managed"]:
+    raise SystemExit("Tiến trình không khớp daemon tự khởi động của repo")
+os.kill(pid, signal.SIGTERM)
+for _ in range(60):
+    with socket.socket() as client:
+        if client.connect_ex(("127.0.0.1", 8989)):
+            break
+    time.sleep(.15)
+else:
+    raise SystemExit("Daemon cũ chưa đóng cổng")
+result = subprocess.run(["/tmp/zalo-forward", "-list"], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=30)
+print("Daemon mới đã sẵn sàng" if result.returncode == 0 else "Không kiểm tra được daemon mới")
+raise SystemExit(result.returncode)
+PY
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:27:30.409723 — Sticker và cuộn chat
+```sh
+cat internal/tui/selection.go; sed -n '345,382p' internal/tui/model.go; rg -n 'Sticker|sticker' daemon/node_modules/zca-js/dist/apis/{getStickerDetail,sendSticker}.js; head -56 daemon/history.mjs; sed -n '56,78p;98,130p;200,227p' daemon/archive.mjs; rg -n 'kind == "image"|Kind == "image"' internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:27:34.822325 — Sticker và cuộn chat
+```sh
+rg --files daemon/node_modules/zca-js/dist | rg -i 'sticker' | head -25; rg -n 'chat.sticker|stickerId' daemon/node_modules/zca-js/dist/models; sed -n '42,53p' daemon/archive.mjs; rg -n 'kind' daemon/image-store.mjs
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:27:38.504007 — Sticker và cuộn chat
+```sh
+cat daemon/node_modules/zca-js/dist/apis/getStickersDetail.{d.ts,js}; cat daemon/node_modules/zca-js/dist/models/Sticker.d.ts; rg -n 'createGroupSync|captureBatch|archive = new|old_messages' daemon/index.mjs
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:29:04.743489 — Sticker và cuộn chat
+```sh
+gofmt -w internal/tui/{model,history,selection,view}.go && GOCACHE=/tmp/zalo-sticker-cache go build ./... && GOCACHE=/tmp/zalo-sticker-cache go test ./internal/tui
+```
+- Kết quả: Exit 1
+
+### 2026-11-11T10:29:14.993123 — Sticker và cuộn chat
+```sh
+gofmt -w internal/tui/model_test.go && GOCACHE=/tmp/zalo-sticker-cache go build ./... && GOCACHE=/tmp/zalo-sticker-cache go test ./internal/tui
+```
+- Kết quả: Exit 1
+
+### 2026-11-11T10:29:23.417066 — Sticker và cuộn chat
+```sh
+node --input-type=module <<'JS'
+import fs from 'node:fs';
+import path from 'node:path';
+import Database from './daemon/node_modules/better-sqlite3/lib/index.js';
+import {archiveRoot} from './daemon/archive.mjs';
+import {normalizeMessage} from './daemon/history.mjs';
+for (const account of fs.readdirSync(archiveRoot()).filter(id=>/^\d+$/.test(id))) {
+  const db = new Database(path.join(archiveRoot(),account,'messages.sqlite3'),{readonly:true,fileMustExist:true});
+  const rows = db.prepare("SELECT raw FROM messages WHERE json_extract(raw,'$.data.msgType')='chat.sticker' LIMIT 100").all();
+  console.log({stickers:rows.length, withID:rows.filter(row=>normalizeMessage(JSON.parse(row.raw)).sticker_id).length});
+  db.close();
+}
+JS
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:29:27.814300 — Sticker và cuộn chat
+```sh
+npm --prefix daemon test > /tmp/zalo-sticker-tests.log 2>&1; result=$?; tail -30 /tmp/zalo-sticker-tests.log; exit "$result"
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:29:31.455893 — Sticker và cuộn chat
+```sh
+sed -n '1,48p' internal/tui/history_test.go; rg -n 'func .*appendLine' internal/tui; git status --short
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:29:47.985234 — Sticker và cuộn chat
+```sh
+gofmt -w internal/tui/{selection,history_test}.go && GOCACHE=/tmp/zalo-sticker-cache go build ./... && GOCACHE=/tmp/zalo-sticker-cache go test ./internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:30:14.154955 — Kiểm thử Go và nạp sticker vào daemon
+```sh
+GOCACHE=/tmp/zalo-sticker-cache go test ./... && GOCACHE=/tmp/zalo-sticker-cache go build -o /tmp/zalo-sticker-cli ./cmd/zalo-cli && python3 - <<'PY2'
+from pathlib import Path
+import os,re,signal,socket,subprocess,time
+p = subprocess.check_output(["ss","-ltnp","sport = :8989"],text=True)
+pids = re.findall(r'"node",pid=(\d+)',p)
+if len(pids)==1:
+    pid=int(pids[0])
+    proc=Path("/proc")/str(pid)
+    if (proc/"cwd").resolve()!=Path.cwd()/"daemon" or (proc/"cmdline").read_bytes().split(b"\0")[1:3]!=[b"index.mjs",b"--managed"]:
+        raise SystemExit("Daemon đang chạy không phải daemon tự bật của dự án")
+    os.kill(pid,signal.SIGTERM)
+    for _ in range(60):
+        with socket.socket() as sock:
+            if sock.connect_ex(("127.0.0.1",8989)): break
+        time.sleep(.15)
+    else: raise SystemExit("Daemon chưa đóng cổng")
+elif "LISTEN" in p:
+    raise SystemExit("Cổng đang được dùng bởi tiến trình khác")
+subprocess.run(["/tmp/zalo-sticker-cli","-list"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=30)
+print("Daemon mới đã sẵn sàng")
+PY2
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:30:21.320700 — Sticker và cuộn chat
+```sh
+node --input-type=module <<'JS'
+import fs from 'node:fs';
+import path from 'node:path';
+import Database from './daemon/node_modules/better-sqlite3/lib/index.js';
+import {archiveRoot} from './daemon/archive.mjs';
+for (const account of fs.readdirSync(archiveRoot()).filter(id=>/^\d+$/.test(id))) {
+  const db = new Database(path.join(archiveRoot(),account,'messages.sqlite3'),{readonly:true,fileMustExist:true});
+  console.log(db.prepare("SELECT media_state,media_error,count(*) AS total FROM messages WHERE json_extract(data,'$.kind')='sticker' GROUP BY media_state,media_error").all().map(({media_state,media_error,total})=>({state:media_state,error:media_error.replace(/https?:\S+/g,'[URL]'),total})));
+  db.close();
+}
+JS
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:30:33.951812 — Sticker và cuộn chat
+```sh
+python3 - <<'PY'
+from datetime import datetime
+with open("CHANGELOG.md","a") as f:
+    f.write("\n## "+datetime.now().isoformat()+" — feat: hiển thị sticker và di chuyển dấu chọn theo chuột (commit hiện tại)\n- Files Changed: daemon/archive.mjs, archive.test.mjs, history.mjs, index.mjs; internal/tui/history.go, history_test.go, model.go, model_test.go, selection.go, view.go; CHANGELOG.md, COMMAND_LOG.md.\n- Cuộn chuột trong chat dịch viewport và dấu chọn theo cùng độ lệch, vẫn lấy thêm lịch sử ở đầu trang.\n- Chuẩn hóa chat.sticker, nâng cấp tin raw đã lưu, tra ảnh qua getStickersDetail và dùng lại tệp local theo ID. Sticker được chọn có bản xem pixel tĩnh nhỏ hơn ảnh thường.\n- Validation: go build ./..., go test ./..., npm test qua. Daemon thật sau restart có 38 tin sticker ở trạng thái ready.\n")
+PY
+git diff --check
+```
+- Kết quả: Exit 0

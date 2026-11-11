@@ -9,6 +9,34 @@ import (
 
 type lineRange struct{ start, end int }
 
+func (m *model) scrollMessages(delta int) tea.Cmd {
+	previous := m.chat.YOffset
+	m.chat.SetYOffset(previous + delta)
+	lastVisible := min(m.chat.TotalLineCount()-1, m.chat.YOffset+m.chat.Height-1)
+	target := lastVisible
+	if bounds, ok := m.lineRanges[m.selectedLine]; ok {
+		target = bounds.start + m.chat.YOffset - previous
+	}
+	target = min(lastVisible, max(m.chat.YOffset, target))
+	for _, line := range m.history[m.active] {
+		bounds := m.lineRanges[line]
+		if bounds.end < target {
+			continue
+		}
+		if m.selectedLine != line {
+			m.stopPreview()
+			m.selectedLine = line
+			m.refreshChat(false)
+		}
+		break
+	}
+	preview := m.ensurePreview(false)
+	if delta < 0 && m.chat.AtTop() {
+		return tea.Batch(preview, m.loadOlder())
+	}
+	return preview
+}
+
 type previewReady struct {
 	line                  *chatLine
 	thread, address, text string
@@ -70,16 +98,22 @@ func (m *model) ensureSelectedVisible() {
 
 func (m *model) ensurePreview(retry bool) tea.Cmd {
 	line := m.selectedLine
-	if line == nil || line.kind != "image" || m.width < 68 || m.height < 18 {
+	if line == nil || (line.kind != "image" && line.kind != "sticker") || m.width < 68 || m.height < 18 {
 		return nil
 	}
 	if line.imageURL == "" {
+		if line.kind == "sticker" {
+			return nil
+		}
 		line.previewError = "Ảnh chưa có đường dẫn tải. F6 để cập nhật."
 		m.refreshChat(false)
 		m.ensureSelectedVisible()
 		return nil
 	}
 	width, height := min(80, m.chat.Width), max(1, min(24, m.chat.Height-5))
+	if line.kind == "sticker" {
+		width, height = min(width, 20), min(height, 8)
+	}
 	if line.previewLoading && line.previewWidth == width && line.previewHeight == height {
 		return nil
 	}
