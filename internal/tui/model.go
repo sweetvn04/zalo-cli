@@ -19,6 +19,8 @@ type transport interface {
 	ListRecipients() (string, error)
 	SendMessage(string, string, string) (string, error)
 	SendImage(string, string, string) (string, error)
+	SendSticker(string, string, int64) (string, error)
+	ListStickers() (string, error)
 	History(string, string, ...string) (string, error)
 }
 
@@ -42,6 +44,7 @@ type requestExpired struct {
 }
 
 type chatLine struct {
+	stickerID                                   int64
 	mediaState                                  string
 	preview, previewError                       string
 	previewLoading                              bool
@@ -62,6 +65,9 @@ type outgoing struct {
 
 type model struct {
 	copiedImage             string
+	copiedSticker           int64
+	stickerMenu             *stickerPicker
+	stickerAttempt          int
 	previewImage            func(context.Context, string, int, int) (string, error)
 	previewCancel           context.CancelFunc
 	previewLine             *chatLine
@@ -293,7 +299,7 @@ func (m *model) handleEvent(event ipc.Event) {
 		if !found {
 			m.recipients = append(m.recipients, r)
 		}
-		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp, kind: msg.Kind, imageURL: msg.ImageSource(), mediaState: msg.ImageState})
+		m.appendLine(k, &chatLine{id: msg.MsgID, sender: msg.SenderName, text: msg.Content, self: msg.IsSelf, timestamp: msg.Timestamp, kind: msg.Kind, imageURL: msg.ImageSource(), mediaState: msg.ImageState, stickerID: msg.StickerID})
 		if k != m.active {
 			m.unread[k]++
 		} else {
@@ -347,7 +353,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		m.resize(msg.Width, msg.Height)
 		return m, m.ensurePreview(false)
 	case tea.MouseMsg:
-		if m.imageMenu {
+		if m.imageMenu || m.stickerMenu != nil {
 			return m, nil
 		}
 		if m.width < 68 || m.height < 18 {
@@ -381,6 +387,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.status = "Đã mất kết nối daemon. Esc để thoát, khởi động lại daemon rồi mở lại giao diện."
 			return m, nil
 		}
+		if msg.result.Event.Event == "stickers_result" {
+			return m, tea.Batch(m.listen(), m.receiveStickers(msg.result.Event))
+		}
 		if msg.result.Err != nil {
 			m.status = msg.result.Err.Error()
 		} else {
@@ -401,6 +410,11 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, tea.Batch(m.listen(), m.refreshFromArchive(), m.ensurePreview(false))
 	case requestStarted:
+		if msg.kind == "stickers" && msg.err != nil && m.stickerMenu != nil && msg.attempt == m.stickerMenu.attempt {
+			m.stickerMenu.loading = false
+			m.stickerMenu.status = msg.err.Error()
+			return m, nil
+		}
 		if msg.kind == "history" {
 			m.historyStarted(msg)
 			return m, tea.Batch(m.refreshFromArchive(), m.ensurePreview(false))
@@ -428,6 +442,11 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, m.refreshFromArchive()
 	case requestExpired:
+		if msg.kind == "stickers" && m.stickerMenu != nil && m.stickerMenu.loading && msg.attempt == m.stickerMenu.attempt {
+			m.stickerMenu.loading = false
+			m.stickerMenu.status = "Hết thời gian tải sticker. Esc rồi F4 để thử lại."
+			return m, nil
+		}
 		if msg.kind == "history" {
 			if state := m.historyStates[msg.thread]; state != nil && state.loading && state.attempt == msg.attempt {
 				state.loading = false
@@ -446,12 +465,21 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.status = "Hết thời gian tải danh sách. F5 để thử lại."
 		}
 		return m, nil
+	case stickerPreview:
+		if m.stickerMenu == msg.menu && msg.menu.version == msg.version {
+			msg.menu.preview = msg.text
+		}
+		return m, nil
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
 		if m.imageMenu {
 			return m.updateImageMenu(msg)
+		}
+		if m.stickerMenu != nil {
+			cmd := m.updateStickerMenu(msg.String())
+			return m, cmd
 		}
 		if msg.String() == "esc" {
 			return m, tea.Quit
@@ -460,11 +488,14 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		switch msg.String() {
+		case "f4":
+			cmd := m.openStickerMenu()
+			return m, cmd
 		case "f9":
-			m.copySelectedImage()
+			m.copySelectedMedia()
 			return m, nil
 		case "ctrl+g":
-			cmd := m.sendCopiedImage()
+			cmd := m.sendCopiedMedia()
 			return m, cmd
 		case "f8", "ctrl+o":
 			if msg.String() == "ctrl+o" && m.selectedLine != nil && (m.selectedLine.kind == "image" || m.selectedLine.kind == "video") {

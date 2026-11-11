@@ -35,23 +35,48 @@ export async function handleCommand(raw, api, archive = null) {
       const list = await loadRecipients(api);
       return { event, id, ok: true, ...list };
     }
+    if (command?.action === "list_stickers") {
+      event = "stickers_result";
+      if (!archive) throw new Error("Daemon chưa mở kho sticker");
+      return {event,id,ok:true,messages:archive.stickers()};
+    }
     const sendingImage = command?.action === "send_image";
-    if (!sendingImage && command?.action !== "send_message") {
+    const sendingSticker = command?.action === "send_sticker";
+    if (!sendingImage && !sendingSticker && command?.action !== "send_message") {
       throw new Error("Lệnh IPC không được hỗ trợ");
     }
     const { thread_id, thread_type, text } = command.payload ?? {};
     if (typeof thread_id !== "string" || !thread_id.trim() ||
-        (!sendingImage && (typeof text !== "string" || !text.trim()))) {
+        (!sendingImage && !sendingSticker && (typeof text !== "string" || !text.trim()))) {
       throw new Error("Người nhận và nội dung không được để trống");
     }
     if (thread_type !== "user" && thread_type !== "group") {
       throw new Error("Loại hội thoại phải là user hoặc group");
     }
     if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
+    const destination = thread_type === "group" ? ThreadType.Group : ThreadType.User;
+    if (sendingSticker) {
+      const stickerId = command.payload.sticker_id;
+      if (!Number.isSafeInteger(stickerId) || stickerId <= 0 || !archive?.hasSticker(stickerId)) {
+        throw new Error("Sticker không có trong kho chat");
+      }
+      const details = await api.getStickersDetail(stickerId);
+      const sticker = details.find(item => Number(item.id) === stickerId);
+      if (!sticker) throw new Error("Zalo chưa trả thông tin sticker");
+      const sent = await api.sendSticker(sticker,thread_id,destination);
+      const result = {event,id,ok:true,msg_id:sent?.msgId == null ? "" : String(sent.msgId)};
+      try {
+        archive.save({msg_id:result.msg_id,thread_id,thread_type,sender_id:archive.account,sender_name:"Bạn",
+          content:"",kind:"sticker",sticker_id:stickerId,timestamp:Date.now(),is_self:true});
+      } catch (error) {
+        result.notice = "Sticker đã gửi nhưng chưa lưu được trên máy: "+error.message;
+      }
+      return result;
+    }
     if (sendingImage && !archive) throw new Error("Daemon chưa mở kho ảnh local");
     const image = sendingImage ? await archive.imageForSend(command.payload.image_local) : null;
     const sent = await api.sendMessage(image ? {msg:"",attachments:[image.attachment]} : {msg:text},
-      thread_id, thread_type === "group" ? ThreadType.Group : ThreadType.User);
+      thread_id, destination);
     const result = { event: "send_result", id, ok: true };
     const msgId = image ? sent?.attachment?.[0]?.msgId : sent?.message?.msgId;
     if (msgId != null) result.msg_id = String(msgId);

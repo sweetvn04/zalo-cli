@@ -21,6 +21,7 @@ type Event struct {
 }
 
 type Message struct {
+	StickerID  int64  `json:"sticker_id,omitempty"`
 	VideoURL   string `json:"video_url,omitempty"`
 	Notice     string `json:"notice,omitempty"`
 	ImageLocal string `json:"image_local,omitempty"`
@@ -51,6 +52,7 @@ type SendRequest struct {
 }
 
 type SendPayload struct {
+	StickerID     int64  `json:"sticker_id,omitempty"`
 	ImageLocal    string `json:"image_local,omitempty"`
 	ArchiveBefore string `json:"archive_before,omitempty"`
 	BeforeID      string `json:"before_id,omitempty"`

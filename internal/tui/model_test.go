@@ -66,6 +66,13 @@ func (f *fakeTransport) SendImage(id, kind, image string) (string, error) {
 	return "image-1", nil
 }
 
+func (f *fakeTransport) SendSticker(id, kind string, stickerID int64) (string, error) {
+	f.sent <- ipc.SendPayload{ThreadID: id, ThreadType: kind, StickerID: stickerID}
+	return "sticker-1", nil
+}
+
+func (f *fakeTransport) ListStickers() (string, error) { return "stickers-1", nil }
+
 func fixture() model {
 	f := &fakeTransport{results: make(chan ipc.Result, 10), sent: make(chan ipc.SendPayload, 10)}
 	m := newModel(f)
@@ -119,6 +126,43 @@ func TestCopyImageThenSendToAnotherConversation(t *testing.T) {
 	m.handleEvent(ipc.Event{Event: "send_result", ID: "image-1", OK: true, MsgID: "789"})
 	if m.pending != nil || m.history["group:go"][0].id != "789" {
 		t.Fatal("send acknowledgement was not applied")
+	}
+}
+
+func TestStickerPickerSendsSelectedSticker(t *testing.T) {
+	m := fixture()
+	m = update(m, tea.KeyMsg{Type: tea.KeyF4})
+	m = update(m, packet{open: true, result: ipc.Result{Event: ipc.Event{
+		Event: "stickers_result", OK: true, Messages: []ipc.Message{{StickerID: 123}, {StickerID: 456}},
+	}}})
+	m = update(m, tea.KeyMsg{Type: tea.KeyDown})
+	m.composer.SetValue("Bản nháp")
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(model)
+	if cmd == nil || m.stickerMenu != nil || m.composer.Value() != "Bản nháp" {
+		t.Fatal("sticker selection must send and preserve the draft")
+	}
+	cmd().(tea.BatchMsg)[0]()
+	payload := <-m.client.(*fakeTransport).sent
+	if payload.ThreadID != "an" || payload.StickerID != 456 {
+		t.Fatalf("wrong sticker payload: %+v", payload)
+	}
+}
+
+func TestCopiedStickerCanBeSentWithoutLocalPreview(t *testing.T) {
+	m := fixture()
+	m.selectedLine = &chatLine{kind: "sticker", stickerID: 123}
+	m = update(m, tea.KeyMsg{Type: tea.KeyF9})
+	m.cursor = 1
+	m.openSelected()
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
+	if cmd == nil {
+		t.Fatal("copied sticker did not produce a send command")
+	}
+	cmd().(tea.BatchMsg)[0]()
+	payload := <-m.client.(*fakeTransport).sent
+	if payload.ThreadID != "go" || payload.ThreadType != "group" || payload.StickerID != 123 {
+		t.Fatalf("wrong forwarded sticker: %+v", payload)
 	}
 }
 

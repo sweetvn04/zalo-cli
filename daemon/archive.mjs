@@ -176,6 +176,18 @@ export class Archive {
     return this.db.prepare("SELECT thread_type,thread_id,name FROM recipients ORDER BY name,thread_id").all();
   }
 
+  stickers() {
+    const rows = this.db.prepare(`SELECT data FROM (
+      SELECT data,timestamp,ROW_NUMBER() OVER (PARTITION BY media_url ORDER BY (media_state='ready') DESC,timestamp DESC) AS rank
+      FROM messages WHERE media_url LIKE 'sticker:%'
+    ) WHERE rank=1 ORDER BY timestamp DESC LIMIT 200`).all();
+    return rows.map(row => this.withMedia(JSON.parse(row.data)));
+  }
+
+  hasSticker(id) {
+    return !!this.db.prepare("SELECT 1 FROM messages WHERE media_url=? LIMIT 1").get(`sticker:${id}`);
+  }
+
   saveRecipients(recipients) {
     const put = this.db.prepare("INSERT INTO recipients VALUES(?,?,?) ON CONFLICT(thread_type,thread_id) DO UPDATE SET name=excluded.name");
     this.db.transaction(() => { for (const r of recipients) put.run(r.thread_type,r.thread_id,r.name); })();

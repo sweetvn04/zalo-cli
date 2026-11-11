@@ -249,3 +249,9 @@
 - Cuộn chuột trong chat dịch viewport và dấu chọn theo cùng độ lệch, vẫn lấy thêm lịch sử ở đầu trang.
 - Chuẩn hóa chat.sticker, nâng cấp tin raw đã lưu, tra ảnh qua getStickersDetail và dùng lại tệp local theo ID. Sticker được chọn có bản xem pixel tĩnh nhỏ hơn ảnh thường.
 - Validation: go build ./..., go test ./..., npm test qua. Daemon thật sau restart có 38 tin sticker ở trạng thái ready.
+
+## 2026-11-11T10:36:30.802362 — feat: sao chép và chọn gửi sticker (commit hiện tại)
+- Files Changed: daemon/archive.mjs, archive.test.mjs, ipc.mjs; internal/ipc/client.go, protocol.go; internal/tui/forward.go, history.go, model.go, model_test.go, stickers.go, view.go; CHANGELOG.md, COMMAND_LOG.md.
+- F9 giữ ID sticker, Ctrl+G gửi vào chat đang mở. F4 mở bộ chọn từ kho chat với tối đa 200 sticker duy nhất, xem pixel, tên nơi nhận và Enter gửi. Bản nháp văn bản được giữ.
+- Daemon kiểm tra sticker có trong kho, lấy metadata từ Zalo và gọi sendSticker, lưu kết quả vào lịch sử đích. Dùng lại ảnh sticker sẵn có qua hàng đợi media.
+- Validation: kiểm thử Go và Node bao phủ menu, copy khi ảnh chưa tải, đích nhận, danh sách khử trùng và phản hồi gửi giả lập.

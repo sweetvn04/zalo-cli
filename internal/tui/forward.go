@@ -8,9 +8,14 @@ import (
 	"zalo-cli/internal/ipc"
 )
 
-func (m *model) copySelectedImage() {
+func (m *model) copySelectedMedia() {
+	if m.editing && m.selectedLine != nil && m.selectedLine.kind == "sticker" && m.selectedLine.stickerID > 0 {
+		m.copiedSticker, m.copiedImage = m.selectedLine.stickerID, m.selectedLine.imageURL
+		m.status = "Đã chép sticker. Mở chat đích rồi bấm Ctrl+G để gửi."
+		return
+	}
 	if !m.editing || m.selectedLine == nil || m.selectedLine.kind != "image" {
-		m.status = "Dùng ↑↓ chọn ảnh trong chat rồi bấm F9."
+		m.status = "Dùng ↑↓ chọn ảnh hoặc sticker rồi bấm F9."
 		return
 	}
 	if !strings.HasPrefix(m.selectedLine.imageURL, "archive:") {
@@ -18,22 +23,33 @@ func (m *model) copySelectedImage() {
 		return
 	}
 	m.copiedImage = m.selectedLine.imageURL
+	m.copiedSticker = 0
 	m.status = "Đã sao chép ảnh. Mở chat đích rồi bấm Ctrl+G để gửi."
 }
 
-func (m *model) sendCopiedImage() tea.Cmd {
-	if m.copiedImage == "" {
-		m.status = "Chọn ảnh rồi bấm F9 để sao chép."
+func (m *model) sendCopiedMedia() tea.Cmd {
+	if m.copiedImage == "" && m.copiedSticker == 0 {
+		m.status = "Chọn ảnh hoặc sticker rồi bấm F9 để sao chép."
 		return nil
 	}
+	return m.sendMedia(m.copiedImage, m.copiedSticker)
+}
+
+func (m *model) sendMedia(image string, stickerID int64) tea.Cmd {
 	r, ok := m.recipient()
 	if !m.editing || !ok || !m.connected || m.pending != nil {
 		m.status = "Mở chat đích đã kết nối và đợi lượt gửi hiện tại kết thúc."
 		return nil
 	}
-	client, image := m.client, m.copiedImage
+	client := m.client
 	line := &chatLine{sender: "Bạn", self: true, kind: "image", imageURL: image,
 		mediaState: "ready", state: "Đang gửi...", timestamp: time.Now().UnixMilli()}
+	if stickerID > 0 {
+		line.kind, line.stickerID, line.mediaState = "sticker", stickerID, ""
+		return m.beginSend(line, func() (string, error) {
+			return client.SendSticker(r.ThreadID, r.ThreadType, stickerID)
+		})
+	}
 	return m.beginSend(line, func() (string, error) {
 		return client.SendImage(r.ThreadID, r.ThreadType, image)
 	})

@@ -43,6 +43,21 @@ test("sticker trong kho cũ được nâng cấp và các tin cùng sticker dùn
     assert.equal(message.content,"");
     assert.equal(message.image_local,`archive:1001/${key}`);
   }
+  const catalog = await handleCommand(JSON.stringify({id:"catalog",action:"list_stickers"}),null,archive);
+  assert.equal(catalog.messages.length,1);
+  assert.equal(catalog.messages[0].sticker_id,123);
+  const sticker = {id:123,cateId:1,type:1};
+  const result = await handleCommand(JSON.stringify({id:"send",action:"send_sticker",
+    payload:{thread_id:"target",thread_type:"group",sticker_id:123}}),{
+    getStickersDetail:async id => { assert.equal(id,123); return [sticker]; },
+    sendSticker:async (payload,id,type) => {
+      assert.deepEqual([payload,id,type],[sticker,"target",1]);
+      return {msgId:"900"};
+    },
+  },archive);
+  assert.equal(result.ok,true);
+  assert.equal(result.msg_id,"900");
+  assert.equal(archive.history("target","group").messages[0].sticker_id,123);
 });
 
 test("gửi lại ảnh local vào nhóm và giữ bản ảnh trong lịch sử đích", async t => {

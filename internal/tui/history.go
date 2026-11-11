@@ -173,6 +173,7 @@ func (m *model) mergeHistory(k string, messages []ipc.Message) {
 				existing.mediaState = message.ImageState
 				if message.Kind == "sticker" {
 					existing.text = message.Content
+					existing.stickerID = message.StickerID
 				}
 			}
 			continue
@@ -181,6 +182,7 @@ func (m *model) mergeHistory(k string, messages []ipc.Message) {
 			id: message.MsgID, sender: message.SenderName, text: message.Content,
 			self: message.IsSelf, timestamp: message.Timestamp,
 			kind: message.Kind, imageURL: message.ImageSource(), mediaState: message.ImageState,
+			stickerID: message.StickerID,
 		}
 		m.history[k] = append(m.history[k], line)
 		if message.MsgID != "" {

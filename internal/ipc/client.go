@@ -88,6 +88,14 @@ func (c *Client) SendImage(threadID, threadType, imageLocal string) (string, err
 	return c.request("send_image", &SendPayload{ThreadID: threadID, ThreadType: threadType, ImageLocal: imageLocal})
 }
 
+func (c *Client) SendSticker(threadID, threadType string, stickerID int64) (string, error) {
+	return c.request("send_sticker", &SendPayload{ThreadID: threadID, ThreadType: threadType, StickerID: stickerID})
+}
+
+func (c *Client) ListStickers() (string, error) {
+	return c.request("list_stickers", nil)
+}
+
 // SendMessage gửi lệnh qua IPC. Bên gọi phải đợi send_result cùng ID để biết
 // Zalo đã chấp nhận lệnh hay chưa. Không tự gửi lại khi mất phản hồi.
 func (c *Client) SendMessage(threadID, threadType, text string) (string, error) {

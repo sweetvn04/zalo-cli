@@ -155,6 +155,9 @@ func (m model) View() string {
 	if m.imageMenu {
 		return m.imageView()
 	}
+	if m.stickerMenu != nil {
+		return m.stickerView()
+	}
 	connection := lipgloss.NewStyle().Foreground(green).Render("● Đã kết nối")
 	if !m.connected {
 		connection = lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Render("● Mất kết nối")
@@ -239,9 +242,9 @@ func (m model) View() string {
 	}, "\n")
 	right := panel.BorderForeground(rightColor).Width(rightWidth + 2).Height(innerHeight).Render(chat)
 	footer := clip(" "+oneLine(m.status), m.width)
-	keys := " ↑↓ chọn tin · F9 chép ảnh · Tab đổi cột · Enter gửi · Ctrl+O ảnh gốc · F7 tin cũ · Esc thoát"
-	if m.copiedImage != "" {
-		keys = " Đã chép ảnh · Ctrl+G gửi vào chat đang mở · Tab đổi cột · F9 chép ảnh khác"
+	keys := " ↑↓ chọn tin · F4 sticker · F9 chép ảnh/sticker · Tab đổi cột · Enter gửi · F7 tin cũ · Esc thoát"
+	if m.copiedImage != "" || m.copiedSticker > 0 {
+		keys = " Đã chép ảnh/sticker · Ctrl+G gửi vào chat đang mở · F4 sticker · Tab đổi cột"
 	}
 	help := muted.Render(clip(keys, m.width))
 	return header + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, left, right) + "\n" + footer + "\n" + help

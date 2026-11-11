@@ -6095,3 +6095,97 @@ PY
 git diff --check
 ```
 - Kết quả: Exit 0
+
+### 2026-11-11T10:30:43.527883 — Commit sticker và cuộn chat
+```sh
+git add CHANGELOG.md COMMAND_LOG.md daemon/{archive.mjs,archive.test.mjs,history.mjs,index.mjs} internal/tui/{history,history_test,model,model_test,selection,view}.go && git commit -m "feat(tui): follow mouse scrolling and preview stickers"
+```
+- Kết quả: Exit 0 [main c117237] feat(tui): follow mouse scrolling and preview stickers
+
+### 2026-11-11T10:32:46.802250 — Sticker và cuộn chat
+```sh
+cat internal/tui/forward.go; cat internal/tui/images.go; cat daemon/node_modules/zca-js/dist/apis/sendSticker.js; cat daemon/ipc.mjs; rg -n 'type model|media_updated|imageMenu|msg.Kind' internal/tui/{model,history}.go
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:32:57.095835 — Sticker và cuộn chat
+```sh
+cat daemon/node_modules/zca-js/dist/apis/sendSticker.d.ts; sed -n '215,239p;386,437p' internal/tui/model.go; rg -n 'imageMenu|keys :=' internal/tui/view.go; sed -n '15,28p' internal/tui/model.go
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:35:03.761554 — Sticker và cuộn chat
+```sh
+gofmt -w internal/ipc/{client,protocol}.go internal/tui/{model,model_test,view,history,forward,stickers}.go && GOCACHE=/tmp/zalo-sticker-cache go build ./... && GOCACHE=/tmp/zalo-sticker-cache go test ./internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:35:28.359874 — Sticker và cuộn chat
+```sh
+gofmt -w internal/tui/model_test.go && GOCACHE=/tmp/zalo-sticker-cache go build ./... && GOCACHE=/tmp/zalo-sticker-cache go test ./internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:35:33.541211 — Sticker và cuộn chat
+```sh
+sed -n '145,167p' internal/tui/view.go; git diff --check; git status --short
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:35:40.910646 — Sticker và cuộn chat
+```sh
+npm --prefix daemon test > /tmp/zalo-sticker-send-tests.log 2>&1; result=$?; tail -14 /tmp/zalo-sticker-send-tests.log; exit "$result"
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:36:22.233417 — Kiểm thử và kiểm tra menu sticker trên daemon local
+```sh
+gofmt -w internal/tui/{model,forward,model_test}.go && GOCACHE=/tmp/zalo-sticker-cache go test ./... && GOCACHE=/tmp/zalo-sticker-cache go build -o /tmp/zalo-sticker-cli ./cmd/zalo-cli && python3 - <<'PY2'
+from pathlib import Path
+import os,re,signal,socket,subprocess,time
+p = subprocess.check_output(["ss","-ltnp","sport = :8989"],text=True)
+pids = re.findall(r'"node",pid=(\d+)',p)
+if len(pids)==1:
+    pid=int(pids[0])
+    proc=Path("/proc")/str(pid)
+    if (proc/"cwd").resolve()!=Path.cwd()/"daemon" or (proc/"cmdline").read_bytes().split(b"\0")[1:3]!=[b"index.mjs",b"--managed"]:
+        raise SystemExit("Daemon đang chạy không phải daemon tự bật của dự án")
+    os.kill(pid,signal.SIGTERM)
+    for _ in range(60):
+        with socket.socket() as sock:
+            if sock.connect_ex(("127.0.0.1",8989)): break
+        time.sleep(.15)
+    else: raise SystemExit("Daemon chưa đóng cổng")
+elif "LISTEN" in p:
+    raise SystemExit("Cổng đang được dùng bởi tiến trình khác")
+subprocess.run(["/tmp/zalo-sticker-cli","-list"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=30)
+print("Daemon mới đã sẵn sàng")
+PY2
+if [ "$?" -ne 0 ]; then exit 1; fi
+node --input-type=module <<'JS'
+import WebSocket from './daemon/node_modules/ws/wrapper.mjs';
+const socket=new WebSocket('ws://127.0.0.1:8989');
+const timer=setTimeout(()=>{process.exitCode=1;socket.terminate()},3000);
+socket.on('open',()=>socket.send(JSON.stringify({id:'catalog-check',action:'list_stickers'})));
+socket.on('message',raw=>{
+ const event=JSON.parse(raw);
+ if(event.id!=='catalog-check')return;
+ clearTimeout(timer);
+ if(!event.ok)process.exitCode=1;
+ else console.log({stickers:event.messages.length,withPreview:event.messages.filter(item=>item.image_local).length});
+ socket.close();
+});
+JS
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:36:30.809230 — Sticker và cuộn chat
+```sh
+python3 - <<'PY'
+from datetime import datetime
+with open("CHANGELOG.md","a") as f:
+    f.write("\n## "+datetime.now().isoformat()+" — feat: sao chép và chọn gửi sticker (commit hiện tại)\n- Files Changed: daemon/archive.mjs, archive.test.mjs, ipc.mjs; internal/ipc/client.go, protocol.go; internal/tui/forward.go, history.go, model.go, model_test.go, stickers.go, view.go; CHANGELOG.md, COMMAND_LOG.md.\n- F9 giữ ID sticker, Ctrl+G gửi vào chat đang mở. F4 mở bộ chọn từ kho chat với tối đa 200 sticker duy nhất, xem pixel, tên nơi nhận và Enter gửi. Bản nháp văn bản được giữ.\n- Daemon kiểm tra sticker có trong kho, lấy metadata từ Zalo và gọi sendSticker, lưu kết quả vào lịch sử đích. Dùng lại ảnh sticker sẵn có qua hàng đợi media.\n- Validation: kiểm thử Go và Node bao phủ menu, copy khi ảnh chưa tải, đích nhận, danh sách khử trùng và phản hồi gửi giả lập.\n")
+PY
+git diff --check
+```
+- Kết quả: Exit 0
