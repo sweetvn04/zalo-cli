@@ -234,6 +234,10 @@ func (m model) View() string {
 	}, "\n")
 	right := panel.BorderForeground(rightColor).Width(rightWidth + 2).Height(innerHeight).Render(chat)
 	footer := clip(" "+oneLine(m.status), m.width)
-	help := muted.Render(clip(" ↑↓ chọn tin/ảnh · Chuột/PgUp cuộn · Ctrl+O ảnh gốc · Tab đổi cột · Enter gửi · F7 tin cũ · Esc thoát", m.width))
+	keys := " ↑↓ chọn tin · F9 chép ảnh · Tab đổi cột · Enter gửi · Ctrl+O ảnh gốc · F7 tin cũ · Esc thoát"
+	if m.copiedImage != "" {
+		keys = " Đã chép ảnh · Ctrl+G gửi vào chat đang mở · Tab đổi cột · F9 chép ảnh khác"
+	}
+	help := muted.Render(clip(keys, m.width))
 	return header + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, left, right) + "\n" + footer + "\n" + help
 }

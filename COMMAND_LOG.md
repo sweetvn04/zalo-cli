@@ -5835,3 +5835,113 @@ git diff --check
 ```
 - Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
 - Kết quả: Exit 0;
+
+### 2026-11-11T01:19:36.023896 — Đồng bộ khi mở CLI
+```sh
+git add internal/tui/view.go CHANGELOG.md COMMAND_LOG.md && git commit -m "style(tui): show only time for todays messages"
+```
+- Mục đích: Triển khai và kiểm chứng khởi động, đồng bộ.
+- Kết quả: Exit 0; [main ce38ec8] style(tui): show only time for todays messages
+ 3 files changed, 38 insertions(+), 1 deletion(-)
+
+### 2026-11-11T10:12:00.062916 — Chuyển tiếp ảnh
+```sh
+git status --short; cat internal/ipc/protocol.go; rg -n 'Send|pending|ctrl\+|case .*enter|case .*esc' internal/tui/model.go internal/ipc/client.go; cat daemon/ipc.mjs; head -100 daemon/node_modules/zca-js/dist/apis/sendMessage.d.ts
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:12:09.287348 — Chuyển tiếp ảnh
+```sh
+rg -n 'forwardMessage|AttachmentSource' daemon/node_modules/zca-js/dist/{apis,models} -g '*.d.ts'; sed -n '35,66p;300,325p;450,490p;530,565p' internal/tui/model.go; rg -n 'Ctrl\+O|F8|footer|status' internal/tui/view.go; sed -n '95,145p' daemon/archive.mjs; rg -n 'fileName|attachments|\.msgId' daemon/node_modules/zca-js/dist/apis/sendMessage.js | tail -30; rg -n 'fakeTransport' internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:12:12.331652 — Chuyển tiếp ảnh
+```sh
+cat daemon/node_modules/zca-js/dist/apis/forwardMessage.js; sed -n '268,299p' internal/tui/model.go; head -40 AGENTS.md
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:12:23.860655 — Chuyển tiếp ảnh
+```sh
+rg -n 'jpg|jpeg|png|webp|bmp|imageExtensions' daemon/node_modules/zca-js/dist/apis/{sendMessage,uploadAttachment}.js; head -16 daemon/archive.mjs; sed -n '165,192p' internal/tui/history.go; rg -n 'func .*recipient' internal/tui/model.go
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:13:45.095424 — Chuyển tiếp ảnh
+```sh
+gofmt -w internal/ipc/{client,protocol}.go internal/tui/{model,model_test,forward,view}.go && GOCACHE=/tmp/zalo-forward-cache go build ./...
+```
+- Kết quả: Exit 1
+
+### 2026-11-11T10:13:46.286513 — Chuyển tiếp ảnh
+```sh
+sed -n '384,415p;430,462p' daemon/node_modules/zca-js/dist/apis/sendMessage.js; head -32 daemon/archive.test.mjs; head -25 internal/tui/model_test.go; command -v go; git diff --check
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:13:51.196021 — Chuyển tiếp ảnh
+```sh
+rg -n 'imageMetadataGetter|MissingImageMetadata|getImageMetaData' daemon/node_modules/zca-js/dist/{context.js,zalo.js,apis/uploadAttachment.js,apis/sendMessage.js,utils.js}; sed -n '35,100p' daemon/node_modules/zca-js/dist/apis/uploadAttachment.js; rg -n 'new Zalo' daemon/index.mjs; cat daemon/node_modules/zca-js/dist/models/Attachment.d.ts; cat daemon/package.json
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:14:08.013472 — Chuyển tiếp ảnh
+```sh
+npm --prefix daemon install --save-exact image-size@2.0.2 --cache /tmp/zalo-npm-cache
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:14:16.912677 — Chuyển tiếp ảnh
+```sh
+npm --prefix daemon install --save-exact image-size@2 --cache /tmp/zalo-npm-cache
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:14:23.720215 — Chuyển tiếp ảnh
+```sh
+sed -n '66,96p' internal/tui/model_test.go; sed -n '494,512p' internal/tui/model.go; rg -n '"image-size"' daemon/package*.json; sed -n '300,338p' daemon/node_modules/zca-js/dist/utils.js
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:15:21.548298 — Chuyển tiếp ảnh
+```sh
+gofmt -w internal/tui/model_test.go && GOCACHE=/tmp/zalo-forward-cache go build ./... && GOCACHE=/tmp/zalo-forward-cache go test ./internal/tui
+```
+- Kết quả: Exit 1
+
+### 2026-11-11T10:15:33.994503 — Chuyển tiếp ảnh
+```sh
+gofmt -w internal/tui/forward.go && GOCACHE=/tmp/zalo-forward-cache go build ./... && GOCACHE=/tmp/zalo-forward-cache go test ./internal/tui
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:15:45.580145 — Chuyển tiếp ảnh
+```sh
+npm --prefix daemon test > /tmp/zalo-forward-tests.log 2>&1 && tail -12 /tmp/zalo-forward-tests.log
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:15:45.760707 — Chuyển tiếp ảnh
+```sh
+git diff --stat; sed -n '84,102p' internal/ipc/client.go; rg -n '30\*time.Second|func expires' internal/tui/model.go; rg -n 'func .*Key' internal/tui/model_test.go | head
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:16:08.882689 — Chuyển tiếp ảnh
+```sh
+GOCACHE=/tmp/zalo-forward-cache go test ./... && GOCACHE=/tmp/zalo-forward-cache go build -o /tmp/zalo-forward ./cmd/zalo-cli && ss -ltnp 'sport = :8989'
+```
+- Kết quả: Exit 0
+
+### 2026-11-11T10:16:24.615612 — Chuyển tiếp ảnh
+```sh
+python3 - <<'PY'
+from datetime import datetime
+from pathlib import Path
+with Path("CHANGELOG.md").open("a") as f:
+    f.write("\n## "+datetime.now().isoformat()+" — feat: gửi lại ảnh đã lưu (commit hiện tại)\n- Files Changed: internal/tui/forward.go, model.go, model_test.go, view.go; internal/ipc/client.go, protocol.go; daemon/archive.mjs, archive.test.mjs, ipc.mjs, package.json, package-lock.json; CHANGELOG.md, COMMAND_LOG.md.\n- F9 giữ tham chiếu ảnh local trong TUI. Ctrl+G gửi ảnh vào chat đang mở và giữ nguyên bản nháp văn bản.\n- Daemon chỉ đọc ảnh JPG, PNG, GIF, WebP từ kho đúng tài khoản, kiểm tra đường dẫn và đọc kích thước bằng image-size, gửi qua zca-js và dùng lại tệp trong lịch sử đích.\n- Validation: go build, go test ./..., npm test qua. Kiểm thử nơi nhận, dữ liệu ảnh, xác nhận gửi và lưu ảnh bằng phản hồi giả lập.\n")
+PY
+git diff --check
+```
+- Kết quả: Exit 0

@@ -18,6 +18,7 @@ type transport interface {
 	Results() <-chan ipc.Result
 	ListRecipients() (string, error)
 	SendMessage(string, string, string) (string, error)
+	SendImage(string, string, string) (string, error)
 	History(string, string, ...string) (string, error)
 }
 
@@ -60,6 +61,7 @@ type outgoing struct {
 }
 
 type model struct {
+	copiedImage             string
 	previewImage            func(context.Context, string, int, int) (string, error)
 	previewCancel           context.CancelFunc
 	previewLine             *chatLine
@@ -461,6 +463,12 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		switch msg.String() {
+		case "f9":
+			m.copySelectedImage()
+			return m, nil
+		case "ctrl+g":
+			cmd := m.sendCopiedImage()
+			return m, cmd
 		case "f8", "ctrl+o":
 			if msg.String() == "ctrl+o" && m.selectedLine != nil && (m.selectedLine.kind == "image" || m.selectedLine.kind == "video") {
 				return m, m.openExternalImage(m.selectedLine)
@@ -543,19 +551,13 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			if !ok || !m.connected || m.pending != nil || strings.TrimSpace(text) == "" {
 				return m, nil
 			}
-			m.sendAttempt++
 			line := &chatLine{sender: "Bạn", text: text, self: true, state: "Đang gửi...", timestamp: time.Now().UnixMilli()}
-			m.pending = &outgoing{thread: m.active, line: line, attempt: m.sendAttempt, early: make(map[string]ipc.Event)}
-			m.appendLine(m.active, line)
 			m.composer.Reset()
 			m.drafts[m.active] = ""
-			m.refreshChat(true)
-			m.status = "Đang chờ Zalo xác nhận..."
-			send := func() tea.Msg {
-				id, err := m.client.SendMessage(r.ThreadID, r.ThreadType, text)
-				return requestStarted{kind: "send", id: id, err: err, attempt: m.sendAttempt}
-			}
-			return m, tea.Batch(send, expires("send", m.sendAttempt))
+			cmd := m.beginSend(line, func() (string, error) {
+				return m.client.SendMessage(r.ThreadID, r.ThreadType, text)
+			})
+			return m, cmd
 		}
 	}
 	var cmd tea.Cmd

@@ -237,3 +237,9 @@
 - Files Changed: internal/tui/view.go, CHANGELOG.md, COMMAND_LOG.md.
 - Tin cùng ngày hôm nay theo múi giờ máy chỉ hiện HH:mm; các ngày trước giữ dd/mm/yyyy HH:mm. Tính ngày hiện tại một lần khi dựng nội dung chat.
 - Validation: go build ./... và go test ./internal/tui qua.
+
+## 2026-11-11T10:16:24.600727 — feat: gửi lại ảnh đã lưu (commit hiện tại)
+- Files Changed: internal/tui/forward.go, model.go, model_test.go, view.go; internal/ipc/client.go, protocol.go; daemon/archive.mjs, archive.test.mjs, ipc.mjs, package.json, package-lock.json; CHANGELOG.md, COMMAND_LOG.md.
+- F9 giữ tham chiếu ảnh local trong TUI. Ctrl+G gửi ảnh vào chat đang mở và giữ nguyên bản nháp văn bản.
+- Daemon chỉ đọc ảnh JPG, PNG, GIF, WebP từ kho đúng tài khoản, kiểm tra đường dẫn và đọc kích thước bằng image-size, gửi qua zca-js và dùng lại tệp trong lịch sử đích.
+- Validation: go build, go test ./..., npm test qua. Kiểm thử nơi nhận, dữ liệu ảnh, xác nhận gửi và lưu ảnh bằng phản hồi giả lập.

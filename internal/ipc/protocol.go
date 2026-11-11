@@ -51,6 +51,7 @@ type SendRequest struct {
 }
 
 type SendPayload struct {
+	ImageLocal    string `json:"image_local,omitempty"`
 	ArchiveBefore string `json:"archive_before,omitempty"`
 	BeforeID      string `json:"before_id,omitempty"`
 	ThreadID      string `json:"thread_id"`

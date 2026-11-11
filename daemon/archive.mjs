@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import Database from "better-sqlite3";
+import { imageSize } from "image-size";
 import { ThreadType } from "zca-js";
 import { normalizeMessage } from "./history.mjs";
 import { storeImage } from "./image-store.mjs";
@@ -130,6 +131,36 @@ export class Archive {
       }
     }
     return wire;
+  }
+
+  async imageForSend(reference) {
+    const match = typeof reference === "string" && /^archive:(\d{1,32})\/([a-f0-9]{64}\.(?:jpg|png|gif|webp|bmp))$/.exec(reference);
+    if (!match || match[1] !== this.account) throw new Error("Ảnh không thuộc kho của tài khoản này");
+    const key = match[2];
+    if (key.endsWith(".bmp")) throw new Error("Gửi lại ảnh hỗ trợ JPG, PNG, GIF và WebP");
+    const file = path.join(this.mediaDirectory,key);
+    const info = fs.lstatSync(file,{throwIfNoEntry:false});
+    if (!info?.isFile() || !info.size || info.size > 100*1024*1024 ||
+        fs.realpathSync(file) !== path.join(fs.realpathSync(this.directory),"media",key)) {
+      throw new Error("Không tìm thấy tệp ảnh hợp lệ trong kho local");
+    }
+    const handle = await fs.promises.open(file,fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+    try {
+      const data = await handle.readFile();
+      const {width,height} = imageSize(data);
+      if (!width || !height) throw new Error("Không đọc được kích thước ảnh");
+      return {key,attachment:{data,filename:key,metadata:{width,height,totalSize:data.length}}};
+    } finally {
+      await handle.close();
+    }
+  }
+
+  saveImageCopy(message, key) {
+    this.db.transaction(() => {
+      const saved = this.save(message,null,false);
+      this.db.prepare(`UPDATE messages SET media_key=?,media_state='ready'
+        WHERE thread_type=? AND thread_id=? AND msg_id=?`).run(key,saved.thread_type,saved.thread_id,saved.msg_id);
+    })();
   }
 
   recipients() {

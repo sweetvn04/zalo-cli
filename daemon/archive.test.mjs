@@ -13,6 +13,34 @@ import { syncArchive } from "./archive-sync.mjs";
 import { validateImageURL, storeImage, videoExtension } from "./image-store.mjs";
 import { normalizeMessage } from "./history.mjs";
 
+test("gửi lại ảnh local vào nhóm và giữ bản ảnh trong lịch sử đích", async t => {
+  const archive = new Archive("1001", {root:temporary(t),worker:false});
+  t.after(() => archive.close());
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=","base64");
+  const key = createHash("sha256").update(png).digest("hex")+".png";
+  fs.writeFileSync(path.join(archive.mediaDirectory,key),png);
+  let sends = 0;
+  const api = {async sendMessage(payload,id,type) {
+    sends++;
+    assert.equal(id,"456");
+    assert.equal(type,1);
+    assert.deepEqual(payload.attachments,[{filename:key,data:png,metadata:{width:1,height:1,totalSize:png.length}}]);
+    return {message:null,attachment:[{msgId:"789"}]};
+  }};
+  const send = image_local => handleCommand(JSON.stringify({id:"forward",action:"send_image",
+    payload:{thread_id:"456",thread_type:"group",image_local}}),api,archive);
+  for (const invalid of ["/etc/passwd",`archive:2002/${key}`,`archive:1001/${"a".repeat(64)}.png`]) {
+    assert.equal((await send(invalid)).ok,false);
+  }
+  assert.equal(sends,0);
+  const reference = `archive:1001/${key}`;
+  const result = await send(reference);
+  assert.equal(result.ok,true);
+  assert.equal(result.msg_id,"789");
+  assert.equal(sends,1);
+  assert.equal(archive.history("456","group").messages[0].image_local,reference);
+});
+
 test("video được stream ra file theo nội dung, không lưu trang lỗi HTTP thành video", async t => {
   const root = temporary(t);
   let body = Buffer.concat([Buffer.from([0,0,0,24]),Buffer.from("ftypisom"),Buffer.alloc(20)]);

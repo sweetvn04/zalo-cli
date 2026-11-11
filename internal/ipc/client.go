@@ -83,6 +83,11 @@ func (c *Client) deliver(ctx context.Context, result Result) bool {
 	}
 }
 
+// SendImage gửi ảnh từ kho local và trả ID để ghép với send_result.
+func (c *Client) SendImage(threadID, threadType, imageLocal string) (string, error) {
+	return c.request("send_image", &SendPayload{ThreadID: threadID, ThreadType: threadType, ImageLocal: imageLocal})
+}
+
 // SendMessage gửi lệnh qua IPC. Bên gọi phải đợi send_result cùng ID để biết
 // Zalo đã chấp nhận lệnh hay chưa. Không tự gửi lại khi mất phản hồi.
 func (c *Client) SendMessage(threadID, threadType, text string) (string, error) {

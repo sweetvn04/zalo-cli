@@ -61,6 +61,11 @@ func (f *fakeTransport) SendMessage(id, kind, text string) (string, error) {
 	return "send-1", nil
 }
 
+func (f *fakeTransport) SendImage(id, kind, image string) (string, error) {
+	f.sent <- ipc.SendPayload{ThreadID: id, ThreadType: kind, ImageLocal: image}
+	return "image-1", nil
+}
+
 func fixture() model {
 	f := &fakeTransport{results: make(chan ipc.Result, 10), sent: make(chan ipc.SendPayload, 10)}
 	m := newModel(f)
@@ -71,6 +76,35 @@ func fixture() model {
 	}
 	m.openSelected()
 	return m
+}
+
+func TestCopyImageThenSendToAnotherConversation(t *testing.T) {
+	m := fixture()
+	image := "archive:1001/" + strings.Repeat("a", 64) + ".png"
+	m.selectedLine = &chatLine{kind: "image", imageURL: image}
+	m = update(m, tea.KeyMsg{Type: tea.KeyF9})
+	if m.copiedImage != image || m.pending != nil {
+		t.Fatal("F9 must copy without sending")
+	}
+	m = update(m, tea.KeyMsg{Type: tea.KeyTab})
+	m.cursor = 1
+	m = update(m, tea.KeyMsg{Type: tea.KeyEnter})
+	m.composer.SetValue("Tin nháp")
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
+	m = updated.(model)
+	if cmd == nil || m.pending == nil || m.pending.thread != "group:go" || m.composer.Value() != "Tin nháp" {
+		t.Fatal("Ctrl+G must target open group and preserve text draft")
+	}
+	batch := cmd().(tea.BatchMsg)
+	m = update(m, batch[0]())
+	payload := <-m.client.(*fakeTransport).sent
+	if payload.ThreadID != "go" || payload.ThreadType != "group" || payload.ImageLocal != image {
+		t.Fatalf("wrong send payload: %+v", payload)
+	}
+	m.handleEvent(ipc.Event{Event: "send_result", ID: "image-1", OK: true, MsgID: "789"})
+	if m.pending != nil || m.history["group:go"][0].id != "789" {
+		t.Fatal("send acknowledgement was not applied")
+	}
 }
 
 func update(m model, msg tea.Msg) model {

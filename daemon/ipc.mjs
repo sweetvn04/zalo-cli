@@ -35,25 +35,32 @@ export async function handleCommand(raw, api, archive = null) {
       const list = await loadRecipients(api);
       return { event, id, ok: true, ...list };
     }
-    if (command?.action !== "send_message") {
+    const sendingImage = command?.action === "send_image";
+    if (!sendingImage && command?.action !== "send_message") {
       throw new Error("Lệnh IPC không được hỗ trợ");
     }
     const { thread_id, thread_type, text } = command.payload ?? {};
     if (typeof thread_id !== "string" || !thread_id.trim() ||
-        typeof text !== "string" || !text.trim()) {
+        (!sendingImage && (typeof text !== "string" || !text.trim()))) {
       throw new Error("Người nhận và nội dung không được để trống");
     }
     if (thread_type !== "user" && thread_type !== "group") {
       throw new Error("Loại hội thoại phải là user hoặc group");
     }
     if (!api) throw new Error("Daemon chưa đăng nhập Zalo");
-    const sent = await api.sendMessage({ msg: text }, thread_id, thread_type === "group" ? ThreadType.Group : ThreadType.User);
+    if (sendingImage && !archive) throw new Error("Daemon chưa mở kho ảnh local");
+    const image = sendingImage ? await archive.imageForSend(command.payload.image_local) : null;
+    const sent = await api.sendMessage(image ? {msg:"",attachments:[image.attachment]} : {msg:text},
+      thread_id, thread_type === "group" ? ThreadType.Group : ThreadType.User);
     const result = { event: "send_result", id, ok: true };
-    if (sent?.message?.msgId != null) result.msg_id = String(sent.message.msgId);
+    const msgId = image ? sent?.attachment?.[0]?.msgId : sent?.message?.msgId;
+    if (msgId != null) result.msg_id = String(msgId);
     if (archive) {
       try {
-        archive.save({msg_id:result.msg_id || "",thread_id,thread_type,sender_id:archive.account,sender_name:"Bạn",
-          content:text,kind:"text",timestamp:Date.now(),is_self:true});
+        const message = {msg_id:result.msg_id || "",thread_id,thread_type,sender_id:archive.account,sender_name:"Bạn",
+          content:image ? "" : text,kind:image ? "image" : "text",timestamp:Date.now(),is_self:true};
+        if (image) archive.saveImageCopy(message,image.key);
+        else archive.save(message);
       } catch (error) {
         result.notice = "Tin đã gửi nhưng chưa lưu được trên máy: "+error.message;
       }
