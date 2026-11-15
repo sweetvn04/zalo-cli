@@ -4,12 +4,7 @@ Zalo CLI là ứng dụng dòng lệnh không chính thức để đọc và g�
 
 ## Demo
 
-_Chỗ dành cho GIF hoặc video demo._
-
-<!--
-GIF: đặt file tại docs/demo.gif rồi dùng ![Zalo CLI demo](docs/demo.gif)
-Video: thay bằng [Xem video demo](URL_VIDEO)
--->
+![Giao diện Zalo CLI với danh sách hội thoại và khung chat nhóm](./demo.png)
 
 ## Tính năng
 
