@@ -29,3 +29,13 @@ session.json
 *~
 .idea/
 .vscode/
+
+# Local Zalo data and project notes
+/daemon/qr.png
+session.json.*
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+/COMMAND_LOG.md
+/plan.md
+/HUONG-DAN-HIEU-PROJECT.md
