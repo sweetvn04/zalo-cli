@@ -34,6 +34,12 @@ CLI sẽ tự khởi động daemon nếu chưa chạy. Khi được yêu cầu,
 
 Lệnh cuối cho phép chọn người nhận trước khi gửi.
 
+## Mở ảnh, video và sticker đã lưu
+
+Khi tin nhắn hiện **Đã lưu máy**, bạn có thể mở tệp trực tiếp bằng trình quản lý tệp. Bấm **Ctrl+L**, nhập `~/.local/share/zalo-cli/accounts/` (hoặc dán đường dẫn tuyệt đối nếu trình quản lý tệp không hiểu `~`), rồi mở thư mục ID tài khoản và vào `media/`.
+
+Nếu máy đặt `XDG_DATA_HOME` thành đường dẫn tuyệt đối, hãy mở `zalo-cli/accounts/<ID tài khoản>/media/` bên trong thư mục đó. Tên tệp được tạo theo nội dung để tránh lưu trùng. Tệp đã tải vẫn mở được khi mất mạng hoặc khi link Zalo hết hạn.
+
 ## Kiến trúc
 
 - **Go + Bubble Tea** dựng giao diện terminal và gửi lệnh JSON qua WebSocket tại `127.0.0.1:8989`.
